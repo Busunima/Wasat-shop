@@ -1,0 +1,16 @@
+# Node / Vite
+node_modules/
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+
+# Окружение
+.env
+.env.*
+!.env.example
+
+# TypeScript / Vite
+*.tsbuildinfo
+.vite/

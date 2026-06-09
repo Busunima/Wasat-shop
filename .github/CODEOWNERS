@@ -1,0 +1,14 @@
+# Владельцы кода по каталогам (заготовка).
+# Замените @team-* на реальные команды/пользователей GitHub при настройке доступа.
+
+# Общие контракты и документация — ревью обязательно (меняются согласованно с обеими сторонами)
+/docs/                      @team-leads
+/firebase/                  @team-backend @team-leads
+
+# Компоненты
+/android/                   @team-android
+/server/                    @team-backend
+/admin-web/                 @team-web
+
+# Инфраструктура CI/CD
+/.github/                   @team-leads

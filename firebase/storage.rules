@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// Storage Rules (ТЗ §4.3, §13): запись только в stores/{storeId}/** для
+// владельца/сотрудника. Чтение медиа товаров — публичное (витрина открыта).
+// Лимит файла — 10 МБ (§13).
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isOwner(storeId) {
+      return request.auth != null &&
+        firestore.get(/databases/(default)/documents/stores/$(storeId)).data.ownerUid == request.auth.uid;
+    }
+
+    function isStaff(storeId) {
+      return request.auth != null &&
+        firestore.exists(/databases/(default)/documents/stores/$(storeId)/staff/$(request.auth.uid));
+    }
+
+    function validImage() {
+      return request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /stores/{storeId}/{allPaths=**} {
+      allow read: if true; // публичные медиа витрины
+      allow write: if (isOwner(storeId) || isStaff(storeId)) && validImage();
+    }
+
+    // Всё остальное запрещено по умолчанию.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

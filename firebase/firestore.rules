@@ -1,0 +1,62 @@
+rules_version = '2';
+
+// Каркас правил из ТЗ §4.3. Изоляция данных по storeId.
+//
+// ВАЖНО: заказы, аналитика и списание стока выполняются СЕРВЕРОМ через Admin SDK —
+// правила игнорируются Admin SDK и защищают только прямой клиентский доступ.
+// Поэтому для клиента запись в orders/analytics/inventory здесь не разрешается.
+
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function isOwner(s) {
+      return request.auth != null &&
+        get(/databases/$(db)/documents/stores/$(s)).data.ownerUid == request.auth.uid;
+    }
+
+    function isStaff(s) {
+      return request.auth != null &&
+        exists(/databases/$(db)/documents/stores/$(s)/staff/$(request.auth.uid));
+    }
+
+    match /stores/{storeId} {
+      allow read: if resource.data.isPublic == true || isOwner(storeId) || isStaff(storeId);
+      allow write: if isOwner(storeId);
+
+      match /products/{pid} {
+        allow read: if true;
+        allow write: if isOwner(storeId) || isStaff(storeId);
+      }
+
+      match /categories/{cid} {
+        allow read: if true;
+        allow write: if isOwner(storeId);
+      }
+
+      match /orders/{oid} {
+        // Чтение: владелец, сотрудник или сам покупатель.
+        // Запись — только сервер (Admin SDK), клиенту запрещена.
+        allow read: if isOwner(storeId) || isStaff(storeId)
+                       || resource.data.customerUid == request.auth.uid;
+        allow write: if false;
+      }
+
+      match /analytics/{d} {
+        allow read: if isOwner(storeId);
+        allow write: if false;
+      }
+    }
+
+    // Публичный обратный индекс slug -> storeId (резолв витрины по ссылке/QR).
+    match /slugs/{slug} {
+      allow read: if true;
+      allow write: if false; // пишет сервер
+    }
+
+    // Список магазинов пользователя (владелец/сотрудник).
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false; // пишет сервер
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "comment": "Заготовка композитных индексов. Реальный набор уточняется по запросам в Фазах 2-3 (каталог с фильтрами, список заказов). Firestore подскажет недостающие индексы в логах эмулятора/консоли.",
+  "indexes": [
+    {
+      "comment": "Каталог: активные товары категории, сортировка по дате (FR-B02).",
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "comment": "Заказы магазина: фильтр по статусу + дата (FR-A04).",
+      "collectionGroup": "orders",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

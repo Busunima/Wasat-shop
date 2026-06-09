@@ -1,0 +1,97 @@
+# CI-пайплайн (ТЗ §14, §15). Полный поток до релиза наполняется по фазам:
+# lint -> unit -> build -> deploy staging -> E2E -> promote prod.
+# Этот этап: реальные lint/unit/build для server и android с path-фильтрами по каталогам.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read # нужно dorny/paths-filter для PR API listFiles
+
+jobs:
+  changes:
+    name: Определить изменённые компоненты
+    runs-on: ubuntu-latest
+    outputs:
+      android: ${{ steps.filter.outputs.android }}
+      server: ${{ steps.filter.outputs.server }}
+      admin-web: ${{ steps.filter.outputs.admin-web }}
+      firebase: ${{ steps.filter.outputs.firebase }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            android:
+              - 'android/**'
+            server:
+              - 'server/**'
+            admin-web:
+              - 'admin-web/**'
+            firebase:
+              - 'firebase/**'
+
+  server:
+    name: Server · lint + test + build
+    needs: changes
+    if: ${{ needs.changes.outputs.server == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  android:
+    name: Android · lint + unit + build
+    needs: changes
+    if: ${{ needs.changes.outputs.android == 'true' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew lintDebug testDebugUnitTest assembleDebug
+      # TODO(Фаза 1): добавить статанализ ktlint + detekt (ТЗ §14) отдельными задачами.
+
+  admin-web:
+    name: Admin Web · lint + build
+    needs: changes
+    if: ${{ needs.changes.outputs.admin-web == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: проект инициализируется отдельным треком; шаги setup-node + npm ci/lint/build добавляются тогда.
+      - run: echo "Admin Web CI — заготовка; инициализируется отдельным треком (см. docs/roadmap.md)"
+
+  firebase-rules:
+    name: Firebase · тесты правил (Emulator Suite)
+    needs: changes
+    if: ${{ needs.changes.outputs.firebase == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO(Шаг 2): тестовый пакет правил + firebase emulators:exec --only firestore,storage "npm test".
+      - run: echo "Firebase Rules CI — тесты правил добавляются в Шаге 2 (ходячий скелет auth→store)"

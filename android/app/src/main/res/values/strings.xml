@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Базовые строки. Локализация (мультиязычный UI, ТЗ §11.7) — через locale-папки values-xx. -->
+<resources>
+    <string name="app_name">Wasat Shop</string>
+</resources>
