@@ -4,7 +4,7 @@ import {
   ORDER_STATUS,
   isCancellableByBuyer,
   orderStatusSchema,
-} from "../src/schemas/orderStatus.ts";
+} from "../../src/schemas/orderStatus.ts";
 
 test("канонический enum содержит ровно 10 статусов (ТЗ §FR-A04)", () => {
   assert.equal(ORDER_STATUS.length, 10);
