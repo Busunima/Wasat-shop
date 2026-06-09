@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  XML-тема нужна только для splash/стартового окна до запуска Compose.
+  Реальная тема приложения задаётся в Compose (WasatTheme). Material3.* без ActionBar,
+  т.к. UI рисуется edge-to-edge (ТЗ §11.4).
+-->
+<resources>
+    <style name="Theme.WasatShop" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
