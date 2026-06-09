@@ -1,0 +1,26 @@
+# https://editorconfig.org — единый стиль кода в монорепо.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# JS/TS/JSON/YAML — 2 пробела (общепринято для Node/React-экосистемы)
+[*.{js,jsx,ts,tsx,json,yml,yaml}]
+indent_size = 2
+
+# Markdown — не обрезаем хвостовые пробелы (значимы для переносов строк)
+[*.md]
+trim_trailing_whitespace = false
+
+# Kotlin / Gradle
+[*.{kt,kts,gradle}]
+indent_size = 4
+
+# Makefile требует табов
+[Makefile]
+indent_style = tab

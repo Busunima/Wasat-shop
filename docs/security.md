@@ -1,0 +1,44 @@
+# Безопасность и соответствие (ТЗ §13)
+
+## Аутентификация и доступ
+
+- Firebase ID Token + **App Check** на каждом запросе; **Custom Claims задаёт только
+  сервер**.
+- Firestore Rules: изоляция по `ownerUid`/`staff` (см. §4.3 и
+  [`../firebase/firestore.rules`](../firebase/firestore.rules)); Storage Rules: запись
+  только в `stores/{storeId}/**`.
+- Rate limiting REST — общий счётчик в Memorystore; прямой доступ к Firestore защищён
+  App Check и квотами.
+
+## Защита данных
+
+- ПДн покупателей — только в `stores/{storeId}/customers`; платёжные данные не хранятся
+  (только идентификаторы Stripe).
+- Шифрование at-rest (AES-256) и in-transit (TLS 1.2+); маскирование email в логах.
+- **PCI DSS (SAQ-A)** — через Stripe; данные карт не проходят через наш сервер.
+- Удаление аккаунта и экспорт данных (право на забвение); процедура анонимизации
+  заказов.
+
+## Соответствие (GDPR)
+
+- Для пользователей ЕС — GDPR: законные основания обработки, DPA с Google (Firebase)
+  и Stripe.
+- Резидентность данных — регион Firestore **`us-central1` (США)**; для пользователей
+  ЕС — DPA и стандартные договорные положения (SCC) с Google и Stripe, минимизация ПДн.
+- Согласие на обработку и cookie-баннер для любой веб-части; политика
+  конфиденциальности до релиза.
+
+## Валидация и секреты
+
+- **Двойная валидация** (Kotlin + Zod); whitelist enum (см.
+  [`order-status.md`](order-status.md)); санитизация HTML; лимит файла 10 МБ.
+- Секреты — Google Secret Manager / переменные Cloud Run; `google-services.json` —
+  публичная конфигурация; `CRON_SECRET` и Stripe webhook secret — **без fallback в
+  production**.
+
+## Чек-лист на каждый PR (сводно)
+
+- [ ] Новый эндпоинт проверяет ID Token + App Check + роль.
+- [ ] Новый доступ к Firestore/Storage покрыт правилом и тестом Emulator Suite.
+- [ ] Нет секретов в коде/логах; email маскируется.
+- [ ] Body валидируется Zod (сервер) и на клиенте (Kotlin).

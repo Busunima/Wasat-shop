@@ -1,0 +1,22 @@
+# Android / Gradle
+.gradle/
+build/
+**/build/
+local.properties
+.cxx/
+captures/
+*.apk
+*.aab
+*.ap_
+*.dex
+output.json
+
+# Подписи / секреты
+*.keystore
+*.jks
+google-services.json
+
+# IDE
+.idea/
+*.iml
+.navigation/

@@ -1,0 +1,51 @@
+# ── Корневой .gitignore монорепо ───────────────────────────────────────────
+# Компонент-специфичные правила также есть в android/.gitignore, server/.gitignore,
+# admin-web/.gitignore.
+
+# OS / редакторы
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+*.iml
+
+# ── Android / Gradle ───────────────────────────────────────────────────────
+android/.gradle/
+android/build/
+android/**/build/
+android/local.properties
+android/.cxx/
+android/captures/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# ── Node (server, admin-web) ───────────────────────────────────────────────
+node_modules/
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ── Секреты / окружение (НИКОГДА не коммитим) ──────────────────────────────
+# google-services.json — публичная конфигурация, но держим вне VCS до настройки проектов
+**/google-services.json
+**/GoogleService-Info.plist
+**/serviceAccountKey*.json
+.env
+.env.*
+!.env.example
+*.pem
+
+# ── Firebase ───────────────────────────────────────────────────────────────
+firebase/.firebase/
+firebase/firebase-debug.log
+firebase/firestore-debug.log
+firebase/ui-debug.log
+firebase/.runtimeconfig.json

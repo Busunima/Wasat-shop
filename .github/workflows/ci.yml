@@ -1,0 +1,79 @@
+# CI-пайплайн (заготовка). Реальные шаги наполняются в Фазе 1 (ТЗ §14, §15):
+# lint -> unit -> build -> deploy staging -> E2E -> promote prod.
+# Сейчас — каркас с path-фильтрами: каждый компонент собирается только при изменениях
+# в своём каталоге, чтобы PR не гонял лишние джобы.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Минимум прав по умолчанию.
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Определить изменённые компоненты
+    runs-on: ubuntu-latest
+    outputs:
+      android: ${{ steps.filter.outputs.android }}
+      server: ${{ steps.filter.outputs.server }}
+      admin-web: ${{ steps.filter.outputs.admin-web }}
+      firebase: ${{ steps.filter.outputs.firebase }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            android:
+              - 'android/**'
+            server:
+              - 'server/**'
+            admin-web:
+              - 'admin-web/**'
+            firebase:
+              - 'firebase/**'
+
+  android:
+    name: Android · lint + unit + build
+    needs: changes
+    if: ${{ needs.changes.outputs.android == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO (Фаза 1): setup-java, gradle cache, ./gradlew ktlintCheck detekt test assembleDebug
+      - run: echo "Android CI — заготовка; шаги добавляются в Фазе 1"
+
+  server:
+    name: Server · lint + unit + build
+    needs: changes
+    if: ${{ needs.changes.outputs.server == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO (Фаза 1): setup-node, npm ci, npm run lint, npm test, npm run build
+      - run: echo "Server CI — заготовка; шаги добавляются в Фазе 1"
+
+  admin-web:
+    name: Admin Web · lint + unit + build
+    needs: changes
+    if: ${{ needs.changes.outputs.admin-web == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO: setup-node, npm ci, npm run lint, npm test, npm run build
+      - run: echo "Admin Web CI — заготовка; шаги добавляются позже"
+
+  firebase-rules:
+    name: Firebase · тесты правил (Emulator Suite)
+    needs: changes
+    if: ${{ needs.changes.outputs.firebase == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # TODO (Фаза 1): firebase emulators:exec "npm test" — тесты Firestore/Storage Rules
+      - run: echo "Firebase Rules CI — заготовка; тесты правил добавляются в Фазе 1"

@@ -1,0 +1,16 @@
+# Node
+node_modules/
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+
+# Окружение / секреты
+.env
+.env.*
+!.env.example
+serviceAccountKey*.json
+
+# TypeScript
+*.tsbuildinfo
