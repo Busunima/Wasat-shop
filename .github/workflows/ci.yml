@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read # нужно dorny/paths-filter для PR API listFiles
 
 jobs:
   changes:
