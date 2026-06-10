@@ -1,15 +1,51 @@
 import { Router } from "express";
-import { optionalAuth, requireAuth, type AuthedRequest } from "../middleware/auth.js";
+import {
+  optionalAuth,
+  requireAuth,
+  requireStoreRole,
+  type AuthedRequest,
+} from "../middleware/auth.js";
 import { verifyAppCheck } from "../middleware/appCheck.js";
 import { ApiError } from "../middleware/errorHandler.js";
-import { storeInitSchema } from "../schemas/store.js";
-import { createStore, getStoreInfo } from "../services/stores.js";
+import { storeInitSchema, storeUpdateSchema } from "../schemas/store.js";
+import { createStore, getStoreInfo, resolveSlug, updateStore } from "../services/stores.js";
 import { productsRouter } from "./products.js";
 
 export const storesRouter: Router = Router();
 
 // Товары магазина: /api/stores/:storeId/products (FR-A02 + витрина)
 storesRouter.use("/:storeId/products", productsRouter);
+
+/**
+ * GET /api/stores/by-slug/:slug — резолв витрины по slug (FR-B01: deep link / QR).
+ * Public-правило видимости. Объявлен ДО GET /:storeId (иначе перехват параметром).
+ */
+storesRouter.get("/by-slug/:slug", async (req, res, next) => {
+  try {
+    res.json(await resolveSlug(String(req.params["slug"] ?? "")));
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * PATCH /api/stores/:storeId — настройки магазина (FR-A01), только владелец.
+ * slug/currency/plan не изменяются (см. storeUpdateSchema).
+ */
+storesRouter.patch(
+  "/:storeId",
+  verifyAppCheck,
+  requireAuth,
+  requireStoreRole,
+  async (req: AuthedRequest, res, next) => {
+    try {
+      const body = storeUpdateSchema.parse(req.body);
+      res.json(await updateStore(String(req.params["storeId"] ?? ""), body));
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 /**
  * GET /api/stores/:storeId — публичная карточка магазина (витрина).

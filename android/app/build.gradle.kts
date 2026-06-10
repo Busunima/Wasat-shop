@@ -106,6 +106,11 @@ dependencies {
     implementation(libs.androidx.paging.runtime)
     implementation(libs.androidx.paging.compose)
 
+    // Кэш последнего магазина (FR-B01)
+    implementation(libs.androidx.datastore.preferences)
+    // QR-сканер slug (FR-B01): системный Google code scanner, без camera-permission
+    implementation(libs.play.services.code.scanner)
+
     // Firebase (BOM управляет версиями)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { FieldValue } from "firebase-admin/firestore";
 import { auth, db } from "../lib/firebase.js";
 import { ApiError } from "../middleware/errorHandler.js";
-import type { StoreInit } from "../schemas/store.js";
+import type { StoreInit, StoreUpdate } from "../schemas/store.js";
 import { createConnectOnboarding, type OnboardingResult } from "./stripe.js";
 import { logger } from "../lib/logger.js";
 
@@ -20,6 +20,27 @@ export interface ApiStoreInfo {
   description: string;
   currency: string;
   isPublic: boolean;
+  logoUrl: string | null;
+  bannerUrl: string | null;
+  theme: { primary: string; secondary: string } | null;
+  contact: { email?: string; phone?: string | null; address?: string | null } | null;
+  deliveryCost: number | null;
+}
+
+function toApiStoreInfo(data: FirebaseFirestore.DocumentData): ApiStoreInfo {
+  return {
+    storeId: data["id"] as string,
+    slug: data["slug"] as string,
+    name: data["name"] as string,
+    description: (data["description"] as string) ?? "",
+    currency: data["currency"] as string,
+    isPublic: data["isPublic"] === true,
+    logoUrl: (data["logoUrl"] as string | undefined) ?? null,
+    bannerUrl: (data["bannerUrl"] as string | undefined) ?? null,
+    theme: (data["theme"] as ApiStoreInfo["theme"]) ?? null,
+    contact: (data["contact"] as ApiStoreInfo["contact"]) ?? null,
+    deliveryCost: (data["deliveryCost"] as number | undefined) ?? null,
+  };
 }
 
 /**
@@ -35,14 +56,35 @@ export async function getStoreInfo(
   if (!data || (!includePrivate && (data["isPublic"] !== true || data["isBlocked"] === true))) {
     throw new ApiError("NOT_FOUND", "Магазин не найден");
   }
-  return {
-    storeId: data["id"] as string,
-    slug: data["slug"] as string,
-    name: data["name"] as string,
-    description: (data["description"] as string) ?? "",
-    currency: data["currency"] as string,
-    isPublic: data["isPublic"] === true,
-  };
+  return toApiStoreInfo(data);
+}
+
+/** Резолв slug → карточка магазина (FR-B01: deep link / QR). Public-правило видимости. */
+export async function resolveSlug(slug: string): Promise<ApiStoreInfo> {
+  const slugSnap = await db().collection("slugs").doc(slug).get();
+  const storeId = slugSnap.data()?.["storeId"] as string | undefined;
+  if (!storeId) throw new ApiError("NOT_FOUND", "Магазин не найден");
+  return getStoreInfo(storeId, false);
+}
+
+/**
+ * Настройки магазина (FR-A01). undefined-поля не трогаются (partial-PATCH),
+ * null — явная очистка. slug/currency/plan здесь не изменяются (см. схему).
+ */
+export async function updateStore(storeId: string, input: StoreUpdate): Promise<ApiStoreInfo> {
+  const ref = db().collection("stores").doc(storeId);
+  const snap = await ref.get();
+  if (!snap.exists) throw new ApiError("NOT_FOUND", "Магазин не найден");
+
+  const patch: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(input)) {
+    if (value !== undefined) patch[key] = value;
+  }
+  if (Object.keys(patch).length > 0) await ref.update(patch);
+
+  const updated = await ref.get();
+  logger.info("Настройки магазина обновлены", { storeId, fields: Object.keys(patch) });
+  return toApiStoreInfo(updated.data()!);
 }
 
 /**

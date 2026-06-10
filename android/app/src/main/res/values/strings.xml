@@ -21,6 +21,9 @@
     <string name="home_store_created">Магазин создан: %1$s</string>
     <string name="home_open_catalog">Открыть каталог</string>
     <string name="home_my_products">Мои товары</string>
+    <string name="home_settings">Настройки магазина</string>
+    <string name="home_scan">Сканировать QR</string>
+    <string name="home_last_store">Вернуться в «%1$s»</string>
 
     <!-- Админ: товары (FR-A02) -->
     <string name="my_products_title">Мои товары</string>
@@ -88,4 +91,24 @@
     <string name="cart_remove">Убрать</string>
     <string name="cart_subtotal">Итого</string>
     <string name="cart_checkout_later">Оформление заказа — скоро</string>
+
+    <!-- Настройки магазина (FR-A01) -->
+    <string name="settings_title">Настройки магазина</string>
+    <string name="settings_public">Витрина открыта</string>
+    <string name="settings_public_hint">Открытый магазин виден покупателям по ссылке и QR</string>
+    <string name="settings_logo">Логотип</string>
+    <string name="settings_banner">Баннер</string>
+    <string name="settings_choose_image">Выбрать</string>
+    <string name="settings_theme">Тема магазина</string>
+    <string name="settings_theme_primary">Основной #RRGGBB</string>
+    <string name="settings_theme_secondary">Доп. #RRGGBB</string>
+    <string name="settings_contact_email">Email для связи</string>
+    <string name="settings_contact_phone">Телефон</string>
+    <string name="settings_contact_address">Адрес</string>
+    <string name="settings_delivery_cost">Стоимость доставки</string>
+
+    <!-- Открытие витрины по ссылке/QR (FR-B01) -->
+    <string name="store_not_found">Магазин «%1$s» не найден или закрыт</string>
+    <string name="store_not_found_back">Назад</string>
+    <string name="scan_no_result">QR-код не распознан как магазин</string>
 </resources>
