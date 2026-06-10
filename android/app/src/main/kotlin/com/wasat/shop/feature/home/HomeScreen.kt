@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -23,6 +24,7 @@ import com.wasat.shop.R
 fun HomeScreen(
     slug: String?,
     onOpenCatalog: (storeId: String, currency: String) -> Unit,
+    onOpenMyProducts: (storeId: String, currency: String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -50,6 +52,9 @@ fun HomeScreen(
                 Text(text = s.name, style = MaterialTheme.typography.headlineMedium)
                 Button(onClick = { onOpenCatalog(s.storeId, s.currency) }) {
                     Text(stringResource(R.string.home_open_catalog))
+                }
+                OutlinedButton(onClick = { onOpenMyProducts(s.storeId, s.currency) }) {
+                    Text(stringResource(R.string.home_my_products))
                 }
             }
         }

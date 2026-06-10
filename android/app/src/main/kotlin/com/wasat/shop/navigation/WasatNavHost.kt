@@ -6,6 +6,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.wasat.shop.feature.admin.MyProductsScreen
+import com.wasat.shop.feature.admin.ProductEditScreen
 import com.wasat.shop.feature.auth.AuthRepository
 import com.wasat.shop.feature.auth.SignInScreen
 import com.wasat.shop.feature.cart.CartScreen
@@ -21,12 +23,19 @@ object Routes {
     const val CATALOG = "catalog/{storeId}?currency={currency}"
     const val PRODUCT = "product/{storeId}/{productId}?currency={currency}"
     const val CART = "cart/{storeId}?currency={currency}"
+    const val MY_PRODUCTS = "myproducts/{storeId}?currency={currency}"
+    const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
 
     fun home(slug: String?): String = if (slug != null) "home?slug=$slug" else "home"
     fun catalog(storeId: String, currency: String): String = "catalog/$storeId?currency=$currency"
     fun product(storeId: String, productId: String, currency: String): String =
         "product/$storeId/$productId?currency=$currency"
     fun cart(storeId: String, currency: String): String = "cart/$storeId?currency=$currency"
+    fun myProducts(storeId: String, currency: String): String =
+        "myproducts/$storeId?currency=$currency"
+    fun productEdit(storeId: String, currency: String, productId: String?): String =
+        "productedit/$storeId?currency=$currency" +
+            (productId?.let { "&productId=$it" } ?: "")
 }
 
 private val currencyArg = navArgument("currency") {
@@ -85,6 +94,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 onOpenCatalog = { storeId, currency ->
                     navController.navigate(Routes.catalog(storeId, currency))
                 },
+                onOpenMyProducts = { storeId, currency ->
+                    navController.navigate(Routes.myProducts(storeId, currency))
+                },
             )
         }
 
@@ -119,6 +131,37 @@ fun WasatNavHost(authRepository: AuthRepository) {
         ) { backStackEntry ->
             val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
             CartScreen(currency = currency)
+        }
+
+        composable(
+            route = Routes.MY_PRODUCTS,
+            arguments = listOf(currencyArg),
+        ) { backStackEntry ->
+            val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
+            MyProductsScreen(
+                currency = currency,
+                onAddProduct = {
+                    navController.navigate(Routes.productEdit(storeId, currency, null))
+                },
+                onEditProduct = { productId ->
+                    navController.navigate(Routes.productEdit(storeId, currency, productId))
+                },
+            )
+        }
+
+        composable(
+            route = Routes.PRODUCT_EDIT,
+            arguments = listOf(
+                currencyArg,
+                navArgument("productId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
+        ) {
+            ProductEditScreen(onSaved = { navController.popBackStack() })
         }
     }
 }

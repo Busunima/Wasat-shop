@@ -18,6 +18,24 @@
     <!-- Home (placeholder) -->
     <string name="home_store_created">Store created: %1$s</string>
     <string name="home_open_catalog">Open catalog</string>
+    <string name="home_my_products">My products</string>
+
+    <!-- Admin: products (FR-A02) -->
+    <string name="my_products_title">My products</string>
+    <string name="my_products_add">Add</string>
+    <string name="my_products_empty">No products yet — add your first one</string>
+    <string name="product_status_active">Published</string>
+    <string name="product_status_draft">Draft</string>
+    <string name="product_status_archived">Archived</string>
+    <string name="product_edit_title_new">New product</string>
+    <string name="product_edit_title_edit">Edit product</string>
+    <string name="product_edit_name">Name</string>
+    <string name="product_edit_price">Price</string>
+    <string name="product_edit_description">Description (optional)</string>
+    <string name="product_edit_publish">Publish</string>
+    <string name="product_edit_publish_hint">Published products are visible to buyers</string>
+    <string name="product_edit_save">Save</string>
+    <string name="product_edit_saving">Saving…</string>
 
     <!-- Catalog and product card -->
     <string name="catalog_title">Catalog</string>

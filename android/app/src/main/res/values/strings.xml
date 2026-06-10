@@ -20,6 +20,24 @@
     <!-- Главный экран (плейсхолдер) -->
     <string name="home_store_created">Магазин создан: %1$s</string>
     <string name="home_open_catalog">Открыть каталог</string>
+    <string name="home_my_products">Мои товары</string>
+
+    <!-- Админ: товары (FR-A02) -->
+    <string name="my_products_title">Мои товары</string>
+    <string name="my_products_add">Добавить</string>
+    <string name="my_products_empty">Товаров пока нет — добавьте первый</string>
+    <string name="product_status_active">Опубликован</string>
+    <string name="product_status_draft">Черновик</string>
+    <string name="product_status_archived">Архив</string>
+    <string name="product_edit_title_new">Новый товар</string>
+    <string name="product_edit_title_edit">Редактирование товара</string>
+    <string name="product_edit_name">Название</string>
+    <string name="product_edit_price">Цена</string>
+    <string name="product_edit_description">Описание (необязательно)</string>
+    <string name="product_edit_publish">Опубликовать</string>
+    <string name="product_edit_publish_hint">Опубликованный товар виден покупателям</string>
+    <string name="product_edit_save">Сохранить</string>
+    <string name="product_edit_saving">Сохранение…</string>
 
     <!-- Каталог и карточка товара -->
     <string name="catalog_title">Каталог</string>
