@@ -1,0 +1,71 @@
+package com.wasat.shop.navigation
+
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.wasat.shop.feature.auth.AuthRepository
+import com.wasat.shop.feature.auth.SignInScreen
+import com.wasat.shop.feature.home.HomeScreen
+import com.wasat.shop.feature.onboarding.OnboardingScreen
+
+object Routes {
+    const val AUTH = "auth"
+    const val ONBOARDING = "onboarding"
+    const val HOME = "home?slug={slug}"
+
+    fun home(slug: String?): String = if (slug != null) "home?slug=$slug" else "home"
+}
+
+/**
+ * Граф навигации Шага 2: auth → onboarding → home.
+ * Маршрутизация по custom claims (owner → админ-режим) — уточнение Фазы 2.
+ */
+@Composable
+fun WasatNavHost(authRepository: AuthRepository) {
+    val navController = rememberNavController()
+    val startDestination =
+        if (authRepository.currentUser() == null) Routes.AUTH else Routes.ONBOARDING
+
+    NavHost(navController = navController, startDestination = startDestination) {
+        composable(Routes.AUTH) {
+            SignInScreen(
+                onSignedIn = {
+                    navController.navigate(Routes.ONBOARDING) {
+                        popUpTo(Routes.AUTH) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(Routes.ONBOARDING) {
+            OnboardingScreen(
+                onStoreCreated = { slug ->
+                    navController.navigate(Routes.home(slug)) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    }
+                },
+                onNavigateToSignIn = {
+                    navController.navigate(Routes.AUTH) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        composable(
+            route = Routes.HOME,
+            arguments = listOf(
+                navArgument("slug") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
+        ) { backStackEntry ->
+            HomeScreen(slug = backStackEntry.arguments?.getString("slug"))
+        }
+    }
+}

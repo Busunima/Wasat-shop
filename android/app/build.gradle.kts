@@ -4,6 +4,13 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.serialization)
+}
+
+// google-services.json в .gitignore (секреты не коммитятся, ТЗ §13) — в CI файла нет.
+// Плагин применяется только при наличии файла, иначе сборка без конфига Firebase падала бы.
+if (file("google-services.json").exists()) {
+    apply(plugin = libs.plugins.google.services.get().pluginId)
 }
 
 android {
@@ -19,9 +26,22 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
+
+        // Web Client ID (OAuth) для Sign in with Google: gradle-свойство или env;
+        // плейсхолдер позволяет CI собираться без секретов (рантайм гейтится isConfigured).
+        val webClientId = providers.gradleProperty("wasat.googleWebClientId").orNull
+            ?: System.getenv("WASAT_GOOGLE_WEB_CLIENT_ID")
+            ?: "MISSING_WEB_CLIENT_ID"
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$webClientId\"")
     }
 
     buildTypes {
+        debug {
+            // 10.0.2.2 — host-машина из Android-эмулятора (локальный server, PORT=8080)
+            val baseUrl = providers.gradleProperty("wasat.apiBaseUrl").orNull
+                ?: "http://10.0.2.2:8080/"
+            buildConfigField("String", "API_BASE_URL", "\"$baseUrl\"")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
@@ -29,6 +49,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            // Прод-URL подставляется при настройке деплоя (Фаза 5)
+            buildConfigField("String", "API_BASE_URL", "\"https://api.example.com/\"")
         }
     }
 
@@ -43,6 +65,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     // Исходники размещены в src/main/kotlin.
@@ -93,8 +116,17 @@ dependencies {
     // Платежи
     implementation(libs.stripe.android)
 
+    // Сеть: Retrofit + OkHttp + kotlinx-serialization (контракт docs/api-contract.md)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.okhttp)
+    implementation(libs.kotlinx.serialization.json)
+    // Task<T>.await() для Firebase/Play Services API
+    implementation(libs.kotlinx.coroutines.play.services)
+
     // Тесты
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
