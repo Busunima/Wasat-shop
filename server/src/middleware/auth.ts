@@ -37,6 +37,45 @@ export async function requireAuth(
   }
 }
 
+/**
+ * Опциональная аутентификация для публичных эндпоинтов с расширенным режимом для
+ * владельца (например, листинг товаров: посетителю — active, владельцу — все).
+ * Невалидный/отсутствующий токен НЕ является ошибкой — запрос идёт как анонимный.
+ */
+export async function optionalAuth(
+  req: AuthedRequest,
+  _res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const header = req.header("authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (token) {
+    try {
+      const decoded = await auth().verifyIdToken(token);
+      req.uid = decoded.uid;
+      req.claims = decoded as unknown as Record<string, unknown>;
+    } catch {
+      // анонимный доступ
+    }
+  }
+  next();
+}
+
+/**
+ * Требует, чтобы Custom Claims давали роль в магазине из path-параметра :storeId
+ * (ТЗ §4.2, §13): claims.storeId === :storeId и роль owner (staff — Фаза 3).
+ * Ставится ПОСЛЕ requireAuth.
+ */
+export function requireStoreRole(req: AuthedRequest, _res: Response, next: NextFunction): void {
+  const storeId = req.params["storeId"];
+  const hasRole =
+    typeof storeId === "string" &&
+    req.claims?.["storeId"] === storeId &&
+    req.claims?.["role"] === "owner";
+  if (hasRole) next();
+  else next(new ApiError("FORBIDDEN", "Нет прав на управление этим магазином"));
+}
+
 /** Требует роль суперадмина (Custom Claim superadmin: true) — ТЗ §7. */
 export function requireSuperadmin(req: AuthedRequest, _res: Response, next: NextFunction): void {
   if (req.claims?.["superadmin"] === true) next();

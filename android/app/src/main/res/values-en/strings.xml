@@ -17,4 +17,10 @@
 
     <!-- Home (placeholder) -->
     <string name="home_store_created">Store created: %1$s</string>
+    <string name="home_open_catalog">Open catalog</string>
+
+    <!-- Catalog and product card -->
+    <string name="catalog_retry">Retry</string>
+    <string name="catalog_empty">No products in the catalog yet</string>
+    <string name="product_out_of_stock">Out of stock</string>
 </resources>
