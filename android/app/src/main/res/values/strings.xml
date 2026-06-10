@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Базовые строки. Локализация (мультиязычный UI, ТЗ §11.7) — через locale-папки values-xx. -->
+<!-- Базовые строки (default = ru). Локализация (ТЗ §11.7): переводы в values-xx. -->
 <resources>
-    <string name="app_name">Wasat Shop</string>
+    <string name="app_name" translatable="false">Wasat Shop</string>
 
     <!-- Вход -->
     <string name="sign_in_with_google">Войти через Google</string>

@@ -50,6 +50,7 @@ fun WasatTheme(
     MaterialTheme(
         colorScheme = colorScheme,
         typography = WasatTypography,
+        shapes = WasatShapes,
         content = content,
     )
 }
