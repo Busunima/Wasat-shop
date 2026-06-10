@@ -6,8 +6,8 @@
   "description": "Тесты Firestore/Storage Security Rules (ТЗ §4.3, §14)",
   "engines": { "node": ">=22" },
   "scripts": {
-    "test": "node --test --import tsx \"test/**/*.test.ts\"",
-    "test:emulator": "firebase emulators:exec --only firestore --project demo-wasat \"npm test\""
+    "test": "node --test --test-concurrency=1 --import tsx \"test/**/*.test.ts\"",
+    "test:emulator": "firebase emulators:exec --only firestore,storage --project demo-wasat \"npm test\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",

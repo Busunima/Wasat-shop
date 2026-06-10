@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translations (ТЗ §11.7). -->
+<resources>
+    <!-- Sign-in -->
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_not_configured">Firebase is not configured: add google-services.json and a Web Client ID (wasat.googleWebClientId), then rebuild the app.</string>
+
+    <!-- Store onboarding -->
+    <string name="onboarding_title">Create your store</string>
+    <string name="onboarding_name">Name</string>
+    <string name="onboarding_slug">Address (slug)</string>
+    <string name="onboarding_slug_hint">Lowercase latin letters, digits and hyphens</string>
+    <string name="onboarding_currency">Currency (ISO-4217)</string>
+    <string name="onboarding_description">Description (optional)</string>
+    <string name="onboarding_submit">Create store</string>
+    <string name="onboarding_submitting">Creating…</string>
+
+    <!-- Home (placeholder) -->
+    <string name="home_store_created">Store created: %1$s</string>
+</resources>
