@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
@@ -38,4 +39,9 @@ object FirebaseModule {
     @Singleton
     fun provideFirebaseStorage(@ApplicationContext context: Context): FirebaseStorage? =
         if (isFirebaseConfigured(context)) FirebaseStorage.getInstance() else null
+
+    @Provides
+    @Singleton
+    fun provideFirebaseFirestore(@ApplicationContext context: Context): FirebaseFirestore? =
+        if (isFirebaseConfigured(context)) FirebaseFirestore.getInstance() else null
 }

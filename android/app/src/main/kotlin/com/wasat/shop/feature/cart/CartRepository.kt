@@ -9,12 +9,14 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Локальная корзина на Room (FR-B04, офлайн-first). Гостевая корзина живёт на
- * устройстве; слияние с серверной — вместе с чекаутом (Фаза 4).
+ * Локальная корзина на Room (FR-B04, офлайн-first) + синхронизация с Firestore:
+ * после каждой мутации снапшот пушится в stores/{storeId}/customers/{uid}
+ * (для гостя/без конфига Firebase — no-op, см. CartSyncRepository).
  */
 @Singleton
 class CartRepository @Inject constructor(
     private val dao: CartDao,
+    private val sync: CartSyncRepository,
 ) {
     fun observeCart(storeId: String): Flow<List<CartItemEntity>> = dao.observeCart(storeId)
 
@@ -46,6 +48,7 @@ class CartRepository @Inject constructor(
                 ),
             )
         }
+        sync.push(storeId)
     }
 
     /** Меняет количество; qty <= 0 удаляет позицию. */
@@ -60,9 +63,16 @@ class CartRepository @Inject constructor(
                 CartTotals.clampQuantity(quantity),
             )
         }
+        sync.push(item.storeId)
     }
 
-    suspend fun remove(item: CartItemEntity) = dao.delete(item.storeId, item.productId, item.variantKey)
+    suspend fun remove(item: CartItemEntity) {
+        dao.delete(item.storeId, item.productId, item.variantKey)
+        sync.push(item.storeId)
+    }
 
-    suspend fun clear(storeId: String) = dao.clear(storeId)
+    suspend fun clear(storeId: String) {
+        dao.clear(storeId)
+        sync.push(storeId)
+    }
 }

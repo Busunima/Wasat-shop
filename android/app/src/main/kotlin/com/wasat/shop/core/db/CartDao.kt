@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -37,4 +38,23 @@ interface CartDao {
 
     @Query("DELETE FROM cart_items WHERE storeId = :storeId")
     suspend fun clear(storeId: String)
+
+    // ── Синхронизация с Firestore (FR-B04) ──────────────────────────────────
+
+    @Query("SELECT * FROM cart_items WHERE storeId = :storeId ORDER BY addedAt")
+    suspend fun getAll(storeId: String): List<CartItemEntity>
+
+    /** Магазины, в которых есть локальная (в т.ч. гостевая) корзина. */
+    @Query("SELECT DISTINCT storeId FROM cart_items")
+    suspend fun getStoreIds(): List<String>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(items: List<CartItemEntity>)
+
+    /** Атомарная замена корзины магазина результатом слияния. */
+    @Transaction
+    suspend fun replaceAll(storeId: String, items: List<CartItemEntity>) {
+        clear(storeId)
+        upsertAll(items)
+    }
 }
