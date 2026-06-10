@@ -73,6 +73,13 @@ jobs:
           java-version: 17
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
+      # Kotlin поддерживает ВЛОЖЕННЫЕ блочные комментарии: «/*» внутри KDoc
+      # (например, путь «.../inventory/*») съедает остаток файла (Unclosed comment).
+      - name: Гард — вложенный /* в Kotlin-комментариях
+        run: |
+          if grep -rnE --include='*.kt' '^\s*(/\*\*|\*)([^/]|/[^*])*/\*' app/src; then
+            echo '::error::Найден вложенный /* внутри Kotlin-комментария (Unclosed comment)'; exit 1
+          fi
       - run: ./gradlew lintDebug testDebugUnitTest assembleDebug
       # TODO(Фаза 1): добавить статанализ ktlint + detekt (ТЗ §14) отдельными задачами.
 

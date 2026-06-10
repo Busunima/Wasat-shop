@@ -2,7 +2,7 @@ package com.wasat.shop.core.network.dto
 
 import kotlinx.serialization.Serializable
 
-/** DTO инвентаря — контракт /api/stores/{id}/inventory/* (FR-A03). */
+/** DTO инвентаря — контракт /api/stores/{id}/inventory/... (FR-A03). */
 
 @Serializable
 data class VariantSelectorDto(
