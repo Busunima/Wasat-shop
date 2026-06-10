@@ -7,7 +7,7 @@ import org.junit.Test
 class SettingsValidationTest {
 
     @Test
-    fun `hex - строго #RRGGBB; пусто допустимо`() {
+    fun `hex - строго #RRGGBB, пусто допустимо`() {
         assertNull(SettingsValidation.validateHex("#2D4A7C"))
         assertNull(SettingsValidation.validateHex("#aabbcc"))
         assertNull(SettingsValidation.validateHex("")) // тема не задаётся
@@ -18,7 +18,7 @@ class SettingsValidationTest {
     }
 
     @Test
-    fun `email - базовая проверка; пусто допустимо`() {
+    fun `email - базовая проверка, пусто допустимо`() {
         assertNull(SettingsValidation.validateEmail("shop@example.com"))
         assertNull(SettingsValidation.validateEmail(""))
         assertNotNull(SettingsValidation.validateEmail("плохой"))
