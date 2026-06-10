@@ -12,6 +12,39 @@ export interface CreateStoreResult {
   onboarding: OnboardingResult;
 }
 
+/** Публичная карточка магазина (без owner-полей и Firestore-типов). */
+export interface ApiStoreInfo {
+  storeId: string;
+  slug: string;
+  name: string;
+  description: string;
+  currency: string;
+  isPublic: boolean;
+}
+
+/**
+ * Инфо магазина для витрины: посетителю — только публичный (isPublic) и не
+ * заблокированный; владельцу (includePrivate) — всегда.
+ */
+export async function getStoreInfo(
+  storeId: string,
+  includePrivate: boolean,
+): Promise<ApiStoreInfo> {
+  const snap = await db().collection("stores").doc(storeId).get();
+  const data = snap.data();
+  if (!data || (!includePrivate && (data["isPublic"] !== true || data["isBlocked"] === true))) {
+    throw new ApiError("NOT_FOUND", "Магазин не найден");
+  }
+  return {
+    storeId: data["id"] as string,
+    slug: data["slug"] as string,
+    name: data["name"] as string,
+    description: (data["description"] as string) ?? "",
+    currency: data["currency"] as string,
+    isPublic: data["isPublic"] === true,
+  };
+}
+
 /**
  * Создание магазина (ТЗ §4.1 шаг 4, §8). Атомарная транзакция Firestore:
  *  1) уникальность slug (обратный индекс slugs/{slug});

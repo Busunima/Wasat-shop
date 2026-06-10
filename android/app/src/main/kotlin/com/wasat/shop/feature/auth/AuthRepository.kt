@@ -60,9 +60,14 @@ class AuthRepository @Inject constructor(
      * Принудительно обновляет ID-токен (getIdToken(true)), чтобы подтянуть custom claims
      * (storeId, role), выставленные сервером при создании магазина.
      */
-    suspend fun refreshClaims(): Result<StoreClaims> = runCatching {
+    suspend fun refreshClaims(): Result<StoreClaims> = readClaims(forceRefresh = true)
+
+    /** Текущие custom claims из кэшированного токена (без сетевого обновления). */
+    suspend fun currentClaims(): Result<StoreClaims> = readClaims(forceRefresh = false)
+
+    private suspend fun readClaims(forceRefresh: Boolean): Result<StoreClaims> = runCatching {
         val user = checkNotNull(firebaseAuth?.currentUser) { "Пользователь не аутентифицирован" }
-        val result = user.getIdToken(true).await()
+        val result = user.getIdToken(forceRefresh).await()
         StoreClaims(
             storeId = result.claims["storeId"] as? String,
             role = result.claims["role"] as? String,

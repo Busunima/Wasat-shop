@@ -19,4 +19,10 @@
 
     <!-- Главный экран (плейсхолдер) -->
     <string name="home_store_created">Магазин создан: %1$s</string>
+    <string name="home_open_catalog">Открыть каталог</string>
+
+    <!-- Каталог и карточка товара -->
+    <string name="catalog_retry">Повторить</string>
+    <string name="catalog_empty">В каталоге пока нет товаров</string>
+    <string name="product_out_of_stock">Нет в наличии</string>
 </resources>

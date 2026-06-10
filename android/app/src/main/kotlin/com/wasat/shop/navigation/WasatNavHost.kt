@@ -8,6 +8,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.wasat.shop.feature.auth.AuthRepository
 import com.wasat.shop.feature.auth.SignInScreen
+import com.wasat.shop.feature.catalog.CatalogScreen
+import com.wasat.shop.feature.catalog.ProductDetailScreen
 import com.wasat.shop.feature.home.HomeScreen
 import com.wasat.shop.feature.onboarding.OnboardingScreen
 
@@ -15,12 +17,22 @@ object Routes {
     const val AUTH = "auth"
     const val ONBOARDING = "onboarding"
     const val HOME = "home?slug={slug}"
+    const val CATALOG = "catalog/{storeId}?currency={currency}"
+    const val PRODUCT = "product/{storeId}/{productId}?currency={currency}"
 
     fun home(slug: String?): String = if (slug != null) "home?slug=$slug" else "home"
+    fun catalog(storeId: String, currency: String): String = "catalog/$storeId?currency=$currency"
+    fun product(storeId: String, productId: String, currency: String): String =
+        "product/$storeId/$productId?currency=$currency"
+}
+
+private val currencyArg = navArgument("currency") {
+    type = NavType.StringType
+    defaultValue = "USD"
 }
 
 /**
- * Граф навигации Шага 2: auth → onboarding → home.
+ * Граф навигации: auth → onboarding → home → catalog → product.
  * Маршрутизация по custom claims (owner → админ-режим) — уточнение Фазы 2.
  */
 @Composable
@@ -65,7 +77,34 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 },
             ),
         ) { backStackEntry ->
-            HomeScreen(slug = backStackEntry.arguments?.getString("slug"))
+            HomeScreen(
+                slug = backStackEntry.arguments?.getString("slug"),
+                onOpenCatalog = { storeId, currency ->
+                    navController.navigate(Routes.catalog(storeId, currency))
+                },
+            )
+        }
+
+        composable(
+            route = Routes.CATALOG,
+            arguments = listOf(currencyArg),
+        ) { backStackEntry ->
+            val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
+            CatalogScreen(
+                currency = currency,
+                onProductClick = { productId ->
+                    navController.navigate(Routes.product(storeId, productId, currency))
+                },
+            )
+        }
+
+        composable(
+            route = Routes.PRODUCT,
+            arguments = listOf(currencyArg),
+        ) { backStackEntry ->
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
+            ProductDetailScreen(currency = currency)
         }
     }
 }
