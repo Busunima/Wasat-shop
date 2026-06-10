@@ -17,6 +17,8 @@ data class ProductDto(
     val variants: List<VariantDto> = emptyList(),
     val totalStock: Int = 0,
     val status: String = "active",
+    val sku: String? = null,
+    val barcode: String? = null,
 )
 
 @Serializable
@@ -32,9 +34,9 @@ data class ProductListResponse(val items: List<ProductDto>)
 
 /**
  * Тело создания/обновления товара (админ, FR-A02). Форма владеет полным состоянием,
- * поэтому description/images/variants кодируются ВСЕГДА (без дефолтов) — иначе
- * partial-PATCH сервера сохранил бы старые значения при их очистке в форме.
- * originalPrice опционален (null опускается — в форме его пока нет).
+ * поэтому ВСЕ поля кодируются всегда (без дефолтов) — иначе partial-PATCH сервера
+ * сохранил бы старые значения при их очистке в форме. Очистка: originalPrice — null,
+ * sku/barcode/category — "" (сервер нормализует в null), tags/images — пустой список.
  */
 @Serializable
 data class ProductUpsertRequest(
@@ -44,5 +46,9 @@ data class ProductUpsertRequest(
     val status: String,
     val images: List<String>,
     val variants: List<VariantDto>,
-    val originalPrice: Long? = null,
+    val originalPrice: Long?,
+    val sku: String,
+    val barcode: String,
+    val category: String,
+    val tags: List<String>,
 )

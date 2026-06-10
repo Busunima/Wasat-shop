@@ -16,41 +16,49 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import com.wasat.shop.R
 import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
+import com.wasat.shop.core.designsystem.ProductImage
 import com.wasat.shop.core.designsystem.isExpandedLayout
 
-/** Форма товара (FR-A02): создание и редактирование. Фото/варианты — следующим инкрементом. */
+private val STATUS_OPTIONS = listOf("active", "draft", "archived")
+
+/** Форма товара (FR-A02 полный): поля, фото (мультизагрузка), варианты, статус, удаление. */
 @Composable
 fun ProductEditScreen(
     onSaved: () -> Unit,
     viewModel: ProductEditViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    var confirmDelete by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.save) {
-        if (state.save is SaveState.Saved) onSaved()
+        if (state.save is SaveState.Done) onSaved()
     }
 
     if (state.loadingExisting) {
@@ -58,6 +66,32 @@ fun ProductEditScreen(
             CircularProgressIndicator()
         }
         return
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.product_delete_title)) },
+            text = { Text(stringResource(R.string.product_delete_text, state.name)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmDelete = false
+                        viewModel.delete()
+                    },
+                ) {
+                    Text(
+                        stringResource(R.string.product_delete_confirm),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDelete = false }) {
+                    Text(stringResource(R.string.product_delete_cancel))
+                }
+            },
+        )
     }
 
     val isLoading = state.save is SaveState.Loading
@@ -82,24 +116,76 @@ fun ProductEditScreen(
                 style = MaterialTheme.typography.headlineSmall,
             )
 
-            OutlinedTextField(
+            FormField(
                 value = state.name,
-                onValueChange = viewModel::onNameChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.product_edit_name)) },
-                isError = ProductField.NAME in state.fieldErrors,
-                supportingText = { state.fieldErrors[ProductField.NAME]?.let { Text(it) } },
+                onChange = viewModel::onNameChange,
+                label = R.string.product_edit_name,
+                error = state.fieldErrors[ProductField.NAME],
                 enabled = !isLoading,
-                singleLine = true,
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(modifier = Modifier.weight(1f)) {
+                    FormField(
+                        value = state.priceInput,
+                        onChange = viewModel::onPriceChange,
+                        label = R.string.product_edit_price,
+                        error = state.fieldErrors[ProductField.PRICE],
+                        enabled = !isLoading,
+                    )
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    FormField(
+                        value = state.originalPriceInput,
+                        onChange = viewModel::onOriginalPriceChange,
+                        label = R.string.product_edit_original_price,
+                        error = state.fieldErrors[ProductField.ORIGINAL_PRICE],
+                        enabled = !isLoading,
+                    )
+                }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(modifier = Modifier.weight(1f)) {
+                    FormField(
+                        value = state.sku,
+                        onChange = viewModel::onSkuChange,
+                        label = R.string.product_edit_sku,
+                        error = state.fieldErrors[ProductField.SKU],
+                        enabled = !isLoading,
+                    )
+                }
+                Box(modifier = Modifier.weight(1f)) {
+                    FormField(
+                        value = state.barcode,
+                        onChange = viewModel::onBarcodeChange,
+                        label = R.string.product_edit_barcode,
+                        error = state.fieldErrors[ProductField.BARCODE],
+                        enabled = !isLoading,
+                    )
+                }
+            }
+
+            FormField(
+                value = state.category,
+                onChange = viewModel::onCategoryChange,
+                label = R.string.product_edit_category,
+                error = state.fieldErrors[ProductField.CATEGORY],
+                enabled = !isLoading,
             )
 
             OutlinedTextField(
-                value = state.priceInput,
-                onValueChange = viewModel::onPriceChange,
+                value = state.tagsInput,
+                onValueChange = viewModel::onTagsChange,
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.product_edit_price)) },
-                isError = ProductField.PRICE in state.fieldErrors,
-                supportingText = { state.fieldErrors[ProductField.PRICE]?.let { Text(it) } },
+                label = { Text(stringResource(R.string.product_edit_tags)) },
+                isError = ProductField.TAGS in state.fieldErrors,
+                supportingText = {
+                    Text(
+                        state.fieldErrors[ProductField.TAGS]
+                            ?: stringResource(R.string.product_edit_tags_hint),
+                    )
+                },
                 enabled = !isLoading,
                 singleLine = true,
             )
@@ -119,27 +205,30 @@ fun ProductEditScreen(
 
             VariantsSection(state = state, viewModel = viewModel, enabled = !isLoading)
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.product_edit_publish),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = stringResource(R.string.product_edit_publish_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.outline,
-                    )
+            // Статус (FR-A02): активен / черновик / архив
+            Text(
+                text = stringResource(R.string.product_edit_status),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                STATUS_OPTIONS.forEachIndexed { index, status ->
+                    SegmentedButton(
+                        selected = state.status == status,
+                        onClick = { viewModel.onStatusChange(status) },
+                        shape = SegmentedButtonDefaults.itemShape(index, STATUS_OPTIONS.size),
+                        enabled = !isLoading,
+                    ) {
+                        Text(
+                            stringResource(
+                                when (status) {
+                                    "active" -> R.string.product_status_active
+                                    "archived" -> R.string.product_status_archived
+                                    else -> R.string.product_status_draft
+                                },
+                            ),
+                        )
+                    }
                 }
-                Switch(
-                    checked = state.isActive,
-                    onCheckedChange = viewModel::onActiveChange,
-                    enabled = !isLoading,
-                )
             }
 
             (state.save as? SaveState.Failed)?.let { failed ->
@@ -156,7 +245,7 @@ fun ProductEditScreen(
             Button(
                 onClick = viewModel::save,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading && !state.uploadingImage,
+                enabled = !isLoading && state.uploadingImages == 0,
             ) {
                 Text(
                     stringResource(
@@ -164,11 +253,44 @@ fun ProductEditScreen(
                     ),
                 )
             }
+
+            if (state.productId != null) {
+                OutlinedButton(
+                    onClick = { confirmDelete = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
+                ) {
+                    Text(
+                        stringResource(R.string.product_delete_button),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
         }
     }
 }
 
-/** Фото товара: миниатюры с удалением + системный photo picker (без runtime-разрешений). */
+@Composable
+private fun FormField(
+    value: String,
+    onChange: (String) -> Unit,
+    label: Int,
+    error: String?,
+    enabled: Boolean,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onChange,
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text(stringResource(label)) },
+        isError = error != null,
+        supportingText = { error?.let { Text(it) } },
+        enabled = enabled,
+        singleLine = true,
+    )
+}
+
+/** Фото товара: мультивыбор системным photo picker, миниатюры с удалением. */
 @Composable
 private fun PhotosSection(
     state: ProductEditUiState,
@@ -176,10 +298,12 @@ private fun PhotosSection(
     enabled: Boolean,
 ) {
     val context = LocalContext.current
-    val pickImage = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia(),
-    ) { uri ->
-        uri?.let { viewModel.addImage(it, context.contentResolver.getType(it)) }
+    val pickImages = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(
+            maxItems = ProductFormValidation.IMAGES_MAX,
+        ),
+    ) { uris ->
+        viewModel.addImages(uris.map { it to context.contentResolver.getType(it) })
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -192,11 +316,10 @@ private fun PhotosSection(
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(state.images, key = { it }) { url ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        AsyncImage(
-                            model = url,
+                        ProductImage(
+                            url = url,
                             contentDescription = null,
                             modifier = Modifier.size(88.dp),
-                            contentScale = ContentScale.Crop,
                         )
                         TextButton(
                             onClick = { viewModel.removeImage(url) },
@@ -215,14 +338,18 @@ private fun PhotosSection(
 
         OutlinedButton(
             onClick = {
-                pickImage.launch(
+                pickImages.launch(
                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
                 )
             },
-            enabled = enabled && !state.uploadingImage,
+            enabled = enabled && state.uploadingImages == 0,
         ) {
-            if (state.uploadingImage) {
+            if (state.uploadingImages > 0) {
                 CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                Text(
+                    stringResource(R.string.product_edit_photo_uploading, state.uploadingImages),
+                    modifier = Modifier.padding(start = 8.dp),
+                )
             } else {
                 Text(stringResource(R.string.product_edit_photo_add))
             }
@@ -230,7 +357,7 @@ private fun PhotosSection(
     }
 }
 
-/** Варианты товара: размер/цвет/остаток, добавление и удаление строк. */
+/** Варианты товара: размер/цвет/остаток/SKU, добавление и удаление строк. */
 @Composable
 private fun VariantsSection(
     state: ProductEditUiState,
@@ -244,36 +371,53 @@ private fun VariantsSection(
         )
 
         state.variants.forEachIndexed { index, variant ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                OutlinedTextField(
-                    value = variant.size,
-                    onValueChange = { viewModel.onVariantChange(index, variant.copy(size = it)) },
-                    modifier = Modifier.weight(1f),
-                    label = { Text(stringResource(R.string.product_edit_variant_size)) },
-                    enabled = enabled,
-                    singleLine = true,
-                )
-                OutlinedTextField(
-                    value = variant.color,
-                    onValueChange = { viewModel.onVariantChange(index, variant.copy(color = it)) },
-                    modifier = Modifier.weight(1f),
-                    label = { Text(stringResource(R.string.product_edit_variant_color)) },
-                    enabled = enabled,
-                    singleLine = true,
-                )
-                OutlinedTextField(
-                    value = variant.stockInput,
-                    onValueChange = { viewModel.onVariantChange(index, variant.copy(stockInput = it)) },
-                    modifier = Modifier.weight(0.7f),
-                    label = { Text(stringResource(R.string.product_edit_variant_stock)) },
-                    enabled = enabled,
-                    singleLine = true,
-                )
-                TextButton(onClick = { viewModel.removeVariant(index) }, enabled = enabled) {
-                    Text("✕")
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = variant.size,
+                        onValueChange = { viewModel.onVariantChange(index, variant.copy(size = it)) },
+                        modifier = Modifier.weight(1f),
+                        label = { Text(stringResource(R.string.product_edit_variant_size)) },
+                        enabled = enabled,
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = variant.color,
+                        onValueChange = { viewModel.onVariantChange(index, variant.copy(color = it)) },
+                        modifier = Modifier.weight(1f),
+                        label = { Text(stringResource(R.string.product_edit_variant_color)) },
+                        enabled = enabled,
+                        singleLine = true,
+                    )
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = variant.stockInput,
+                        onValueChange = {
+                            viewModel.onVariantChange(index, variant.copy(stockInput = it))
+                        },
+                        modifier = Modifier.weight(0.8f),
+                        label = { Text(stringResource(R.string.product_edit_variant_stock)) },
+                        enabled = enabled,
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        value = variant.sku,
+                        onValueChange = { viewModel.onVariantChange(index, variant.copy(sku = it)) },
+                        modifier = Modifier.weight(1f),
+                        label = { Text(stringResource(R.string.product_edit_variant_sku)) },
+                        enabled = enabled,
+                        singleLine = true,
+                    )
+                    TextButton(onClick = { viewModel.removeVariant(index) }, enabled = enabled) {
+                        Text("✕")
+                    }
                 }
             }
         }

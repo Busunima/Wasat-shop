@@ -22,14 +22,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import com.wasat.shop.R
 import com.wasat.shop.core.db.CartItemEntity
+import com.wasat.shop.core.designsystem.ProductImage
 import com.wasat.shop.core.util.PriceFormatter
 
 /** Корзина (FR-B04): локальная, офлайн-first. Чекаут подключается в Фазе 4. */
@@ -119,11 +118,10 @@ private fun CartItemRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AsyncImage(
-                model = item.imageUrl,
+            ProductImage(
+                url = item.imageUrl,
                 contentDescription = item.name,
                 modifier = Modifier.size(56.dp),
-                contentScale = ContentScale.Crop,
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(

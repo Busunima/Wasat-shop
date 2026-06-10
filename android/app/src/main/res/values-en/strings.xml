@@ -38,12 +38,26 @@
     <string name="product_edit_saving">Saving…</string>
     <string name="product_edit_photos">Photos</string>
     <string name="product_edit_photo_add">Add photo</string>
+    <string name="product_edit_photo_uploading">Uploading… (%1$d)</string>
     <string name="product_edit_photo_remove">Remove</string>
     <string name="product_edit_variants">Variants</string>
     <string name="product_edit_variant_add">Add variant</string>
     <string name="product_edit_variant_size">Size</string>
     <string name="product_edit_variant_color">Color</string>
     <string name="product_edit_variant_stock">Stock</string>
+    <string name="product_edit_variant_sku">Variant SKU</string>
+    <string name="product_edit_original_price">Original price</string>
+    <string name="product_edit_sku">SKU</string>
+    <string name="product_edit_barcode">Barcode</string>
+    <string name="product_edit_category">Category</string>
+    <string name="product_edit_tags">Tags</string>
+    <string name="product_edit_tags_hint">Comma-separated, up to 20</string>
+    <string name="product_edit_status">Status</string>
+    <string name="product_delete_button">Delete product</string>
+    <string name="product_delete_title">Delete product?</string>
+    <string name="product_delete_text">“%1$s” will be deleted permanently. Use the “Archived” status to hide it from the storefront.</string>
+    <string name="product_delete_confirm">Delete</string>
+    <string name="product_delete_cancel">Cancel</string>
 
     <!-- Catalog and product card -->
     <string name="catalog_title">Catalog</string>

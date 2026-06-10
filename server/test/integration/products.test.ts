@@ -10,6 +10,7 @@ import {
 } from "../../src/services/products.ts";
 import { ApiError } from "../../src/middleware/errorHandler.ts";
 import { getStoreInfo } from "../../src/services/stores.ts";
+import { productUpdateSchema } from "../../src/schemas/product.ts";
 
 /**
  * Интеграционные тесты CRUD товаров против эмулятора Firestore.
@@ -136,6 +137,35 @@ test("updateProduct: пересчитывает totalStock при изменен
   const repriced = await updateProduct(STORE_ID, product.id, { price: 2_490 });
   assert.equal(repriced.totalStock, 17);
   assert.equal(repriced.price, 2_490);
+});
+
+test("sku/barcode/category/tags: round-trip и очистка через PATCH", async () => {
+  const product = await createProduct(STORE_ID, {
+    name: "С артикулом",
+    price: 100,
+    images: [],
+    tags: ["обувь", "лето"],
+    category: "Кеды",
+    sku: "SKU-9",
+    barcode: "4600000000017",
+    variants: [],
+    status: "active",
+  });
+  assert.equal(product.sku, "SKU-9");
+  assert.equal(product.barcode, "4600000000017");
+  assert.equal(product.category, "Кеды");
+  assert.deepEqual(product.tags, ["обувь", "лето"]);
+
+  // "" в PATCH очищает поле; отсутствующие поля не трогаются.
+  // Вход прогоняется через схему, как в роуте (transform "" -> null живёт в zod).
+  const updated = await updateProduct(
+    STORE_ID,
+    product.id,
+    productUpdateSchema.parse({ barcode: "" }),
+  );
+  assert.equal(updated.barcode, null);
+  assert.equal(updated.sku, "SKU-9");
+  assert.deepEqual(updated.tags, ["обувь", "лето"]);
 });
 
 test("deleteProduct: удаляет; повторное удаление — NOT_FOUND", async () => {

@@ -24,15 +24,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import com.wasat.shop.R
 import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
+import com.wasat.shop.core.designsystem.ProductImage
 import com.wasat.shop.core.designsystem.isExpandedLayout
+import com.wasat.shop.core.util.ImageUrls
 import com.wasat.shop.core.util.PriceFormatter
 
 /** Карточка товара (FR-B03 базово): галерея, цена/старая цена, варианты, описание. */
@@ -74,13 +74,13 @@ fun ProductDetailScreen(
                 Column(
                     modifier = widthModifier.verticalScroll(rememberScrollState()),
                 ) {
-                    AsyncImage(
-                        model = product.images.firstOrNull(),
+                    ProductImage(
+                        url = product.images.firstOrNull(),
                         contentDescription = product.name,
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f),
-                        contentScale = ContentScale.Crop,
+                        size = ImageUrls.MEDIUM,
                     )
                     Column(
                         modifier = Modifier.padding(16.dp),

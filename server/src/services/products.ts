@@ -27,6 +27,8 @@ export interface ApiProduct {
   variants: Array<{ size?: string; color?: string; stock: number; sku?: string }>;
   totalStock: number;
   status: string;
+  sku: string | null;
+  barcode: string | null;
 }
 
 function productsCol(storeId: string) {
@@ -46,6 +48,8 @@ function toApiProduct(data: FirebaseFirestore.DocumentData): ApiProduct {
     variants: (data["variants"] as ApiProduct["variants"]) ?? [],
     totalStock: (data["totalStock"] as number) ?? 0,
     status: data["status"] as string,
+    sku: (data["sku"] as string | undefined) ?? null,
+    barcode: (data["barcode"] as string | undefined) ?? null,
   };
 }
 
@@ -72,6 +76,8 @@ export async function createProduct(storeId: string, input: ProductCreate): Prom
     rating: 0,
     reviewCount: 0,
     status: input.status,
+    sku: input.sku ?? null,
+    barcode: input.barcode ?? null,
     createdAt: FieldValue.serverTimestamp(),
   };
   await productsCol(storeId).doc(productId).set(docData);
@@ -91,7 +97,11 @@ export async function updateProduct(
     const snap = await tx.get(ref);
     if (!snap.exists) throw new ApiError("NOT_FOUND", "Товар не найден");
 
-    const patch: Record<string, unknown> = { ...input };
+    // undefined = поле не передано (PATCH не трогает); null = явная очистка.
+    const patch: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(input)) {
+      if (value !== undefined) patch[key] = value;
+    }
     // totalStock — производное: пересчитываем при изменении вариантов.
     if (input.variants !== undefined) {
       patch["totalStock"] = computeTotalStock(input.variants);

@@ -23,14 +23,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import com.wasat.shop.R
+import androidx.compose.ui.text.style.TextDecoration
 import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
+import com.wasat.shop.core.designsystem.ProductImage
 import com.wasat.shop.core.designsystem.isExpandedLayout
 import com.wasat.shop.core.network.dto.ProductDto
 import com.wasat.shop.core.util.PriceFormatter
@@ -124,13 +124,12 @@ private fun CatalogContent(
 private fun ProductCard(product: ProductDto, currency: String, onClick: () -> Unit) {
     Card(modifier = Modifier.clickable(onClick = onClick)) {
         Column {
-            AsyncImage(
-                model = product.images.firstOrNull(),
+            ProductImage(
+                url = product.images.firstOrNull(),
                 contentDescription = product.name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f),
-                contentScale = ContentScale.Crop,
             )
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
@@ -139,11 +138,21 @@ private fun ProductCard(product: ProductDto, currency: String, onClick: () -> Un
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Text(
-                    text = PriceFormatter.format(product.price, currency),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = PriceFormatter.format(product.price, currency),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    product.originalPrice?.takeIf { it > product.price }?.let { old ->
+                        Text(
+                            text = PriceFormatter.format(old, currency),
+                            style = MaterialTheme.typography.labelLarge,
+                            textDecoration = TextDecoration.LineThrough,
+                            color = MaterialTheme.colorScheme.outline,
+                        )
+                    }
+                }
             }
         }
     }
