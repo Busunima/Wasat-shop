@@ -3,24 +3,30 @@ package com.wasat.shop.feature.catalog
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.wasat.shop.core.network.ApiResult
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.wasat.shop.core.network.dto.ProductDto
 import com.wasat.shop.feature.cart.CartRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 
-sealed interface CatalogUiState {
-    data object Loading : CatalogUiState
-    data class Loaded(val products: List<ProductDto>) : CatalogUiState
-    data class Error(val message: String) : CatalogUiState
-}
-
+/** Каталог (FR-B02): Paging 3 + поиск (debounce 300мс) + фильтры + сортировка. */
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class CatalogViewModel @Inject constructor(
     private val repository: CatalogRepository,
@@ -30,27 +36,52 @@ class CatalogViewModel @Inject constructor(
 
     private val storeId: String = checkNotNull(savedStateHandle["storeId"])
 
-    private val _uiState = MutableStateFlow<CatalogUiState>(CatalogUiState.Loading)
-    val uiState: StateFlow<CatalogUiState> = _uiState.asStateFlow()
+    private val _searchInput = MutableStateFlow("")
+    val searchInput: StateFlow<String> = _searchInput.asStateFlow()
+
+    private val _filters = MutableStateFlow(CatalogFilters())
+    val filters: StateFlow<CatalogFilters> = _filters.asStateFlow()
+
+    /** Категории, встреченные в загруженных страницах, — источник chip-фильтров. */
+    private val _categories = MutableStateFlow<Set<String>>(emptySet())
+    val categories: StateFlow<Set<String>> = _categories.asStateFlow()
 
     /** Число позиций в корзине этого магазина — для бейджа на кнопке корзины. */
     val cartCount: StateFlow<Int> = cartRepository.observeCount(storeId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
-    init {
-        load()
+    val products: Flow<PagingData<ProductDto>> =
+        combine(
+            _filters,
+            _searchInput.debounce(300).distinctUntilChanged(), // ТЗ FR-B02: debounce 300мс
+        ) { filters, query -> filters.copy(query = query) }
+            .distinctUntilChanged()
+            .flatMapLatest { effective ->
+                Pager(PagingConfig(pageSize = 20, initialLoadSize = 20)) {
+                    ProductPagingSource(repository, storeId, effective) { items ->
+                        _categories.update { it + items.mapNotNull(ProductDto::category) }
+                    }
+                }.flow
+            }
+            .cachedIn(viewModelScope)
+
+    fun onSearchChange(value: String) {
+        _searchInput.value = value
     }
 
-    fun load() {
-        _uiState.value = CatalogUiState.Loading
-        viewModelScope.launch {
-            _uiState.value = when (val result = repository.listProducts(storeId)) {
-                is ApiResult.Success -> CatalogUiState.Loaded(result.data.items)
-                is ApiResult.ApiError -> CatalogUiState.Error(result.message)
-                is ApiResult.NetworkError -> CatalogUiState.Error(
-                    "Нет соединения с сервером",
-                )
-            }
-        }
+    fun onCategoryToggle(category: String) = _filters.update {
+        it.copy(category = if (it.category == category) null else category)
+    }
+
+    fun onSortChange(sort: CatalogSort) = _filters.update { it.copy(sort = sort) }
+
+    fun onInStockToggle() = _filters.update { it.copy(inStockOnly = !it.inStockOnly) }
+
+    fun onPriceRangeChange(min: Long?, max: Long?) = _filters.update {
+        it.copy(minPrice = min, maxPrice = max)
+    }
+
+    fun clearFilters() {
+        _filters.value = CatalogFilters()
     }
 }

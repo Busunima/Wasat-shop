@@ -30,7 +30,11 @@ data class VariantDto(
 )
 
 @Serializable
-data class ProductListResponse(val items: List<ProductDto>)
+data class ProductListResponse(
+    val items: List<ProductDto>,
+    /** null — страниц больше нет (курсорная пагинация FR-B02). */
+    val nextCursor: String? = null,
+)
 
 /**
  * Тело создания/обновления товара (админ, FR-A02). Форма владеет полным состоянием,

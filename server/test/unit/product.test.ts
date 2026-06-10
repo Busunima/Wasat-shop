@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   computeTotalStock,
+  decodeCursor,
+  encodeCursor,
   productCreateSchema,
+  productListQuerySchema,
   productUpdateSchema,
 } from "../../src/schemas/product.ts";
 
@@ -65,6 +68,34 @@ test("originalPrice: принимает null (сброс старой цены)"
   const parsed = productUpdateSchema.parse({ originalPrice: null });
   assert.equal(parsed.originalPrice, null);
   assert.throws(() => productUpdateSchema.parse({ originalPrice: 9.99 }));
+});
+
+test("productListQuerySchema: дефолты, коэрция чисел, границы", () => {
+  const def = productListQuerySchema.parse({});
+  assert.equal(def.sort, "new");
+  assert.equal(def.limit, 20);
+  assert.equal(def.inStock, false);
+
+  const full = productListQuerySchema.parse({
+    sort: "price_desc",
+    limit: "50",
+    minPrice: "100",
+    inStock: "true",
+    category: "Кеды",
+  });
+  assert.equal(full.limit, 50);
+  assert.equal(full.minPrice, 100);
+  assert.equal(full.inStock, true);
+
+  assert.throws(() => productListQuerySchema.parse({ limit: "51" }));
+  assert.throws(() => productListQuerySchema.parse({ sort: "popularity" }));
+});
+
+test("курсор: round-trip и устойчивость к мусору", () => {
+  const cursor = { v: 12990, id: "prod-1" };
+  assert.deepEqual(decodeCursor(encodeCursor(cursor)), cursor);
+  assert.equal(decodeCursor("мусор"), null);
+  assert.equal(decodeCursor(Buffer.from("{\"x\":1}").toString("base64url")), null);
 });
 
 test("computeTotalStock: сумма по вариантам; пусто — 0", () => {

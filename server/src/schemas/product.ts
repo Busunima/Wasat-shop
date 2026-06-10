@@ -51,3 +51,47 @@ export type ProductUpdate = z.infer<typeof productUpdateSchema>;
 export function computeTotalStock(variants: ProductVariant[]): number {
   return variants.reduce((sum, v) => sum + v.stock, 0);
 }
+
+// ── Листинг каталога (FR-B02): фильтры, сортировка, курсорная пагинация ──────
+
+export const PRODUCT_SORTS = ["new", "price_asc", "price_desc", "rating"] as const;
+export type ProductSort = (typeof PRODUCT_SORTS)[number];
+
+/** Query-параметры GET /stores/:id/products (всё опционально, строки из URL). */
+export const productListQuerySchema = z.object({
+  category: z.string().max(80).optional(),
+  /** Поиск по названию (временно Firestore/in-memory до Algolia, ТЗ §2). */
+  q: z.string().max(120).optional(),
+  inStock: z
+    .enum(["true", "false"])
+    .optional()
+    .transform((v) => v === "true"),
+  minPrice: z.coerce.number().int().min(0).optional(),
+  maxPrice: z.coerce.number().int().min(0).optional(),
+  sort: z.enum(PRODUCT_SORTS).default("new"),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  cursor: z.string().optional(),
+});
+
+export type ProductListQuery = z.infer<typeof productListQuerySchema>;
+
+/** Курсор пагинации: значение поля сортировки последнего элемента + его id. */
+export interface PageCursor {
+  v: number; // значение сортировки (price/rating/createdAt в ms)
+  id: string;
+}
+
+export function encodeCursor(cursor: PageCursor): string {
+  return Buffer.from(JSON.stringify(cursor)).toString("base64url");
+}
+
+/** null — битый/чужой курсор (клиент начнёт с первой страницы). */
+export function decodeCursor(raw: string): PageCursor | null {
+  try {
+    const parsed = JSON.parse(Buffer.from(raw, "base64url").toString("utf8")) as PageCursor;
+    if (typeof parsed.v !== "number" || typeof parsed.id !== "string") return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}

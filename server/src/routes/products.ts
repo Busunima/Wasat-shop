@@ -6,7 +6,11 @@ import {
   type AuthedRequest,
 } from "../middleware/auth.js";
 import { verifyAppCheck } from "../middleware/appCheck.js";
-import { productCreateSchema, productUpdateSchema } from "../schemas/product.js";
+import {
+  productCreateSchema,
+  productListQuerySchema,
+  productUpdateSchema,
+} from "../schemas/product.js";
 import {
   createProduct,
   deleteProduct,
@@ -37,8 +41,9 @@ function isStoreOwner(req: AuthedRequest): boolean {
 
 productsRouter.get("/", optionalAuth, async (req: AuthedRequest, res, next) => {
   try {
-    const items = await listProducts(param(req, "storeId"), isStoreOwner(req));
-    res.json({ items });
+    const query = productListQuerySchema.parse(req.query);
+    const page = await listProducts(param(req, "storeId"), isStoreOwner(req), query);
+    res.json(page);
   } catch (err) {
     next(err);
   }

@@ -1,10 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { db } from "../lib/firebase.js";
 import { ApiError } from "../middleware/errorHandler.js";
 import {
   computeTotalStock,
+  decodeCursor,
+  encodeCursor,
   type ProductCreate,
+  type ProductListQuery,
+  type ProductSort,
   type ProductUpdate,
 } from "../schemas/product.js";
 import { logger } from "../lib/logger.js";
@@ -135,15 +139,91 @@ export async function getProduct(
   return product;
 }
 
+export interface ProductPage {
+  items: ApiProduct[];
+  /** null — страниц больше нет. */
+  nextCursor: string | null;
+}
+
+const SORT_FIELD: Record<ProductSort, string> = {
+  new: "createdAt",
+  price_asc: "price",
+  price_desc: "price",
+  rating: "rating",
+};
+
+function sortDirection(sort: ProductSort): FirebaseFirestore.OrderByDirection {
+  return sort === "price_asc" ? "asc" : "desc";
+}
+
+/** Значение поля сортировки документа → число для курсора (Timestamp → ms). */
+function sortValueOf(data: FirebaseFirestore.DocumentData, sort: ProductSort): number {
+  const raw = data[SORT_FIELD[sort]] as number | Timestamp | undefined;
+  if (raw instanceof Timestamp) return raw.toMillis();
+  return raw ?? 0;
+}
+
+/**
+ * Листинг каталога (FR-B02): равенства (status/category) и сортировка — в Firestore
+ * (композитные индексы в firebase/firestore.indexes.json); поиск q, диапазон цены и
+ * «в наличии» — постфильтр в цикле добора страницы (временно до Algolia, ТЗ §2/§15;
+ * масштаб MVP ≤10k товаров). Курсор — значение сортировки + id последнего
+ * ВОЗВРАЩЁННОГО элемента: отфильтрованные документы при докрутке просто
+ * перефильтровываются, дубликатов не возникает.
+ */
 export async function listProducts(
   storeId: string,
   includeDrafts: boolean,
-): Promise<ApiProduct[]> {
+  query: ProductListQuery,
+): Promise<ProductPage> {
   await assertStoreExists(storeId);
-  // Пагинация курсором и фасетные фильтры — вместе с поиском (FR-B02).
-  const query = includeDrafts
-    ? productsCol(storeId).limit(100)
-    : productsCol(storeId).where("status", "==", "active").limit(100);
-  const snap = await query.get();
-  return snap.docs.map((d) => toApiProduct(d.data()));
+
+  const { sort, limit } = query;
+  const direction = sortDirection(sort);
+  const qLower = query.q?.trim().toLowerCase();
+
+  let base: FirebaseFirestore.Query = productsCol(storeId);
+  if (!includeDrafts) base = base.where("status", "==", "active");
+  if (query.category) base = base.where("category", "==", query.category);
+  base = base.orderBy(SORT_FIELD[sort], direction).orderBy("id", direction);
+
+  const cursor = query.cursor ? decodeCursor(query.cursor) : null;
+  if (cursor) {
+    const value =
+      sort === "new" ? Timestamp.fromMillis(cursor.v) : cursor.v;
+    base = base.startAfter(value, cursor.id);
+  }
+
+  const matches = (p: ApiProduct): boolean =>
+    (!qLower || p.name.toLowerCase().includes(qLower)) &&
+    (!query.inStock || p.totalStock > 0) &&
+    (query.minPrice === undefined || p.price >= query.minPrice) &&
+    (query.maxPrice === undefined || p.price <= query.maxPrice);
+
+  const items: ApiProduct[] = [];
+  let lastReturned: { v: number; id: string } | null = null;
+  let exhausted = false;
+  let pageQuery = base;
+
+  // Добор страницы: батчи по 50, пока не наберём limit или коллекция не кончится.
+  while (items.length < limit && !exhausted) {
+    const snap = await pageQuery.limit(50).get();
+    exhausted = snap.size < 50;
+    for (const doc of snap.docs) {
+      const product = toApiProduct(doc.data());
+      if (!matches(product)) continue;
+      items.push(product);
+      lastReturned = { v: sortValueOf(doc.data(), sort), id: product.id };
+      if (items.length >= limit) break;
+    }
+    if (!exhausted && items.length < limit) {
+      const lastDoc = snap.docs[snap.size - 1]!;
+      pageQuery = base.startAfter(lastDoc);
+    }
+  }
+
+  return {
+    items,
+    nextCursor: items.length >= limit && lastReturned ? encodeCursor(lastReturned) : null,
+  };
 }
