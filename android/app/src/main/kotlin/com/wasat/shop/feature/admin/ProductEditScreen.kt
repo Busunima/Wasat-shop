@@ -1,5 +1,8 @@
 package com.wasat.shop.feature.admin
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,25 +10,33 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.wasat.shop.R
 import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
 import com.wasat.shop.core.designsystem.isExpandedLayout
@@ -104,6 +115,10 @@ fun ProductEditScreen(
                 minLines = 3,
             )
 
+            PhotosSection(state = state, viewModel = viewModel, enabled = !isLoading)
+
+            VariantsSection(state = state, viewModel = viewModel, enabled = !isLoading)
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -141,7 +156,7 @@ fun ProductEditScreen(
             Button(
                 onClick = viewModel::save,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading,
+                enabled = !isLoading && !state.uploadingImage,
             ) {
                 Text(
                     stringResource(
@@ -149,6 +164,126 @@ fun ProductEditScreen(
                     ),
                 )
             }
+        }
+    }
+}
+
+/** Фото товара: миниатюры с удалением + системный photo picker (без runtime-разрешений). */
+@Composable
+private fun PhotosSection(
+    state: ProductEditUiState,
+    viewModel: ProductEditViewModel,
+    enabled: Boolean,
+) {
+    val context = LocalContext.current
+    val pickImage = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        uri?.let { viewModel.addImage(it, context.contentResolver.getType(it)) }
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.product_edit_photos),
+            style = MaterialTheme.typography.titleMedium,
+        )
+
+        if (state.images.isNotEmpty()) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(state.images, key = { it }) { url ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        AsyncImage(
+                            model = url,
+                            contentDescription = null,
+                            modifier = Modifier.size(88.dp),
+                            contentScale = ContentScale.Crop,
+                        )
+                        TextButton(
+                            onClick = { viewModel.removeImage(url) },
+                            enabled = enabled,
+                        ) {
+                            Text(stringResource(R.string.product_edit_photo_remove))
+                        }
+                    }
+                }
+            }
+        }
+
+        state.fieldErrors[ProductField.IMAGES]?.let {
+            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+        }
+
+        OutlinedButton(
+            onClick = {
+                pickImage.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                )
+            },
+            enabled = enabled && !state.uploadingImage,
+        ) {
+            if (state.uploadingImage) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp))
+            } else {
+                Text(stringResource(R.string.product_edit_photo_add))
+            }
+        }
+    }
+}
+
+/** Варианты товара: размер/цвет/остаток, добавление и удаление строк. */
+@Composable
+private fun VariantsSection(
+    state: ProductEditUiState,
+    viewModel: ProductEditViewModel,
+    enabled: Boolean,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(
+            text = stringResource(R.string.product_edit_variants),
+            style = MaterialTheme.typography.titleMedium,
+        )
+
+        state.variants.forEachIndexed { index, variant ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedTextField(
+                    value = variant.size,
+                    onValueChange = { viewModel.onVariantChange(index, variant.copy(size = it)) },
+                    modifier = Modifier.weight(1f),
+                    label = { Text(stringResource(R.string.product_edit_variant_size)) },
+                    enabled = enabled,
+                    singleLine = true,
+                )
+                OutlinedTextField(
+                    value = variant.color,
+                    onValueChange = { viewModel.onVariantChange(index, variant.copy(color = it)) },
+                    modifier = Modifier.weight(1f),
+                    label = { Text(stringResource(R.string.product_edit_variant_color)) },
+                    enabled = enabled,
+                    singleLine = true,
+                )
+                OutlinedTextField(
+                    value = variant.stockInput,
+                    onValueChange = { viewModel.onVariantChange(index, variant.copy(stockInput = it)) },
+                    modifier = Modifier.weight(0.7f),
+                    label = { Text(stringResource(R.string.product_edit_variant_stock)) },
+                    enabled = enabled,
+                    singleLine = true,
+                )
+                TextButton(onClick = { viewModel.removeVariant(index) }, enabled = enabled) {
+                    Text("✕")
+                }
+            }
+        }
+
+        state.fieldErrors[ProductField.VARIANTS]?.let {
+            Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+        }
+
+        OutlinedButton(onClick = viewModel::addVariant, enabled = enabled) {
+            Text(stringResource(R.string.product_edit_variant_add))
         }
     }
 }
