@@ -34,8 +34,8 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # ── Секреты / окружение (НИКОГДА не коммитим) ──────────────────────────────
-# google-services.json — публичная конфигурация, но держим вне VCS до настройки проектов
-**/google-services.json
+# google-services.json закоммичен (android/app): публичная конфигурация проекта
+# wasat-21a20 (api_key ограничен package+SHA). Серверные ключи — по-прежнему вне VCS.
 **/GoogleService-Info.plist
 **/serviceAccountKey*.json
 .env

@@ -27,11 +27,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
 
-        // Web Client ID (OAuth) для Sign in with Google: gradle-свойство или env;
-        // плейсхолдер позволяет CI собираться без секретов (рантайм гейтится isConfigured).
+        // Web Client ID (OAuth) для Sign in with Google. Не секрет (встраивается в APK).
+        // Переопределяется gradle-свойством/env; дефолт — Web client проекта wasat-21a20.
+        // Вход всё равно гейтится isConfigured (нужен ещё google-services.json в рантайме).
         val webClientId = providers.gradleProperty("wasat.googleWebClientId").orNull
             ?: System.getenv("WASAT_GOOGLE_WEB_CLIENT_ID")
-            ?: "MISSING_WEB_CLIENT_ID"
+            ?: "925529408936-i5qv589k9okek7gq7mpc40spdmrgm4ue.apps.googleusercontent.com"
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$webClientId\"")
     }
 
