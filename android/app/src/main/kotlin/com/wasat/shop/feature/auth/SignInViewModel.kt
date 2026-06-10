@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wasat.shop.feature.cart.CartSyncRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,7 @@ sealed interface SignInUiState {
 @HiltViewModel
 class SignInViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val cartSync: CartSyncRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(initialState())
@@ -40,7 +42,11 @@ class SignInViewModel @Inject constructor(
         _uiState.value = SignInUiState.Loading
         viewModelScope.launch {
             authRepository.signInWithGoogle(activityContext)
-                .onSuccess { _uiState.value = SignInUiState.SignedIn }
+                .onSuccess {
+                    // FR-B04: слияние гостевой корзины с серверной при входе
+                    cartSync.mergeOnSignIn()
+                    _uiState.value = SignInUiState.SignedIn
+                }
                 .onFailure { e ->
                     _uiState.value = if (e is GetCredentialCancellationException) {
                         SignInUiState.Idle // пользователь сам закрыл диалог — не ошибка

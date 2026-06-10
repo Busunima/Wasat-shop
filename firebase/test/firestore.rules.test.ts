@@ -99,3 +99,33 @@ test("клиентская запись в analytics запрещена", async 
   const owner = env.authenticatedContext(OWNER).firestore();
   await assertFails(setDoc(doc(owner, "stores", STORE_ID, "analytics", "2026-06-09"), { v: 1 }));
 });
+
+test("customers: покупатель пишет свой профиль (корзина), чужой — нет", async () => {
+  const buyer = env.authenticatedContext(BUYER).firestore();
+  await assertSucceeds(
+    setDoc(doc(buyer, "stores", STORE_ID, "customers", BUYER), {
+      cart: [{ productId: "p1", variantKey: "", quantity: 2, price: 100 }],
+    }),
+  );
+
+  const outsider = env.authenticatedContext(OUTSIDER).firestore();
+  await assertFails(
+    setDoc(doc(outsider, "stores", STORE_ID, "customers", BUYER), { cart: [] }),
+  );
+});
+
+test("customers: читают сам покупатель и владелец; посторонний — нет", async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "stores", STORE_ID, "customers", BUYER), { cart: [] });
+  });
+
+  await assertSucceeds(
+    getDoc(doc(env.authenticatedContext(BUYER).firestore(), "stores", STORE_ID, "customers", BUYER)),
+  );
+  await assertSucceeds(
+    getDoc(doc(env.authenticatedContext(OWNER).firestore(), "stores", STORE_ID, "customers", BUYER)),
+  );
+  await assertFails(
+    getDoc(doc(env.authenticatedContext(OUTSIDER).firestore(), "stores", STORE_ID, "customers", BUYER)),
+  );
+});
