@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -40,6 +41,7 @@ import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
 import com.wasat.shop.core.designsystem.ProductImage
 import com.wasat.shop.core.designsystem.isExpandedLayout
 import com.wasat.shop.core.network.dto.ProductDto
+import com.wasat.shop.feature.storefront.RecentProduct
 import com.wasat.shop.core.util.PriceFormatter
 
 /** Каталог (FR-B02): поиск (debounce 300мс), фильтры, сортировка, Paging 3. */
@@ -48,6 +50,7 @@ fun CatalogScreen(
     currency: String,
     onProductClick: (productId: String) -> Unit,
     onOpenCart: () -> Unit,
+    onOpenWishlist: () -> Unit,
     viewModel: CatalogViewModel = hiltViewModel(),
 ) {
     val products = viewModel.products.collectAsLazyPagingItems()
@@ -55,6 +58,8 @@ fun CatalogScreen(
     val filters by viewModel.filters.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val cartCount by viewModel.cartCount.collectAsState()
+    val wishlistIds by viewModel.wishlistIds.collectAsState()
+    val recent by viewModel.recent.collectAsState()
     val columns = if (LocalWindowWidthSizeClass.current.isExpandedLayout) 3 else 2
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -69,8 +74,13 @@ fun CatalogScreen(
                 text = stringResource(R.string.catalog_title),
                 style = MaterialTheme.typography.titleLarge,
             )
-            TextButton(onClick = onOpenCart) {
-                Text(stringResource(R.string.cart_open, cartCount))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (viewModel.wishlistAvailable) {
+                    TextButton(onClick = onOpenWishlist) { Text("♥") }
+                }
+                TextButton(onClick = onOpenCart) {
+                    Text(stringResource(R.string.cart_open, cartCount))
+                }
             }
         }
 
@@ -94,10 +104,18 @@ fun CatalogScreen(
             onClear = viewModel::clearFilters,
         )
 
+        // «Недавно просмотренные» (FR-B12 MVP) — показываем вне поиска
+        if (recent.isNotEmpty() && searchInput.isBlank()) {
+            RecentRow(recent = recent, currency = currency, onProductClick = onProductClick)
+        }
+
         CatalogGrid(
             products = products,
             columns = columns,
             currency = currency,
+            wishlistIds = wishlistIds,
+            wishlistAvailable = viewModel.wishlistAvailable,
+            onToggleWishlist = viewModel::toggleWishlist,
             onProductClick = onProductClick,
         )
     }
@@ -156,10 +174,51 @@ private val SORT_OPTIONS = listOf(
 )
 
 @Composable
+private fun RecentRow(
+    recent: List<RecentProduct>,
+    currency: String,
+    onProductClick: (productId: String) -> Unit,
+) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Text(
+            text = stringResource(R.string.catalog_recent),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            recent.forEach { item ->
+                Card(modifier = Modifier.clickable { onProductClick(item.productId) }) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        ProductImage(
+                            url = item.imageUrl,
+                            contentDescription = item.name,
+                            modifier = Modifier.size(72.dp),
+                        )
+                        Text(
+                            text = PriceFormatter.format(item.price, currency),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun CatalogGrid(
     products: LazyPagingItems<ProductDto>,
     columns: Int,
     currency: String,
+    wishlistIds: Set<String>,
+    wishlistAvailable: Boolean,
+    onToggleWishlist: (String) -> Unit,
     onProductClick: (productId: String) -> Unit,
 ) {
     val refresh = products.loadState.refresh
@@ -197,6 +256,9 @@ private fun CatalogGrid(
                     ProductCard(
                         product = product,
                         currency = currency,
+                        inWishlist = product.id in wishlistIds,
+                        wishlistAvailable = wishlistAvailable,
+                        onToggleWishlist = { onToggleWishlist(product.id) },
                         onClick = { onProductClick(product.id) },
                     )
                 }
@@ -232,16 +294,36 @@ private fun CatalogGrid(
 }
 
 @Composable
-private fun ProductCard(product: ProductDto, currency: String, onClick: () -> Unit) {
+private fun ProductCard(
+    product: ProductDto,
+    currency: String,
+    inWishlist: Boolean,
+    wishlistAvailable: Boolean,
+    onToggleWishlist: () -> Unit,
+    onClick: () -> Unit,
+) {
     Card(modifier = Modifier.clickable(onClick = onClick)) {
         Column {
-            ProductImage(
-                url = product.images.firstOrNull(),
-                contentDescription = product.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f),
-            )
+            Box {
+                ProductImage(
+                    url = product.images.firstOrNull(),
+                    contentDescription = product.name,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f),
+                )
+                if (wishlistAvailable) {
+                    TextButton(
+                        onClick = onToggleWishlist,
+                        modifier = Modifier.align(Alignment.TopEnd),
+                    ) {
+                        Text(
+                            text = if (inWishlist) "♥" else "♡",
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+            }
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
                     text = product.name,

@@ -23,6 +23,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -87,6 +88,7 @@ private fun ProductDetailContent(
     viewModel: ProductDetailViewModel,
 ) {
     val justAdded by viewModel.justAdded.collectAsState()
+    val inWishlist by viewModel.inWishlist.collectAsState()
     var selectedVariant by remember { mutableStateOf(product.variants.firstOrNull { it.stock > 0 }) }
     var zoomedImageUrl by remember { mutableStateOf<String?>(null) }
 
@@ -113,7 +115,26 @@ private fun ProductDetailContent(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(product.name, style = MaterialTheme.typography.headlineSmall)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = product.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (viewModel.wishlistAvailable) {
+                        TextButton(onClick = viewModel::toggleWishlist) {
+                            Text(
+                                text = if (inWishlist) "♥" else "♡",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(

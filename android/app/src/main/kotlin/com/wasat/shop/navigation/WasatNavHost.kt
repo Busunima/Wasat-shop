@@ -19,6 +19,7 @@ import com.wasat.shop.feature.catalog.ProductDetailScreen
 import com.wasat.shop.feature.home.HomeScreen
 import com.wasat.shop.feature.onboarding.OnboardingScreen
 import com.wasat.shop.feature.storefront.StoreResolverScreen
+import com.wasat.shop.feature.wishlist.WishlistScreen
 
 object Routes {
     const val AUTH = "auth"
@@ -31,6 +32,7 @@ object Routes {
     const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
     const val STORE_SETTINGS = "storesettings/{storeId}?currency={currency}"
     const val INVENTORY = "inventory/{storeId}"
+    const val WISHLIST = "wishlist/{storeId}?currency={currency}"
     const val STORE_BY_SLUG = "store/{slug}"
 
     fun home(slug: String?): String = if (slug != null) "home?slug=$slug" else "home"
@@ -46,6 +48,8 @@ object Routes {
     fun storeSettings(storeId: String, currency: String): String =
         "storesettings/$storeId?currency=$currency"
     fun inventory(storeId: String): String = "inventory/$storeId"
+    fun wishlist(storeId: String, currency: String): String =
+        "wishlist/$storeId?currency=$currency"
     fun storeBySlug(slug: String): String = "store/$slug"
 }
 
@@ -134,6 +138,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 onOpenCart = {
                     navController.navigate(Routes.cart(storeId, currency))
                 },
+                onOpenWishlist = {
+                    navController.navigate(Routes.wishlist(storeId, currency))
+                },
             )
         }
 
@@ -195,6 +202,21 @@ fun WasatNavHost(authRepository: AuthRepository) {
         // FR-A03: инвентарь (владелец)
         composable(route = Routes.INVENTORY) {
             InventoryScreen()
+        }
+
+        // FR-B07: вишлист покупателя
+        composable(
+            route = Routes.WISHLIST,
+            arguments = listOf(currencyArg),
+        ) { backStackEntry ->
+            val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
+            WishlistScreen(
+                currency = currency,
+                onProductClick = { productId ->
+                    navController.navigate(Routes.product(storeId, productId, currency))
+                },
+            )
         }
 
         // FR-B01: открытие чужой витрины по slug — deep link (myapp://store/{slug},
