@@ -6,11 +6,15 @@ import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.WasatApi
 import com.wasat.shop.core.network.safeApiCall
 import com.wasat.shop.feature.auth.AuthRepository
+import com.wasat.shop.feature.storefront.LastStore
+import com.wasat.shop.feature.storefront.LastStoreRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
@@ -27,10 +31,15 @@ class HomeViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val api: WasatApi,
     private val json: Json,
+    lastStoreRepository: LastStoreRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    /** Последний открытый чужой магазин (FR-B01) — для быстрого возврата. */
+    val lastStore: StateFlow<LastStore?> = lastStoreRepository.lastStore
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
         load()

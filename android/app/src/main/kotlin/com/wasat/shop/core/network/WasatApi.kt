@@ -5,6 +5,7 @@ import com.wasat.shop.core.network.dto.ProductListResponse
 import com.wasat.shop.core.network.dto.ProductUpsertRequest
 import com.wasat.shop.core.network.dto.StoreInfoDto
 import com.wasat.shop.core.network.dto.StoreInitRequest
+import com.wasat.shop.core.network.dto.StoreUpdateRequest
 import com.wasat.shop.core.network.dto.StoreInitResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -22,6 +23,15 @@ interface WasatApi {
 
     @GET("api/stores/{storeId}")
     suspend fun getStore(@Path("storeId") storeId: String): Response<StoreInfoDto>
+
+    @GET("api/stores/by-slug/{slug}")
+    suspend fun getStoreBySlug(@Path("slug") slug: String): Response<StoreInfoDto>
+
+    @PATCH("api/stores/{storeId}")
+    suspend fun updateStore(
+        @Path("storeId") storeId: String,
+        @Body body: StoreUpdateRequest,
+    ): Response<StoreInfoDto>
 
     @GET("api/stores/{storeId}/products")
     suspend fun listProducts(

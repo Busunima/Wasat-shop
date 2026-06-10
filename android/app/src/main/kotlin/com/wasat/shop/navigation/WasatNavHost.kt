@@ -6,8 +6,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.wasat.shop.feature.admin.MyProductsScreen
 import com.wasat.shop.feature.admin.ProductEditScreen
+import com.wasat.shop.feature.admin.StoreSettingsScreen
 import com.wasat.shop.feature.auth.AuthRepository
 import com.wasat.shop.feature.auth.SignInScreen
 import com.wasat.shop.feature.cart.CartScreen
@@ -15,6 +17,7 @@ import com.wasat.shop.feature.catalog.CatalogScreen
 import com.wasat.shop.feature.catalog.ProductDetailScreen
 import com.wasat.shop.feature.home.HomeScreen
 import com.wasat.shop.feature.onboarding.OnboardingScreen
+import com.wasat.shop.feature.storefront.StoreResolverScreen
 
 object Routes {
     const val AUTH = "auth"
@@ -25,6 +28,8 @@ object Routes {
     const val CART = "cart/{storeId}?currency={currency}"
     const val MY_PRODUCTS = "myproducts/{storeId}?currency={currency}"
     const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
+    const val STORE_SETTINGS = "storesettings/{storeId}?currency={currency}"
+    const val STORE_BY_SLUG = "store/{slug}"
 
     fun home(slug: String?): String = if (slug != null) "home?slug=$slug" else "home"
     fun catalog(storeId: String, currency: String): String = "catalog/$storeId?currency=$currency"
@@ -36,6 +41,9 @@ object Routes {
     fun productEdit(storeId: String, currency: String, productId: String?): String =
         "productedit/$storeId?currency=$currency" +
             (productId?.let { "&productId=$it" } ?: "")
+    fun storeSettings(storeId: String, currency: String): String =
+        "storesettings/$storeId?currency=$currency"
+    fun storeBySlug(slug: String): String = "store/$slug"
 }
 
 private val currencyArg = navArgument("currency") {
@@ -96,6 +104,12 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 },
                 onOpenMyProducts = { storeId, currency ->
                     navController.navigate(Routes.myProducts(storeId, currency))
+                },
+                onOpenSettings = { storeId, currency ->
+                    navController.navigate(Routes.storeSettings(storeId, currency))
+                },
+                onOpenStore = { slug ->
+                    navController.navigate(Routes.storeBySlug(slug))
                 },
             )
         }
@@ -162,6 +176,38 @@ fun WasatNavHost(authRepository: AuthRepository) {
             ),
         ) {
             ProductEditScreen(onSaved = { navController.popBackStack() })
+        }
+
+        // FR-A01: настройки магазина (владелец)
+        composable(
+            route = Routes.STORE_SETTINGS,
+            arguments = listOf(currencyArg),
+        ) {
+            StoreSettingsScreen(onSaved = { navController.popBackStack() })
+        }
+
+        // FR-B01: открытие чужой витрины по slug — deep link (myapp://store/{slug},
+        // https://app.example.com/s/{slug}) и QR/кэш через навигацию.
+        composable(
+            route = Routes.STORE_BY_SLUG,
+            arguments = listOf(navArgument("slug") { type = NavType.StringType }),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "myapp://store/{slug}" },
+                navDeepLink { uriPattern = "https://app.example.com/s/{slug}" },
+            ),
+        ) {
+            StoreResolverScreen(
+                onResolved = { storeId, currency ->
+                    navController.navigate(Routes.catalog(storeId, currency)) {
+                        popUpTo(Routes.STORE_BY_SLUG) { inclusive = true }
+                    }
+                },
+                onBack = {
+                    if (!navController.popBackStack()) {
+                        navController.navigate(Routes.home(null))
+                    }
+                },
+            )
         }
     }
 }

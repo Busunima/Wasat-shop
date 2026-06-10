@@ -19,6 +19,9 @@
     <string name="home_store_created">Store created: %1$s</string>
     <string name="home_open_catalog">Open catalog</string>
     <string name="home_my_products">My products</string>
+    <string name="home_settings">Store settings</string>
+    <string name="home_scan">Scan QR</string>
+    <string name="home_last_store">Back to “%1$s”</string>
 
     <!-- Admin: products (FR-A02) -->
     <string name="my_products_title">My products</string>
@@ -86,4 +89,24 @@
     <string name="cart_remove">Remove</string>
     <string name="cart_subtotal">Subtotal</string>
     <string name="cart_checkout_later">Checkout — coming soon</string>
+
+    <!-- Store settings (FR-A01) -->
+    <string name="settings_title">Store settings</string>
+    <string name="settings_public">Storefront is public</string>
+    <string name="settings_public_hint">A public store is visible to buyers via link and QR</string>
+    <string name="settings_logo">Logo</string>
+    <string name="settings_banner">Banner</string>
+    <string name="settings_choose_image">Choose</string>
+    <string name="settings_theme">Store theme</string>
+    <string name="settings_theme_primary">Primary #RRGGBB</string>
+    <string name="settings_theme_secondary">Secondary #RRGGBB</string>
+    <string name="settings_contact_email">Contact email</string>
+    <string name="settings_contact_phone">Phone</string>
+    <string name="settings_contact_address">Address</string>
+    <string name="settings_delivery_cost">Delivery cost</string>
+
+    <!-- Open storefront by link/QR (FR-B01) -->
+    <string name="store_not_found">Store “%1$s” not found or closed</string>
+    <string name="store_not_found_back">Back</string>
+    <string name="scan_no_result">QR code is not a store link</string>
 </resources>
