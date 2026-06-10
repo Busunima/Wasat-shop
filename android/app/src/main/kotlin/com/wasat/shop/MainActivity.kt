@@ -8,12 +8,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.wasat.shop.core.designsystem.WasatTheme
+import com.wasat.shop.feature.auth.AuthRepository
+import com.wasat.shop.navigation.WasatNavHost
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * Единственная Activity (single-activity + Compose-навигация).
@@ -21,32 +22,27 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var authRepository: AuthRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
             WasatTheme {
-                AppRoot()
+                AppRoot(authRepository)
             }
         }
     }
 }
 
 @Composable
-private fun AppRoot() {
-    // Каркас: Scaffold корректно обрабатывает insets системных баров (edge-to-edge).
-    // Навигация (Compose Navigation) и экраны добавляются в Шаге 2 / Фазе 2.
+private fun AppRoot(authRepository: AuthRepository) {
+    // Scaffold корректно обрабатывает insets системных баров (edge-to-edge).
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            Text(text = "Wasat Shop — каркас")
+            WasatNavHost(authRepository)
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun AppRootPreview() {
-    WasatTheme {
-        AppRoot()
     }
 }

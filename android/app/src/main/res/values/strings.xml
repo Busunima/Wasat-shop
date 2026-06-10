@@ -2,4 +2,21 @@
 <!-- Базовые строки. Локализация (мультиязычный UI, ТЗ §11.7) — через locale-папки values-xx. -->
 <resources>
     <string name="app_name">Wasat Shop</string>
+
+    <!-- Вход -->
+    <string name="sign_in_with_google">Войти через Google</string>
+    <string name="sign_in_not_configured">Firebase не сконфигурирован: добавьте google-services.json и Web Client ID (wasat.googleWebClientId), затем пересоберите приложение.</string>
+
+    <!-- Онбординг магазина -->
+    <string name="onboarding_title">Создание магазина</string>
+    <string name="onboarding_name">Название</string>
+    <string name="onboarding_slug">Адрес (slug)</string>
+    <string name="onboarding_slug_hint">Строчные латинские буквы, цифры и дефис</string>
+    <string name="onboarding_currency">Валюта (ISO-4217)</string>
+    <string name="onboarding_description">Описание (необязательно)</string>
+    <string name="onboarding_submit">Создать магазин</string>
+    <string name="onboarding_submitting">Создание…</string>
+
+    <!-- Главный экран (плейсхолдер) -->
+    <string name="home_store_created">Магазин создан: %1$s</string>
 </resources>
