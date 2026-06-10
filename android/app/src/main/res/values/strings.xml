@@ -22,6 +22,7 @@
     <string name="home_open_catalog">Открыть каталог</string>
     <string name="home_my_products">Мои товары</string>
     <string name="home_settings">Настройки магазина</string>
+    <string name="home_inventory">Инвентарь</string>
     <string name="home_scan">Сканировать QR</string>
     <string name="home_last_store">Вернуться в «%1$s»</string>
 
@@ -111,4 +112,13 @@
     <string name="store_not_found">Магазин «%1$s» не найден или закрыт</string>
     <string name="store_not_found_back">Назад</string>
     <string name="scan_no_result">QR-код не распознан как магазин</string>
+
+    <!-- Инвентарь (FR-A03) -->
+    <string name="inventory_title">Инвентарь</string>
+    <string name="inventory_total">Всего: %1$d</string>
+    <string name="inventory_no_variants">Остаток</string>
+    <string name="inventory_import_csv">Импорт CSV</string>
+    <string name="inventory_import_report_title">Импорт остатков</string>
+    <string name="inventory_import_applied">Применено строк: %1$d</string>
+    <string name="inventory_log_title">История изменений</string>
 </resources>
