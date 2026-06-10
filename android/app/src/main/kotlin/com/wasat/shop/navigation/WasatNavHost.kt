@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.wasat.shop.feature.auth.AuthRepository
 import com.wasat.shop.feature.auth.SignInScreen
+import com.wasat.shop.feature.cart.CartScreen
 import com.wasat.shop.feature.catalog.CatalogScreen
 import com.wasat.shop.feature.catalog.ProductDetailScreen
 import com.wasat.shop.feature.home.HomeScreen
@@ -19,11 +20,13 @@ object Routes {
     const val HOME = "home?slug={slug}"
     const val CATALOG = "catalog/{storeId}?currency={currency}"
     const val PRODUCT = "product/{storeId}/{productId}?currency={currency}"
+    const val CART = "cart/{storeId}?currency={currency}"
 
     fun home(slug: String?): String = if (slug != null) "home?slug=$slug" else "home"
     fun catalog(storeId: String, currency: String): String = "catalog/$storeId?currency=$currency"
     fun product(storeId: String, productId: String, currency: String): String =
         "product/$storeId/$productId?currency=$currency"
+    fun cart(storeId: String, currency: String): String = "cart/$storeId?currency=$currency"
 }
 
 private val currencyArg = navArgument("currency") {
@@ -96,6 +99,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 onProductClick = { productId ->
                     navController.navigate(Routes.product(storeId, productId, currency))
                 },
+                onOpenCart = {
+                    navController.navigate(Routes.cart(storeId, currency))
+                },
             )
         }
 
@@ -105,6 +111,14 @@ fun WasatNavHost(authRepository: AuthRepository) {
         ) { backStackEntry ->
             val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
             ProductDetailScreen(currency = currency)
+        }
+
+        composable(
+            route = Routes.CART,
+            arguments = listOf(currencyArg),
+        ) { backStackEntry ->
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
+            CartScreen(currency = currency)
         }
     }
 }

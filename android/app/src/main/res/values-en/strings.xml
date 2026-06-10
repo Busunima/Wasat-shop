@@ -20,7 +20,18 @@
     <string name="home_open_catalog">Open catalog</string>
 
     <!-- Catalog and product card -->
+    <string name="catalog_title">Catalog</string>
     <string name="catalog_retry">Retry</string>
     <string name="catalog_empty">No products in the catalog yet</string>
     <string name="product_out_of_stock">Out of stock</string>
+
+    <!-- Cart -->
+    <string name="cart_title">Cart</string>
+    <string name="cart_open">Cart (%1$d)</string>
+    <string name="cart_empty">Your cart is empty</string>
+    <string name="cart_add">Add to cart</string>
+    <string name="cart_added">Added ✓</string>
+    <string name="cart_remove">Remove</string>
+    <string name="cart_subtotal">Subtotal</string>
+    <string name="cart_checkout_later">Checkout — coming soon</string>
 </resources>

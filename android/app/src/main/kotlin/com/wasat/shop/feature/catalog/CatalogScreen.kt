@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +17,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,18 +40,54 @@ import com.wasat.shop.core.util.PriceFormatter
 fun CatalogScreen(
     currency: String,
     onProductClick: (productId: String) -> Unit,
+    onOpenCart: () -> Unit,
     viewModel: CatalogViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val cartCount by viewModel.cartCount.collectAsState()
     val columns = if (LocalWindowWidthSizeClass.current.isExpandedLayout) 3 else 2
 
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.catalog_title),
+                style = MaterialTheme.typography.titleLarge,
+            )
+            TextButton(onClick = onOpenCart) {
+                Text(stringResource(R.string.cart_open, cartCount))
+            }
+        }
+        CatalogContent(
+            state = state,
+            columns = columns,
+            currency = currency,
+            onProductClick = onProductClick,
+            onRetry = viewModel::load,
+        )
+    }
+}
+
+@Composable
+private fun CatalogContent(
+    state: CatalogUiState,
+    columns: Int,
+    currency: String,
+    onProductClick: (productId: String) -> Unit,
+    onRetry: () -> Unit,
+) {
     when (val s = state) {
         CatalogUiState.Loading -> Centered { CircularProgressIndicator() }
 
         is CatalogUiState.Error -> Centered {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(s.message, style = MaterialTheme.typography.bodyMedium)
-                Button(onClick = viewModel::load) {
+                Button(onClick = onRetry) {
                     Text(stringResource(R.string.catalog_retry))
                 }
             }

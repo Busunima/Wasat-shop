@@ -5,8 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.dto.ProductDto
+import com.wasat.shop.core.network.dto.VariantDto
+import com.wasat.shop.feature.cart.CartRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +24,7 @@ sealed interface ProductDetailUiState {
 @HiltViewModel
 class ProductDetailViewModel @Inject constructor(
     private val repository: CatalogRepository,
+    private val cartRepository: CartRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -30,8 +34,22 @@ class ProductDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<ProductDetailUiState>(ProductDetailUiState.Loading)
     val uiState: StateFlow<ProductDetailUiState> = _uiState.asStateFlow()
 
+    /** Кратковременный флаг «добавлено» для обратной связи на кнопке. */
+    private val _justAdded = MutableStateFlow(false)
+    val justAdded: StateFlow<Boolean> = _justAdded.asStateFlow()
+
     init {
         load()
+    }
+
+    fun addToCart(currency: String, variant: VariantDto?) {
+        val product = (uiState.value as? ProductDetailUiState.Loaded)?.product ?: return
+        viewModelScope.launch {
+            cartRepository.add(storeId, currency, product, variant)
+            _justAdded.value = true
+            delay(2_000)
+            _justAdded.value = false
+        }
     }
 
     fun load() {
