@@ -9,8 +9,8 @@ import javax.inject.Singleton
 import kotlinx.coroutines.tasks.await
 
 /**
- * Загрузка фото товара в Firebase Storage (ТЗ §13: путь stores/{storeId}/** —
- * запись разрешена правилами только владельцу/сотруднику, contentType image/*, ≤10 МБ).
+ * Загрузка фото товара в Firebase Storage (ТЗ §13: путь stores/{storeId}/... —
+ * запись разрешена правилами только владельцу/сотруднику, contentType image, ≤10 МБ).
  * Возвращает публичный downloadUrl — он сохраняется в products.images.
  */
 @Singleton
