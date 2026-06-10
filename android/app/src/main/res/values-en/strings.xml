@@ -64,6 +64,10 @@
     <string name="catalog_retry">Retry</string>
     <string name="catalog_empty">No products in the catalog yet</string>
     <string name="product_out_of_stock">Out of stock</string>
+    <string name="product_in_stock">In stock</string>
+    <string name="product_low_stock">Only %1$d left</string>
+    <string name="product_reviews_title">Reviews</string>
+    <string name="product_reviews_empty">No reviews yet — they will appear after the first purchases</string>
 
     <!-- Cart -->
     <string name="cart_title">Cart</string>
