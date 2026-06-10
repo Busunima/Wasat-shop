@@ -38,6 +38,14 @@
     <string name="product_edit_publish_hint">Опубликованный товар виден покупателям</string>
     <string name="product_edit_save">Сохранить</string>
     <string name="product_edit_saving">Сохранение…</string>
+    <string name="product_edit_photos">Фото</string>
+    <string name="product_edit_photo_add">Добавить фото</string>
+    <string name="product_edit_photo_remove">Удалить</string>
+    <string name="product_edit_variants">Варианты</string>
+    <string name="product_edit_variant_add">Добавить вариант</string>
+    <string name="product_edit_variant_size">Размер</string>
+    <string name="product_edit_variant_color">Цвет</string>
+    <string name="product_edit_variant_stock">Остаток</string>
 
     <!-- Каталог и карточка товара -->
     <string name="catalog_title">Каталог</string>

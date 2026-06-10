@@ -36,6 +36,14 @@
     <string name="product_edit_publish_hint">Published products are visible to buyers</string>
     <string name="product_edit_save">Save</string>
     <string name="product_edit_saving">Saving…</string>
+    <string name="product_edit_photos">Photos</string>
+    <string name="product_edit_photo_add">Add photo</string>
+    <string name="product_edit_photo_remove">Remove</string>
+    <string name="product_edit_variants">Variants</string>
+    <string name="product_edit_variant_add">Add variant</string>
+    <string name="product_edit_variant_size">Size</string>
+    <string name="product_edit_variant_color">Color</string>
+    <string name="product_edit_variant_stock">Stock</string>
 
     <!-- Catalog and product card -->
     <string name="catalog_title">Catalog</string>

@@ -29,4 +29,15 @@ class ProductFormValidationTest {
         assertNull(ProductFormValidation.validateDescription("x".repeat(5000)))
         assertNotNull(ProductFormValidation.validateDescription("x".repeat(5001)))
     }
+
+    @Test
+    fun `stock - целое неотрицательное`() {
+        assertNull(ProductFormValidation.validateStock("0"))
+        assertNull(ProductFormValidation.validateStock("42"))
+        assertNull(ProductFormValidation.validateStock(" 7 "))
+        assertNotNull(ProductFormValidation.validateStock(""))
+        assertNotNull(ProductFormValidation.validateStock("-1"))
+        assertNotNull(ProductFormValidation.validateStock("1.5"))
+        assertNotNull(ProductFormValidation.validateStock("abc"))
+    }
 }

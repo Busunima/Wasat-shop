@@ -27,4 +27,16 @@ object ProductFormValidation {
         description.length > DESCRIPTION_MAX -> "Описание не длиннее $DESCRIPTION_MAX символов"
         else -> null
     }
+
+    const val IMAGES_MAX = 10
+
+    /** Остаток (stock) варианта: целое ≥ 0 (зеркало z.number().int().min(0)). */
+    fun validateStock(input: String): String? = when {
+        input.isBlank() -> "Укажите остаток"
+        parseStock(input) == null -> "Остаток — целое число ≥ 0"
+        else -> null
+    }
+
+    fun parseStock(input: String): Int? =
+        input.trim().toIntOrNull()?.takeIf { it >= 0 }
 }

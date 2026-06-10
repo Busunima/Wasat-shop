@@ -1,11 +1,12 @@
 package com.wasat.shop.feature.admin
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.dto.ProductUpsertRequest
-import com.wasat.shop.core.util.PriceFormatter
+import com.wasat.shop.core.network.dto.VariantDto
 import com.wasat.shop.core.util.PriceParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
@@ -17,7 +18,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class ProductField { NAME, PRICE, DESCRIPTION }
+enum class ProductField { NAME, PRICE, DESCRIPTION, VARIANTS, IMAGES }
 
 sealed interface SaveState {
     data object Idle : SaveState
@@ -25,6 +26,13 @@ sealed interface SaveState {
     data class Failed(val message: String) : SaveState
     data object Saved : SaveState
 }
+
+/** Черновик варианта в форме (stock — сырой ввод, парсится при сохранении). */
+data class VariantDraft(
+    val size: String = "",
+    val color: String = "",
+    val stockInput: String = "",
+)
 
 data class ProductEditUiState(
     /** null — создание нового товара; иначе — редактирование. */
@@ -34,14 +42,28 @@ data class ProductEditUiState(
     val priceInput: String = "",
     val description: String = "",
     val isActive: Boolean = false,
+    val images: List<String> = emptyList(),
+    val uploadingImage: Boolean = false,
+    val variants: List<VariantDraft> = emptyList(),
     val fieldErrors: Map<ProductField, String> = emptyMap(),
     val save: SaveState = SaveState.Idle,
 )
 
-/** Создание/редактирование товара владельцем (FR-A02). */
+/** Маппинг черновика в DTO; null — невалидный stock (pure JVM, под тестом). */
+fun VariantDraft.toVariantDto(): VariantDto? {
+    val stock = ProductFormValidation.parseStock(stockInput) ?: return null
+    return VariantDto(
+        size = size.trim().ifEmpty { null },
+        color = color.trim().ifEmpty { null },
+        stock = stock,
+    )
+}
+
+/** Создание/редактирование товара владельцем (FR-A02): поля, фото (Storage), варианты. */
 @HiltViewModel
 class ProductEditViewModel @Inject constructor(
     private val repository: AdminProductsRepository,
+    private val imageRepository: ProductImageRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -68,6 +90,14 @@ class ProductEditViewModel @Inject constructor(
                         priceInput = minorToInput(result.data.price),
                         description = result.data.description,
                         isActive = result.data.status == "active",
+                        images = result.data.images,
+                        variants = result.data.variants.map { v ->
+                            VariantDraft(
+                                size = v.size.orEmpty(),
+                                color = v.color.orEmpty(),
+                                stockInput = v.stock.toString(),
+                            )
+                        },
                     )
                 }
                 else -> _uiState.update {
@@ -98,14 +128,67 @@ class ProductEditViewModel @Inject constructor(
 
     fun onActiveChange(value: Boolean) = _uiState.update { it.copy(isActive = value) }
 
+    // --- Фото ---
+
+    fun addImage(uri: Uri, contentType: String?) {
+        val s = _uiState.value
+        if (s.uploadingImage) return
+        if (s.images.size >= ProductFormValidation.IMAGES_MAX) {
+            _uiState.update {
+                it.copy(fieldErrors = it.fieldErrors + (ProductField.IMAGES to "Не больше ${ProductFormValidation.IMAGES_MAX} фото"))
+            }
+            return
+        }
+        _uiState.update {
+            it.copy(uploadingImage = true, fieldErrors = it.fieldErrors - ProductField.IMAGES)
+        }
+        viewModelScope.launch {
+            imageRepository.uploadProductImage(storeId, uri, contentType)
+                .onSuccess { url ->
+                    _uiState.update { it.copy(uploadingImage = false, images = it.images + url) }
+                }
+                .onFailure { e ->
+                    _uiState.update {
+                        it.copy(
+                            uploadingImage = false,
+                            fieldErrors = it.fieldErrors +
+                                (ProductField.IMAGES to (e.message ?: "Не удалось загрузить фото")),
+                        )
+                    }
+                }
+        }
+    }
+
+    fun removeImage(url: String) = _uiState.update { it.copy(images = it.images - url) }
+
+    // --- Варианты ---
+
+    fun addVariant() = _uiState.update { it.copy(variants = it.variants + VariantDraft()) }
+
+    fun removeVariant(index: Int) = _uiState.update {
+        it.copy(
+            variants = it.variants.filterIndexed { i, _ -> i != index },
+            fieldErrors = it.fieldErrors - ProductField.VARIANTS,
+        )
+    }
+
+    fun onVariantChange(index: Int, draft: VariantDraft) = _uiState.update {
+        it.copy(
+            variants = it.variants.mapIndexed { i, v -> if (i == index) draft else v },
+            fieldErrors = it.fieldErrors - ProductField.VARIANTS,
+        )
+    }
+
     fun save() {
         val s = _uiState.value
-        if (s.save is SaveState.Loading || s.loadingExisting) return
+        if (s.save is SaveState.Loading || s.loadingExisting || s.uploadingImage) return
 
         val errors = buildMap {
             ProductFormValidation.validateName(s.name)?.let { put(ProductField.NAME, it) }
             ProductFormValidation.validatePrice(s.priceInput, currency)?.let { put(ProductField.PRICE, it) }
             ProductFormValidation.validateDescription(s.description)?.let { put(ProductField.DESCRIPTION, it) }
+            s.variants.firstNotNullOfOrNull { ProductFormValidation.validateStock(it.stockInput) }
+                ?.let { put(ProductField.VARIANTS, it) }
         }
         if (errors.isNotEmpty()) {
             _uiState.update { it.copy(fieldErrors = errors) }
@@ -115,8 +198,10 @@ class ProductEditViewModel @Inject constructor(
         val body = ProductUpsertRequest(
             name = s.name.trim(),
             price = checkNotNull(PriceParser.parse(s.priceInput, currency)),
-            description = s.description.trim().ifEmpty { null },
+            description = s.description.trim(),
             status = if (s.isActive) "active" else "draft",
+            images = s.images,
+            variants = s.variants.mapNotNull { it.toVariantDto() },
         )
 
         _uiState.update { it.copy(save = SaveState.Loading) }

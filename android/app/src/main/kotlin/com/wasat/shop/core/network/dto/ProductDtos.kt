@@ -31,14 +31,18 @@ data class VariantDto(
 data class ProductListResponse(val items: List<ProductDto>)
 
 /**
- * Тело создания/обновления товара (админ, FR-A02). Дефолты не кодируются,
- * поэтому null-поля опускаются — совместимо и с create-, и с partial-схемой PATCH.
+ * Тело создания/обновления товара (админ, FR-A02). Форма владеет полным состоянием,
+ * поэтому description/images/variants кодируются ВСЕГДА (без дефолтов) — иначе
+ * partial-PATCH сервера сохранил бы старые значения при их очистке в форме.
+ * originalPrice опционален (null опускается — в форме его пока нет).
  */
 @Serializable
 data class ProductUpsertRequest(
     val name: String,
     val price: Long,
-    val description: String? = null,
+    val description: String,
+    val status: String,
+    val images: List<String>,
+    val variants: List<VariantDto>,
     val originalPrice: Long? = null,
-    val status: String = "draft",
 )
