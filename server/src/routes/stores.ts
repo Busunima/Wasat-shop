@@ -10,11 +10,15 @@ import { ApiError } from "../middleware/errorHandler.js";
 import { storeInitSchema, storeUpdateSchema } from "../schemas/store.js";
 import { createStore, getStoreInfo, resolveSlug, updateStore } from "../services/stores.js";
 import { productsRouter } from "./products.js";
+import { inventoryRouter } from "./inventory.js";
 
 export const storesRouter: Router = Router();
 
 // Товары магазина: /api/stores/:storeId/products (FR-A02 + витрина)
 storesRouter.use("/:storeId/products", productsRouter);
+
+// Инвентарь: /api/stores/:storeId/inventory (FR-A03)
+storesRouter.use("/:storeId/inventory", inventoryRouter);
 
 /**
  * GET /api/stores/by-slug/:slug — резолв витрины по slug (FR-B01: deep link / QR).
