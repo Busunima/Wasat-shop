@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.wasat.shop.feature.admin.InventoryScreen
 import com.wasat.shop.feature.admin.MyProductsScreen
 import com.wasat.shop.feature.admin.ProductEditScreen
 import com.wasat.shop.feature.admin.StoreSettingsScreen
@@ -29,6 +30,7 @@ object Routes {
     const val MY_PRODUCTS = "myproducts/{storeId}?currency={currency}"
     const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
     const val STORE_SETTINGS = "storesettings/{storeId}?currency={currency}"
+    const val INVENTORY = "inventory/{storeId}"
     const val STORE_BY_SLUG = "store/{slug}"
 
     fun home(slug: String?): String = if (slug != null) "home?slug=$slug" else "home"
@@ -43,6 +45,7 @@ object Routes {
             (productId?.let { "&productId=$it" } ?: "")
     fun storeSettings(storeId: String, currency: String): String =
         "storesettings/$storeId?currency=$currency"
+    fun inventory(storeId: String): String = "inventory/$storeId"
     fun storeBySlug(slug: String): String = "store/$slug"
 }
 
@@ -107,6 +110,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 },
                 onOpenSettings = { storeId, currency ->
                     navController.navigate(Routes.storeSettings(storeId, currency))
+                },
+                onOpenInventory = { storeId ->
+                    navController.navigate(Routes.inventory(storeId))
                 },
                 onOpenStore = { slug ->
                     navController.navigate(Routes.storeBySlug(slug))
@@ -184,6 +190,11 @@ fun WasatNavHost(authRepository: AuthRepository) {
             arguments = listOf(currencyArg),
         ) {
             StoreSettingsScreen(onSaved = { navController.popBackStack() })
+        }
+
+        // FR-A03: инвентарь (владелец)
+        composable(route = Routes.INVENTORY) {
+            InventoryScreen()
         }
 
         // FR-B01: открытие чужой витрины по slug — deep link (myapp://store/{slug},

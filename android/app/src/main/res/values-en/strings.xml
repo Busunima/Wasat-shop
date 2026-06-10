@@ -20,6 +20,7 @@
     <string name="home_open_catalog">Open catalog</string>
     <string name="home_my_products">My products</string>
     <string name="home_settings">Store settings</string>
+    <string name="home_inventory">Inventory</string>
     <string name="home_scan">Scan QR</string>
     <string name="home_last_store">Back to “%1$s”</string>
 
@@ -109,4 +110,13 @@
     <string name="store_not_found">Store “%1$s” not found or closed</string>
     <string name="store_not_found_back">Back</string>
     <string name="scan_no_result">QR code is not a store link</string>
+
+    <!-- Inventory (FR-A03) -->
+    <string name="inventory_title">Inventory</string>
+    <string name="inventory_total">Total: %1$d</string>
+    <string name="inventory_no_variants">Stock</string>
+    <string name="inventory_import_csv">Import CSV</string>
+    <string name="inventory_import_report_title">Stock import</string>
+    <string name="inventory_import_applied">Rows applied: %1$d</string>
+    <string name="inventory_log_title">Change history</string>
 </resources>
