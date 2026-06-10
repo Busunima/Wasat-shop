@@ -5,11 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.dto.ProductDto
+import com.wasat.shop.feature.cart.CartRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed interface CatalogUiState {
@@ -21,6 +24,7 @@ sealed interface CatalogUiState {
 @HiltViewModel
 class CatalogViewModel @Inject constructor(
     private val repository: CatalogRepository,
+    cartRepository: CartRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -28,6 +32,10 @@ class CatalogViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<CatalogUiState>(CatalogUiState.Loading)
     val uiState: StateFlow<CatalogUiState> = _uiState.asStateFlow()
+
+    /** Число позиций в корзине этого магазина — для бейджа на кнопке корзины. */
+    val cartCount: StateFlow<Int> = cartRepository.observeCount(storeId)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     init {
         load()

@@ -22,7 +22,18 @@
     <string name="home_open_catalog">Открыть каталог</string>
 
     <!-- Каталог и карточка товара -->
+    <string name="catalog_title">Каталог</string>
     <string name="catalog_retry">Повторить</string>
     <string name="catalog_empty">В каталоге пока нет товаров</string>
     <string name="product_out_of_stock">Нет в наличии</string>
+
+    <!-- Корзина -->
+    <string name="cart_title">Корзина</string>
+    <string name="cart_open">Корзина (%1$d)</string>
+    <string name="cart_empty">Корзина пуста</string>
+    <string name="cart_add">В корзину</string>
+    <string name="cart_added">Добавлено ✓</string>
+    <string name="cart_remove">Убрать</string>
+    <string name="cart_subtotal">Итого</string>
+    <string name="cart_checkout_later">Оформление заказа — скоро</string>
 </resources>
