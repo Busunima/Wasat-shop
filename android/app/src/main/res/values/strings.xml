@@ -40,12 +40,26 @@
     <string name="product_edit_saving">Сохранение…</string>
     <string name="product_edit_photos">Фото</string>
     <string name="product_edit_photo_add">Добавить фото</string>
+    <string name="product_edit_photo_uploading">Загрузка… (%1$d)</string>
     <string name="product_edit_photo_remove">Удалить</string>
     <string name="product_edit_variants">Варианты</string>
     <string name="product_edit_variant_add">Добавить вариант</string>
     <string name="product_edit_variant_size">Размер</string>
     <string name="product_edit_variant_color">Цвет</string>
     <string name="product_edit_variant_stock">Остаток</string>
+    <string name="product_edit_variant_sku">SKU варианта</string>
+    <string name="product_edit_original_price">Старая цена</string>
+    <string name="product_edit_sku">SKU</string>
+    <string name="product_edit_barcode">Штрихкод</string>
+    <string name="product_edit_category">Категория</string>
+    <string name="product_edit_tags">Теги</string>
+    <string name="product_edit_tags_hint">Через запятую, до 20</string>
+    <string name="product_edit_status">Статус</string>
+    <string name="product_delete_button">Удалить товар</string>
+    <string name="product_delete_title">Удалить товар?</string>
+    <string name="product_delete_text">«%1$s» будет удалён безвозвратно. Для скрытия с витрины используйте статус «Архив».</string>
+    <string name="product_delete_confirm">Удалить</string>
+    <string name="product_delete_cancel">Отмена</string>
 
     <!-- Каталог и карточка товара -->
     <string name="catalog_title">Каталог</string>

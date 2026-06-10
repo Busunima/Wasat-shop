@@ -35,4 +35,7 @@ class AdminProductsRepository @Inject constructor(
         body: ProductUpsertRequest,
     ): ApiResult<ProductDto> =
         safeApiCall(json) { api.updateProduct(storeId, productId, body) }
+
+    suspend fun delete(storeId: String, productId: String): ApiResult<Unit> =
+        safeApiCall(json) { api.deleteProduct(storeId, productId) }
 }

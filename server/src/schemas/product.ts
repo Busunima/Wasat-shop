@@ -15,16 +15,30 @@ export const productVariantSchema = z.object({
   sku: z.string().max(64).optional(),
 });
 
+/**
+ * Опциональное строковое поле формы: отсутствует → undefined (PATCH не трогает),
+ * пустая строка/null → null (PATCH очищает), иначе — trim.
+ */
+const optionalTrimmed = (max: number) =>
+  z
+    .string()
+    .max(max)
+    .nullish()
+    .transform((v) => (v === undefined ? undefined : v?.trim() ? v.trim() : null));
+
 export const productCreateSchema = z.object({
   name: z.string().min(1).max(200),
   description: z.string().max(5000).optional(),
   price: z.number().int().min(0),
-  originalPrice: z.number().int().min(0).optional(),
+  originalPrice: z.number().int().min(0).nullable().optional(),
   images: z.array(z.string().url()).max(10).default([]),
-  category: z.string().max(80).optional(),
+  category: optionalTrimmed(80),
   tags: z.array(z.string().min(1).max(40)).max(20).default([]),
   variants: z.array(productVariantSchema).max(100).default([]),
   status: z.enum(PRODUCT_STATUSES).default("draft"),
+  // SKU и штрихкод уровня товара (FR-A02); у вариантов — собственный sku
+  sku: optionalTrimmed(64),
+  barcode: optionalTrimmed(64),
 });
 
 export const productUpdateSchema = productCreateSchema.partial();

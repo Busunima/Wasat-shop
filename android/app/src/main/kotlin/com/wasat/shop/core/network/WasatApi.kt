@@ -8,6 +8,7 @@ import com.wasat.shop.core.network.dto.StoreInitRequest
 import com.wasat.shop.core.network.dto.StoreInitResponse
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -42,4 +43,10 @@ interface WasatApi {
         @Path("productId") productId: String,
         @Body body: ProductUpsertRequest,
     ): Response<ProductDto>
+
+    @DELETE("api/stores/{storeId}/products/{productId}")
+    suspend fun deleteProduct(
+        @Path("storeId") storeId: String,
+        @Path("productId") productId: String,
+    ): Response<Unit>
 }

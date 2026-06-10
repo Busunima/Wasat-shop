@@ -48,6 +48,25 @@ test("productUpdateSchema: частичное обновление допуст�
   assert.equal(parsed.name, undefined);
 });
 
+test("sku/barcode/category: trim, '' -> null (очистка), отсутствие -> undefined", () => {
+  const parsed = productCreateSchema.parse({
+    name: "X",
+    price: 1,
+    sku: "  SKU-1  ",
+    barcode: "",
+  });
+  assert.equal(parsed.sku, "SKU-1");
+  assert.equal(parsed.barcode, null);
+  assert.equal(parsed.category, undefined);
+  assert.throws(() => productCreateSchema.parse({ name: "X", price: 1, sku: "x".repeat(65) }));
+});
+
+test("originalPrice: принимает null (сброс старой цены)", () => {
+  const parsed = productUpdateSchema.parse({ originalPrice: null });
+  assert.equal(parsed.originalPrice, null);
+  assert.throws(() => productUpdateSchema.parse({ originalPrice: 9.99 }));
+});
+
 test("computeTotalStock: сумма по вариантам; пусто — 0", () => {
   assert.equal(computeTotalStock([]), 0);
   assert.equal(
