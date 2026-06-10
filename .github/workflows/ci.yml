@@ -81,10 +81,20 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.admin-web == 'true' }}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin-web
     steps:
       - uses: actions/checkout@v4
-      # TODO: проект инициализируется отдельным треком; шаги setup-node + npm ci/lint/build добавляются тогда.
-      - run: echo "Admin Web CI — заготовка; инициализируется отдельным треком (см. docs/roadmap.md)"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: admin-web/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      # Сборка без секретов (VITE_* пустые) — приложение собирается, рантайм гейтится.
+      - run: npm run build
 
   emulator:
     name: Firebase Emulator · rules + server integration

@@ -25,8 +25,9 @@
 | POST | `/api/webhooks/stripe` | Вебхук Stripe (платежи, возвраты) | Stripe signature |
 | POST | `/api/webhooks/stripe-billing` | Вебхук подписок SaaS | Stripe signature |
 | POST | `/api/search/reindex` | Переиндексация товаров (Algolia) | Owner (internal) |
-| GET | `/api/admin/stores` | Список магазинов | Superadmin |
-| PATCH | `/api/admin/stores/:id/block` | Блокировка | Superadmin |
+| GET | `/api/admin/stores` | Список магазинов (поиск q/plan/blocked, курсор) | Superadmin |
+| PATCH | `/api/admin/stores/:id/block` | Блокировка/разблокировка + auditLog | Superadmin |
+| PATCH | `/api/admin/stores/:id/plan` | Смена тарифа + auditLog | Superadmin |
 | POST | `/api/cron/cleanup` | Очистка устаревших данных | `CRON_SECRET` |
 
 ¹ **Public с повышением прав** (`optionalAuth`): анонимный запрос видит только
