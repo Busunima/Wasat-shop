@@ -29,3 +29,16 @@ data class VariantDto(
 
 @Serializable
 data class ProductListResponse(val items: List<ProductDto>)
+
+/**
+ * Тело создания/обновления товара (админ, FR-A02). Дефолты не кодируются,
+ * поэтому null-поля опускаются — совместимо и с create-, и с partial-схемой PATCH.
+ */
+@Serializable
+data class ProductUpsertRequest(
+    val name: String,
+    val price: Long,
+    val description: String? = null,
+    val originalPrice: Long? = null,
+    val status: String = "draft",
+)
