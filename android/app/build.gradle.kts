@@ -102,6 +102,10 @@ dependencies {
     // Изображения
     implementation(libs.coil.compose)
 
+    // Пагинация каталога (FR-B02)
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
+
     // Firebase (BOM управляет версиями)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

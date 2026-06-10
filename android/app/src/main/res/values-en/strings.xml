@@ -62,7 +62,15 @@
     <!-- Catalog and product card -->
     <string name="catalog_title">Catalog</string>
     <string name="catalog_retry">Retry</string>
-    <string name="catalog_empty">No products in the catalog yet</string>
+    <string name="catalog_empty">Nothing found</string>
+    <string name="catalog_error">Failed to load the catalog</string>
+    <string name="catalog_search_hint">Search products</string>
+    <string name="catalog_filter_in_stock">In stock</string>
+    <string name="catalog_filter_clear">Reset</string>
+    <string name="catalog_sort_new">Newest</string>
+    <string name="catalog_sort_price_asc">Price ↑</string>
+    <string name="catalog_sort_price_desc">Price ↓</string>
+    <string name="catalog_sort_rating">By rating</string>
     <string name="product_out_of_stock">Out of stock</string>
 
     <!-- Cart -->

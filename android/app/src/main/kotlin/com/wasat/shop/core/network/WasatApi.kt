@@ -13,6 +13,7 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.QueryMap
 
 /** REST-клиент сервера (docs/api-contract.md). Эндпоинты добавляются по фазам. */
 interface WasatApi {
@@ -23,7 +24,10 @@ interface WasatApi {
     suspend fun getStore(@Path("storeId") storeId: String): Response<StoreInfoDto>
 
     @GET("api/stores/{storeId}/products")
-    suspend fun listProducts(@Path("storeId") storeId: String): Response<ProductListResponse>
+    suspend fun listProducts(
+        @Path("storeId") storeId: String,
+        @QueryMap params: Map<String, String>,
+    ): Response<ProductListResponse>
 
     @GET("api/stores/{storeId}/products/{productId}")
     suspend fun getProduct(

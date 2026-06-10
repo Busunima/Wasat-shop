@@ -64,7 +64,15 @@
     <!-- Каталог и карточка товара -->
     <string name="catalog_title">Каталог</string>
     <string name="catalog_retry">Повторить</string>
-    <string name="catalog_empty">В каталоге пока нет товаров</string>
+    <string name="catalog_empty">Ничего не найдено</string>
+    <string name="catalog_error">Не удалось загрузить каталог</string>
+    <string name="catalog_search_hint">Поиск товаров</string>
+    <string name="catalog_filter_in_stock">В наличии</string>
+    <string name="catalog_filter_clear">Сбросить</string>
+    <string name="catalog_sort_new">Новинки</string>
+    <string name="catalog_sort_price_asc">Дешевле</string>
+    <string name="catalog_sort_price_desc">Дороже</string>
+    <string name="catalog_sort_rating">По рейтингу</string>
     <string name="product_out_of_stock">Нет в наличии</string>
 
     <!-- Корзина -->

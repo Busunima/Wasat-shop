@@ -21,7 +21,8 @@ class AdminProductsRepository @Inject constructor(
     private val json: Json,
 ) {
     suspend fun listProducts(storeId: String): ApiResult<ProductListResponse> =
-        safeApiCall(json) { api.listProducts(storeId) }
+        // Админ-списку пагинация добавится в Фазе 3 (Dashboard); пока первая страница 50
+        safeApiCall(json) { api.listProducts(storeId, mapOf("limit" to "50")) }
 
     suspend fun getProduct(storeId: String, productId: String): ApiResult<ProductDto> =
         safeApiCall(json) { api.getProduct(storeId, productId) }
