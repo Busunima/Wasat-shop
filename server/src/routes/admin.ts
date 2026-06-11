@@ -6,8 +6,10 @@ import {
   adminBlockSchema,
   adminPlanSchema,
   adminStoreListQuerySchema,
+  platformAnalyticsQuerySchema,
 } from "../schemas/admin.js";
 import { listStores, setStoreBlocked, setStorePlan } from "../services/admin.js";
+import { getPlatformAnalytics } from "../services/platformAnalytics.js";
 
 /**
  * Суперадмин-эндпоинты (ТЗ §7, §9). Цепочка: App Check → ID Token → claim superadmin.
@@ -53,6 +55,16 @@ adminRouter.patch("/stores/:storeId/plan", async (req: AuthedRequest, res, next)
   try {
     const { plan } = adminPlanSchema.parse(req.body);
     res.json(await setStorePlan(actorUid(req), param(req, "storeId"), plan));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// FR-S04: глобальная аналитика платформы (GMV, MAU, состав магазинов)
+adminRouter.get("/analytics", async (req: AuthedRequest, res, next) => {
+  try {
+    const query = platformAnalyticsQuerySchema.parse(req.query);
+    res.json(await getPlatformAnalytics(query));
   } catch (err) {
     next(err);
   }
