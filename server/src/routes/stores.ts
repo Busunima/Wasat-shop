@@ -11,6 +11,7 @@ import { storeInitSchema, storeUpdateSchema } from "../schemas/store.js";
 import { createStore, getStoreInfo, resolveSlug, updateStore } from "../services/stores.js";
 import { productsRouter } from "./products.js";
 import { inventoryRouter } from "./inventory.js";
+import { analyticsRouter } from "./analytics.js";
 
 export const storesRouter: Router = Router();
 
@@ -19,6 +20,9 @@ storesRouter.use("/:storeId/products", productsRouter);
 
 // Инвентарь: /api/stores/:storeId/inventory (FR-A03)
 storesRouter.use("/:storeId/inventory", inventoryRouter);
+
+// События и аналитика: /api/stores/:storeId/{events,analytics} (§16, FR-A05)
+storesRouter.use("/:storeId", analyticsRouter);
 
 /**
  * GET /api/stores/by-slug/:slug — резолв витрины по slug (FR-B01: deep link / QR).
