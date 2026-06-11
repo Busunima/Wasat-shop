@@ -23,6 +23,7 @@ import { staffRouter } from "./staff.js";
 import { recommendationsRouter } from "./recommendations.js";
 import { pushRouter } from "./push.js";
 import { aiRouter } from "./ai.js";
+import { ordersRouter } from "./orders.js";
 
 export const storesRouter: Router = Router();
 
@@ -46,6 +47,9 @@ storesRouter.use("/:storeId/push-tokens", pushRouter);
 
 // AI-ассист контента: /api/stores/:storeId/ai (FR-A12)
 storesRouter.use("/:storeId/ai", aiRouter);
+
+// Заказы: /api/stores/:storeId/orders (FR-A04/B06; создание — POST /api/checkout)
+storesRouter.use("/:storeId/orders", ordersRouter);
 
 // События и аналитика: /api/stores/:storeId/{events,analytics} (§16, FR-A05)
 storesRouter.use("/:storeId", analyticsRouter);
