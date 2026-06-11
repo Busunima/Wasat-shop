@@ -60,11 +60,21 @@ export async function generateDescription(
   input: AiDescribe,
   storeName: string,
 ): Promise<{ description: string }> {
-  const response = await anthropic().messages.create({
-    model: MODEL,
-    max_tokens: MAX_TOKENS,
-    messages: [{ role: "user", content: buildDescriptionPrompt(input, storeName) }],
-  });
+  let response: Anthropic.Message;
+  try {
+    response = await anthropic().messages.create({
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: "user", content: buildDescriptionPrompt(input, storeName) }],
+    });
+  } catch (err) {
+    // Читаемая причина для клиента (нет кредитов / невалидный ключ / перегрузка)
+    if (err instanceof Anthropic.APIError) {
+      const code = err.status === 429 ? "RATE_LIMITED" : "INTERNAL";
+      throw new ApiError(code, `Claude API: ${err.message}`);
+    }
+    throw err;
+  }
 
   const description = response.content
     .filter((block) => block.type === "text")
