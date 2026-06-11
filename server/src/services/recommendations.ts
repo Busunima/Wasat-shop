@@ -103,6 +103,8 @@ function toApi(data: FirebaseFirestore.DocumentData): ApiProduct {
     status: data["status"] as string,
     sku: (data["sku"] as string | undefined) ?? null,
     barcode: (data["barcode"] as string | undefined) ?? null,
+    rating: (data["rating"] as number | undefined) ?? 0,
+    reviewCount: (data["reviewCount"] as number | undefined) ?? 0,
   };
 }
 

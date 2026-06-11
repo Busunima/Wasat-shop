@@ -35,6 +35,9 @@ export interface ApiProduct {
   status: string;
   sku: string | null;
   barcode: string | null;
+  /** Производные агрегаты отзывов (FR-B08), пишет только сервер. */
+  rating: number;
+  reviewCount: number;
 }
 
 function productsCol(storeId: string) {
@@ -56,6 +59,8 @@ function toApiProduct(data: FirebaseFirestore.DocumentData): ApiProduct {
     status: data["status"] as string,
     sku: (data["sku"] as string | undefined) ?? null,
     barcode: (data["barcode"] as string | undefined) ?? null,
+    rating: (data["rating"] as number | undefined) ?? 0,
+    reviewCount: (data["reviewCount"] as number | undefined) ?? 0,
   };
 }
 
