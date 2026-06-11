@@ -39,6 +39,7 @@ fun HomeScreen(
     slug: String?,
     onOpenCatalog: (storeId: String, currency: String) -> Unit,
     onOpenMyProducts: (storeId: String, currency: String) -> Unit,
+    onOpenOrders: (storeId: String, currency: String) -> Unit,
     onOpenSettings: (storeId: String, currency: String) -> Unit,
     onOpenInventory: (storeId: String) -> Unit,
     onOpenPromocodes: (storeId: String, currency: String) -> Unit,
@@ -98,6 +99,12 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.home_my_products))
+                }
+                OutlinedButton(
+                    onClick = { onOpenOrders(s.storeId, s.currency) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.home_orders))
                 }
                 OutlinedButton(
                     onClick = { onOpenInventory(s.storeId) },

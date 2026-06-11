@@ -4,6 +4,10 @@ import com.wasat.shop.core.network.dto.AiDescribeRequest
 import com.wasat.shop.core.network.dto.AiDescribeResponse
 import com.wasat.shop.core.network.dto.AnalyticsEventRequest
 import com.wasat.shop.core.network.dto.AnalyticsReportDto
+import com.wasat.shop.core.network.dto.CheckoutRequest
+import com.wasat.shop.core.network.dto.OrderDto
+import com.wasat.shop.core.network.dto.OrderListResponse
+import com.wasat.shop.core.network.dto.OrderStatusUpdateRequest
 import com.wasat.shop.core.network.dto.ImportReportDto
 import com.wasat.shop.core.network.dto.InventoryLogResponse
 import com.wasat.shop.core.network.dto.ProductDto
@@ -164,6 +168,39 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @Body body: PromoPreviewRequest,
     ): Response<PromoPreviewResponse>
+
+    // ── Заказы (FR-B05/A04/B06) ──────────────────────────────────────────────
+
+    /** Транзакционный чекаут (§10.1); повтор idempotencyKey → 200 + тот же заказ. */
+    @POST("api/checkout")
+    suspend fun checkout(@Body body: CheckoutRequest): Response<OrderDto>
+
+    /** Заказы магазина — владелец/сотрудник (FR-A04). */
+    @GET("api/stores/{storeId}/orders")
+    suspend fun storeOrders(
+        @Path("storeId") storeId: String,
+        @QueryMap params: Map<String, String>,
+    ): Response<OrderListResponse>
+
+    /** Заказы покупателя (FR-B06). */
+    @GET("api/stores/{storeId}/orders/my")
+    suspend fun myOrders(
+        @Path("storeId") storeId: String,
+        @QueryMap params: Map<String, String>,
+    ): Response<OrderListResponse>
+
+    @POST("api/stores/{storeId}/orders/{orderId}/status")
+    suspend fun updateOrderStatus(
+        @Path("storeId") storeId: String,
+        @Path("orderId") orderId: String,
+        @Body body: OrderStatusUpdateRequest,
+    ): Response<OrderDto>
+
+    @POST("api/stores/{storeId}/orders/{orderId}/cancel")
+    suspend fun cancelOrder(
+        @Path("storeId") storeId: String,
+        @Path("orderId") orderId: String,
+    ): Response<OrderDto>
 
     // ── AI-ассист контента (FR-A12) ──────────────────────────────────────────
 

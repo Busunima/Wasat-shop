@@ -31,20 +31,27 @@ import com.wasat.shop.core.db.CartItemEntity
 import com.wasat.shop.core.designsystem.ProductImage
 import com.wasat.shop.core.util.PriceFormatter
 
-/** Корзина (FR-B04): локальная, офлайн-first. Чекаут подключается в Фазе 4. */
+/** Корзина (FR-B04): локальная, офлайн-first; оформление — FR-B05. */
 @Composable
 fun CartScreen(
     currency: String,
+    onCheckout: () -> Unit = {},
+    onMyOrders: () -> Unit = {},
     viewModel: CartViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
 
     if (state.items.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = stringResource(R.string.cart_empty),
-                style = MaterialTheme.typography.bodyLarge,
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = stringResource(R.string.cart_empty),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                TextButton(onClick = onMyOrders) {
+                    Text(stringResource(R.string.cart_my_orders))
+                }
+            }
         }
         return
     }
@@ -94,11 +101,13 @@ fun CartScreen(
                 )
             }
             Button(
-                onClick = {},
+                onClick = onCheckout,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = false, // транзакционный чекаут — Фаза 4 (FR-B05)
             ) {
-                Text(stringResource(R.string.cart_checkout_later))
+                Text(stringResource(R.string.cart_checkout))
+            }
+            TextButton(onClick = onMyOrders, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.cart_my_orders))
             }
         }
     }
