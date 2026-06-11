@@ -20,6 +20,7 @@ import {
   listProducts,
   updateProduct,
 } from "../services/products.js";
+import { reviewsRouter } from "./reviews.js";
 
 /**
  * Товары магазина (FR-A02 + чтение витрины): /api/stores/:storeId/products.
@@ -28,6 +29,9 @@ import {
  * mergeParams: true — доступ к :storeId родительского роутера.
  */
 export const productsRouter: Router = Router({ mergeParams: true });
+
+// Отзывы о товаре: /api/stores/:storeId/products/:productId/reviews (FR-B08)
+productsRouter.use("/:productId/reviews", reviewsRouter);
 
 /** Path-параметр строкой (типы params допускают string[] для wildcard-роутов). */
 function param(req: AuthedRequest, name: string): string {
