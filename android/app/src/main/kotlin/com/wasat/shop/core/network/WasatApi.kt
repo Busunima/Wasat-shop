@@ -1,5 +1,7 @@
 package com.wasat.shop.core.network
 
+import com.wasat.shop.core.network.dto.AiDescribeRequest
+import com.wasat.shop.core.network.dto.AiDescribeResponse
 import com.wasat.shop.core.network.dto.AnalyticsEventRequest
 import com.wasat.shop.core.network.dto.AnalyticsReportDto
 import com.wasat.shop.core.network.dto.ImportReportDto
@@ -162,6 +164,15 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @Body body: PromoPreviewRequest,
     ): Response<PromoPreviewResponse>
+
+    // ── AI-ассист контента (FR-A12) ──────────────────────────────────────────
+
+    /** Генерация описания товара; 501 NOT_IMPLEMENTED без ANTHROPIC_API_KEY. */
+    @POST("api/stores/{storeId}/ai/describe")
+    suspend fun aiDescribe(
+        @Path("storeId") storeId: String,
+        @Body body: AiDescribeRequest,
+    ): Response<AiDescribeResponse>
 
     // ── Push-уведомления (FR-B10) ────────────────────────────────────────────
 

@@ -42,6 +42,8 @@
     <string name="product_edit_name">Name</string>
     <string name="product_edit_price">Price</string>
     <string name="product_edit_description">Description (optional)</string>
+    <string name="product_edit_ai_describe">✨ Generate description</string>
+    <string name="product_edit_ai_generating">Generating…</string>
     <string name="product_edit_publish">Publish</string>
     <string name="product_edit_publish_hint">Published products are visible to buyers</string>
     <string name="product_edit_save">Save</string>

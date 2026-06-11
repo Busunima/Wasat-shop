@@ -197,9 +197,22 @@ fun ProductEditScreen(
                 label = { Text(stringResource(R.string.product_edit_description)) },
                 isError = ProductField.DESCRIPTION in state.fieldErrors,
                 supportingText = { state.fieldErrors[ProductField.DESCRIPTION]?.let { Text(it) } },
-                enabled = !isLoading,
+                enabled = !isLoading && !state.aiGenerating,
                 minLines = 3,
             )
+
+            // AI-ассист (FR-A12): генерация описания по названию/категории/тегам
+            TextButton(
+                onClick = viewModel::generateDescription,
+                enabled = !isLoading && !state.aiGenerating && state.name.isNotBlank(),
+            ) {
+                Text(
+                    stringResource(
+                        if (state.aiGenerating) R.string.product_edit_ai_generating
+                        else R.string.product_edit_ai_describe,
+                    ),
+                )
+            }
 
             PhotosSection(state = state, viewModel = viewModel, enabled = !isLoading)
 
