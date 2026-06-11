@@ -90,6 +90,12 @@
     <string name="product_low_stock">Осталось мало: %1$d шт.</string>
     <string name="product_reviews_title">Отзывы</string>
     <string name="product_reviews_empty">Отзывов пока нет — они появятся после первых покупок</string>
+    <string name="product_rating_summary">%1$.1f · %2$d отз.</string>
+    <string name="review_title">Оставить отзыв</string>
+    <string name="review_text">Текст отзыва (необязательно)</string>
+    <string name="review_submit">Отправить</string>
+    <string name="review_submitting">Отправляем…</string>
+    <string name="review_for">Отзыв: %1$s</string>
 
     <!-- Корзина -->
     <string name="cart_title">Корзина</string>

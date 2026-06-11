@@ -19,6 +19,9 @@ data class ProductDto(
     val status: String = "active",
     val sku: String? = null,
     val barcode: String? = null,
+    /** Агрегаты отзывов (FR-B08), считает сервер. */
+    val rating: Double = 0.0,
+    val reviewCount: Int = 0,
 )
 
 @Serializable

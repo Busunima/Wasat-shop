@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.dto.ProductDto
+import com.wasat.shop.core.network.dto.ReviewDto
 import com.wasat.shop.core.network.dto.VariantDto
+import com.wasat.shop.feature.orders.ReviewsRepository
 import com.wasat.shop.feature.analytics.AnalyticsRepository
 import com.wasat.shop.feature.cart.CartRepository
 import com.wasat.shop.feature.storefront.RecentProduct
@@ -35,6 +37,7 @@ class ProductDetailViewModel @Inject constructor(
     private val wishlistRepository: WishlistRepository,
     private val recentlyViewed: RecentlyViewedRepository,
     private val analytics: AnalyticsRepository,
+    private val reviewsRepository: ReviewsRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -60,6 +63,10 @@ class ProductDetailViewModel @Inject constructor(
     /** Похожие товары (FR-B12) — подгружаются best-effort после карточки. */
     private val _related = MutableStateFlow<List<ProductDto>>(emptyList())
     val related: StateFlow<List<ProductDto>> = _related.asStateFlow()
+
+    /** Отзывы о товаре (FR-B08) — best-effort после карточки. */
+    private val _reviews = MutableStateFlow<List<ReviewDto>>(emptyList())
+    val reviews: StateFlow<List<ReviewDto>> = _reviews.asStateFlow()
 
     /** Кратковременный флаг «добавлено» для обратной связи на кнопке. */
     private val _justAdded = MutableStateFlow(false)
@@ -97,6 +104,7 @@ class ProductDetailViewModel @Inject constructor(
                     )
                     analytics.track(storeId, "product_view", productId = result.data.id)
                     loadRelated()
+                    loadReviews()
                     ProductDetailUiState.Loaded(result.data)
                 }
                 is ApiResult.ApiError -> ProductDetailUiState.Error(result.message)
@@ -110,6 +118,13 @@ class ProductDetailViewModel @Inject constructor(
     private fun loadRelated() {
         viewModelScope.launch {
             _related.value = repository.related(storeId, productId)
+        }
+    }
+
+    private fun loadReviews() {
+        viewModelScope.launch {
+            val result = reviewsRepository.list(storeId, productId)
+            if (result is ApiResult.Success) _reviews.value = result.data.items
         }
     }
 }

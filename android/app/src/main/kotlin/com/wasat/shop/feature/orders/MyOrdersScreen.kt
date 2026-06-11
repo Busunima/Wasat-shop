@@ -19,10 +19,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.wasat.shop.R
+import com.wasat.shop.domain.model.OrderStatus
 
-/** История заказов покупателя (FR-B06): статусы, трекинг, отмена до отгрузки. */
+/** История заказов покупателя (FR-B06): статусы, трекинг, отмена до отгрузки,
+ *  отзыв на товар из полученного заказа (FR-B08). */
 @Composable
-fun MyOrdersScreen(viewModel: MyOrdersViewModel = hiltViewModel()) {
+fun MyOrdersScreen(
+    onWriteReview: (productId: String, orderId: String) -> Unit = { _, _ -> },
+    viewModel: MyOrdersViewModel = hiltViewModel(),
+) {
     val state by viewModel.uiState.collectAsState()
 
     if (state.loading) {
@@ -59,6 +64,8 @@ fun MyOrdersScreen(viewModel: MyOrdersViewModel = hiltViewModel()) {
 
         items(state.orders, key = { it.id }) { order ->
             val status = OrderTransitions.parse(order.status)
+            val canReview =
+                status == OrderStatus.DELIVERED || status == OrderStatus.COMPLETED
             OrderCard(order = order, currency = viewModel.currency) {
                 if (status?.isCancellableByBuyer == true) {
                     TextButton(
@@ -66,6 +73,14 @@ fun MyOrdersScreen(viewModel: MyOrdersViewModel = hiltViewModel()) {
                         enabled = !state.busy,
                     ) {
                         Text(stringResource(R.string.order_cancel))
+                    }
+                }
+                // FR-B08: отзыв на каждый товар полученного заказа
+                if (canReview) {
+                    order.items.forEach { item ->
+                        TextButton(onClick = { onWriteReview(item.productId, order.id) }) {
+                            Text(stringResource(R.string.review_for, item.name))
+                        }
                     }
                 }
             }

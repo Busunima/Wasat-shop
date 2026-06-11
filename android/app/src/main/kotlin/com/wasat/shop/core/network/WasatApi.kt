@@ -20,6 +20,9 @@ import com.wasat.shop.core.network.dto.PromoListResponse
 import com.wasat.shop.core.network.dto.PromoPreviewRequest
 import com.wasat.shop.core.network.dto.PromoPreviewResponse
 import com.wasat.shop.core.network.dto.PushTokenRequest
+import com.wasat.shop.core.network.dto.ReviewCreateRequest
+import com.wasat.shop.core.network.dto.ReviewDto
+import com.wasat.shop.core.network.dto.ReviewListResponse
 import com.wasat.shop.core.network.dto.StaffInviteRequest
 import com.wasat.shop.core.network.dto.StaffListResponse
 import com.wasat.shop.core.network.dto.StaffMemberDto
@@ -72,6 +75,22 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @Path("productId") productId: String,
     ): Response<ProductDto>
+
+    // ── Отзывы (FR-B08) ──────────────────────────────────────────────────────
+
+    @GET("api/stores/{storeId}/products/{productId}/reviews")
+    suspend fun listReviews(
+        @Path("storeId") storeId: String,
+        @Path("productId") productId: String,
+        @QueryMap params: Map<String, String>,
+    ): Response<ReviewListResponse>
+
+    @POST("api/stores/{storeId}/products/{productId}/reviews")
+    suspend fun createReview(
+        @Path("storeId") storeId: String,
+        @Path("productId") productId: String,
+        @Body body: ReviewCreateRequest,
+    ): Response<ReviewDto>
 
     // ── Рекомендации (FR-B12) ────────────────────────────────────────────────
 
