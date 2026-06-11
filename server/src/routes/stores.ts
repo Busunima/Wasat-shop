@@ -13,6 +13,7 @@ import { productsRouter } from "./products.js";
 import { inventoryRouter } from "./inventory.js";
 import { analyticsRouter } from "./analytics.js";
 import { promocodesRouter } from "./promocodes.js";
+import { staffRouter } from "./staff.js";
 
 export const storesRouter: Router = Router();
 
@@ -24,6 +25,9 @@ storesRouter.use("/:storeId/inventory", inventoryRouter);
 
 // Промокоды: /api/stores/:storeId/promocodes (FR-A06)
 storesRouter.use("/:storeId/promocodes", promocodesRouter);
+
+// Сотрудники: /api/stores/:storeId/staff (FR-A09)
+storesRouter.use("/:storeId/staff", staffRouter);
 
 // События и аналитика: /api/stores/:storeId/{events,analytics} (§16, FR-A05)
 storesRouter.use("/:storeId", analyticsRouter);

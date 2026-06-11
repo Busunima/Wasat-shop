@@ -2,9 +2,11 @@ import { Router } from "express";
 import {
   optionalAuth,
   requireAuth,
-  requireStoreRole,
+  requireStoreStaff,
   type AuthedRequest,
 } from "../middleware/auth.js";
+
+const STORE_ROLES = ["owner", "manager", "staff"];
 import { verifyAppCheck } from "../middleware/appCheck.js";
 import {
   productCreateSchema,
@@ -33,16 +35,18 @@ function param(req: AuthedRequest, name: string): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-function isStoreOwner(req: AuthedRequest): boolean {
+/** Член магазина (владелец/сотрудник) — видит черновики и архив в листинге. */
+function isStoreMember(req: AuthedRequest): boolean {
   return (
-    req.claims?.["storeId"] === param(req, "storeId") && req.claims?.["role"] === "owner"
+    req.claims?.["storeId"] === param(req, "storeId") &&
+    STORE_ROLES.includes(req.claims?.["role"] as string)
   );
 }
 
 productsRouter.get("/", optionalAuth, async (req: AuthedRequest, res, next) => {
   try {
     const query = productListQuerySchema.parse(req.query);
-    const page = await listProducts(param(req, "storeId"), isStoreOwner(req), query);
+    const page = await listProducts(param(req, "storeId"), isStoreMember(req), query);
     res.json(page);
   } catch (err) {
     next(err);
@@ -54,7 +58,7 @@ productsRouter.get("/:productId", optionalAuth, async (req: AuthedRequest, res, 
     const product = await getProduct(
       param(req, "storeId"),
       param(req, "productId"),
-      isStoreOwner(req),
+      isStoreMember(req),
     );
     res.json(product);
   } catch (err) {
@@ -66,7 +70,7 @@ productsRouter.post(
   "/",
   verifyAppCheck,
   requireAuth,
-  requireStoreRole,
+  requireStoreStaff,
   async (req: AuthedRequest, res, next) => {
     try {
       const body = productCreateSchema.parse(req.body);
@@ -82,7 +86,7 @@ productsRouter.patch(
   "/:productId",
   verifyAppCheck,
   requireAuth,
-  requireStoreRole,
+  requireStoreStaff,
   async (req: AuthedRequest, res, next) => {
     try {
       const body = productUpdateSchema.parse(req.body);
@@ -102,7 +106,7 @@ productsRouter.delete(
   "/:productId",
   verifyAppCheck,
   requireAuth,
-  requireStoreRole,
+  requireStoreStaff,
   async (req: AuthedRequest, res, next) => {
     try {
       await deleteProduct(param(req, "storeId"), param(req, "productId"));

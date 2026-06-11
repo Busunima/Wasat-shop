@@ -1,5 +1,5 @@
 import express, { Router } from "express";
-import { requireAuth, requireStoreRole, type AuthedRequest } from "../middleware/auth.js";
+import { requireAuth, requireStoreStaff, type AuthedRequest } from "../middleware/auth.js";
 import { verifyAppCheck } from "../middleware/appCheck.js";
 import { ApiError } from "../middleware/errorHandler.js";
 import { stockAdjustSchema } from "../schemas/inventory.js";
@@ -12,7 +12,7 @@ import { z } from "zod";
  */
 export const inventoryRouter: Router = Router({ mergeParams: true });
 
-inventoryRouter.use(verifyAppCheck, requireAuth, requireStoreRole);
+inventoryRouter.use(verifyAppCheck, requireAuth, requireStoreStaff);
 
 function param(req: AuthedRequest, name: string): string {
   const value = req.params[name];

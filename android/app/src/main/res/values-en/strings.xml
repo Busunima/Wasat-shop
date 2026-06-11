@@ -22,6 +22,7 @@
     <string name="home_settings">Store settings</string>
     <string name="home_inventory">Inventory</string>
     <string name="home_promocodes">Promo codes</string>
+    <string name="home_staff">Staff</string>
     <string name="home_analytics">Analytics</string>
     <string name="home_scan">Scan QR</string>
     <string name="home_last_store">Back to “%1$s”</string>
@@ -158,4 +159,16 @@
     <string name="promo_delete">Delete</string>
     <string name="promo_delete_title">Delete promo code?</string>
     <string name="promo_delete_confirm">Promo code "%1$s" will be permanently deleted.</string>
+
+    <!-- Staff (FR-A09) -->
+    <string name="staff_title">Staff</string>
+    <string name="staff_invite_title">Invite a team member</string>
+    <string name="staff_email">Member email</string>
+    <string name="staff_role_manager">Manager</string>
+    <string name="staff_role_staff">Staff</string>
+    <string name="staff_invite">Invite</string>
+    <string name="staff_empty">No staff yet</string>
+    <string name="staff_remove">Remove</string>
+    <string name="staff_remove_title">Remove staff member?</string>
+    <string name="staff_remove_confirm">"%1$s" will lose access to managing the store.</string>
 </resources>
