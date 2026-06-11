@@ -121,4 +121,9 @@
     <string name="inventory_import_report_title">Импорт остатков</string>
     <string name="inventory_import_applied">Применено строк: %1$d</string>
     <string name="inventory_log_title">История изменений</string>
+
+    <!-- Вишлист (FR-B07) и недавно просмотренные (FR-B12 MVP) -->
+    <string name="wishlist_title">Избранное</string>
+    <string name="wishlist_empty">В избранном пока пусто — нажмите ♡ на товаре</string>
+    <string name="catalog_recent">Недавно просмотренные</string>
 </resources>

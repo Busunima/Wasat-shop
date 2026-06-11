@@ -119,4 +119,9 @@
     <string name="inventory_import_report_title">Stock import</string>
     <string name="inventory_import_applied">Rows applied: %1$d</string>
     <string name="inventory_log_title">Change history</string>
+
+    <!-- Wishlist (FR-B07) and recently viewed (FR-B12 MVP) -->
+    <string name="wishlist_title">Wishlist</string>
+    <string name="wishlist_empty">Nothing here yet — tap ♡ on a product</string>
+    <string name="catalog_recent">Recently viewed</string>
 </resources>
