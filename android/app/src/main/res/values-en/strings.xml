@@ -21,6 +21,7 @@
     <string name="home_my_products">My products</string>
     <string name="home_settings">Store settings</string>
     <string name="home_inventory">Inventory</string>
+    <string name="home_promocodes">Promo codes</string>
     <string name="home_analytics">Analytics</string>
     <string name="home_scan">Scan QR</string>
     <string name="home_last_store">Back to “%1$s”</string>
@@ -139,4 +140,22 @@
     <string name="analytics_conversion">Conversion: view→cart %1$.1f%% · cart→order %2$.1f%% · view→order %3$.1f%%</string>
     <string name="analytics_top">Top products by views</string>
     <string name="analytics_views_count">%1$d views</string>
+
+    <!-- Promo codes (FR-A06) -->
+    <string name="promo_title">Promo codes</string>
+    <string name="promo_create_title">New promo code</string>
+    <string name="promo_code">Code</string>
+    <string name="promo_type_percent">Percent</string>
+    <string name="promo_type_fixed">Amount</string>
+    <string name="promo_type_free_shipping">Free shipping</string>
+    <string name="promo_value_percent">Discount, %</string>
+    <string name="promo_value_fixed">Discount amount</string>
+    <string name="promo_min_amount">Min order amount (optional)</string>
+    <string name="promo_usage_limit">Usage limit (optional)</string>
+    <string name="promo_create">Create</string>
+    <string name="promo_empty">No promo codes yet</string>
+    <string name="promo_inactive">Inactive</string>
+    <string name="promo_delete">Delete</string>
+    <string name="promo_delete_title">Delete promo code?</string>
+    <string name="promo_delete_confirm">Promo code "%1$s" will be permanently deleted.</string>
 </resources>

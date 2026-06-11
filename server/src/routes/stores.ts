@@ -12,6 +12,7 @@ import { createStore, getStoreInfo, resolveSlug, updateStore } from "../services
 import { productsRouter } from "./products.js";
 import { inventoryRouter } from "./inventory.js";
 import { analyticsRouter } from "./analytics.js";
+import { promocodesRouter } from "./promocodes.js";
 
 export const storesRouter: Router = Router();
 
@@ -20,6 +21,9 @@ storesRouter.use("/:storeId/products", productsRouter);
 
 // Инвентарь: /api/stores/:storeId/inventory (FR-A03)
 storesRouter.use("/:storeId/inventory", inventoryRouter);
+
+// Промокоды: /api/stores/:storeId/promocodes (FR-A06)
+storesRouter.use("/:storeId/promocodes", promocodesRouter);
 
 // События и аналитика: /api/stores/:storeId/{events,analytics} (§16, FR-A05)
 storesRouter.use("/:storeId", analyticsRouter);
