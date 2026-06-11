@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.dto.ProductDto
 import com.wasat.shop.core.network.dto.VariantDto
+import com.wasat.shop.feature.analytics.AnalyticsRepository
 import com.wasat.shop.feature.cart.CartRepository
 import com.wasat.shop.feature.storefront.RecentProduct
 import com.wasat.shop.feature.storefront.RecentlyViewedRepository
@@ -33,6 +34,7 @@ class ProductDetailViewModel @Inject constructor(
     private val cartRepository: CartRepository,
     private val wishlistRepository: WishlistRepository,
     private val recentlyViewed: RecentlyViewedRepository,
+    private val analytics: AnalyticsRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -67,6 +69,7 @@ class ProductDetailViewModel @Inject constructor(
         val product = (uiState.value as? ProductDetailUiState.Loaded)?.product ?: return
         viewModelScope.launch {
             cartRepository.add(storeId, currency, product, variant)
+            analytics.track(storeId, "add_to_cart", productId = product.id)
             _justAdded.value = true
             delay(2_000)
             _justAdded.value = false
@@ -88,6 +91,7 @@ class ProductDetailViewModel @Inject constructor(
                             imageUrl = result.data.images.firstOrNull(),
                         ),
                     )
+                    analytics.track(storeId, "product_view", productId = result.data.id)
                     ProductDetailUiState.Loaded(result.data)
                 }
                 is ApiResult.ApiError -> ProductDetailUiState.Error(result.message)

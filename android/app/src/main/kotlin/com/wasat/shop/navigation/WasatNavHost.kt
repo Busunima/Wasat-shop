@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.wasat.shop.feature.admin.InventoryScreen
+import com.wasat.shop.feature.analytics.AnalyticsScreen
 import com.wasat.shop.feature.admin.MyProductsScreen
 import com.wasat.shop.feature.admin.ProductEditScreen
 import com.wasat.shop.feature.admin.StoreSettingsScreen
@@ -32,6 +33,7 @@ object Routes {
     const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
     const val STORE_SETTINGS = "storesettings/{storeId}?currency={currency}"
     const val INVENTORY = "inventory/{storeId}"
+    const val ANALYTICS = "analytics/{storeId}?currency={currency}"
     const val WISHLIST = "wishlist/{storeId}?currency={currency}"
     const val STORE_BY_SLUG = "store/{slug}"
 
@@ -48,6 +50,8 @@ object Routes {
     fun storeSettings(storeId: String, currency: String): String =
         "storesettings/$storeId?currency=$currency"
     fun inventory(storeId: String): String = "inventory/$storeId"
+    fun analytics(storeId: String, currency: String): String =
+        "analytics/$storeId?currency=$currency"
     fun wishlist(storeId: String, currency: String): String =
         "wishlist/$storeId?currency=$currency"
     fun storeBySlug(slug: String): String = "store/$slug"
@@ -117,6 +121,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 },
                 onOpenInventory = { storeId ->
                     navController.navigate(Routes.inventory(storeId))
+                },
+                onOpenAnalytics = { storeId, currency ->
+                    navController.navigate(Routes.analytics(storeId, currency))
                 },
                 onOpenStore = { slug ->
                     navController.navigate(Routes.storeBySlug(slug))
@@ -202,6 +209,15 @@ fun WasatNavHost(authRepository: AuthRepository) {
         // FR-A03: инвентарь (владелец)
         composable(route = Routes.INVENTORY) {
             InventoryScreen()
+        }
+
+        // FR-A05: дашборд аналитики (владелец)
+        composable(
+            route = Routes.ANALYTICS,
+            arguments = listOf(currencyArg),
+        ) { backStackEntry ->
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
+            AnalyticsScreen(currency = currency)
         }
 
         // FR-B07: вишлист покупателя

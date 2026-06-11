@@ -23,6 +23,7 @@
     <string name="home_my_products">Мои товары</string>
     <string name="home_settings">Настройки магазина</string>
     <string name="home_inventory">Инвентарь</string>
+    <string name="home_analytics">Аналитика</string>
     <string name="home_scan">Сканировать QR</string>
     <string name="home_last_store">Вернуться в «%1$s»</string>
 
@@ -126,4 +127,18 @@
     <string name="wishlist_title">Избранное</string>
     <string name="wishlist_empty">В избранном пока пусто — нажмите ♡ на товаре</string>
     <string name="catalog_recent">Недавно просмотренные</string>
+
+    <!-- Аналитика (FR-A05, §16) -->
+    <string name="analytics_title">Аналитика</string>
+    <string name="analytics_revenue">Выручка</string>
+    <string name="analytics_orders">Заказы</string>
+    <string name="analytics_avg_check">Средний чек</string>
+    <string name="analytics_funnel">Воронка</string>
+    <string name="analytics_views">Просмотры</string>
+    <string name="analytics_carts">В корзину</string>
+    <string name="analytics_checkouts">Оформления</string>
+    <string name="analytics_purchases">Заказы</string>
+    <string name="analytics_conversion">Конверсии: просмотр→корзина %1$.1f%% · корзина→заказ %2$.1f%% · просмотр→заказ %3$.1f%%</string>
+    <string name="analytics_top">Топ-товары по просмотрам</string>
+    <string name="analytics_views_count">%1$d просм.</string>
 </resources>
