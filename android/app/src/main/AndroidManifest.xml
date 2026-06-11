@@ -44,5 +44,14 @@
                     android:pathPrefix="/s/" />
             </intent-filter>
         </activity>
+
+        <!-- FCM: push о наличии/цене из вишлиста (ТЗ §FR-B10) -->
+        <service
+            android:name=".core.push.WasatMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>

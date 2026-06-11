@@ -9,6 +9,7 @@ import {
   type StockAdjust,
 } from "../schemas/inventory.js";
 import { logger } from "../lib/logger.js";
+import { notifyProductEvent } from "./push.js";
 
 /**
  * Инвентарь (ТЗ §6 FR-A03): атомарные корректировки стока с историей inventoryLog
@@ -55,6 +56,8 @@ export async function adjustStock(
     if (!snap.exists) throw new ApiError("NOT_FOUND", "Товар не найден");
     const data = snap.data()!;
     const variants = ((data["variants"] as ProductVariant[]) ?? []).map((v) => ({ ...v }));
+    const previousTotal = (data["totalStock"] as number) ?? 0;
+    const productName = (data["name"] as string) ?? "";
 
     let variantLabel: string | null = null;
     let totalStock: number;
@@ -95,11 +98,19 @@ export async function adjustStock(
       at: FieldValue.serverTimestamp(),
     });
 
-    return { productId, totalStock, variants };
+    return { productId, totalStock, variants, previousTotal, productName };
   });
 
+  // FR-B10: переход 0 → в наличии — push покупателям с товаром в вишлисте
+  // (fire-and-forget, сбой не влияет на корректировку).
+  if (result.previousTotal <= 0 && result.totalStock > 0) {
+    void notifyProductEvent(storeId, productId, "back_in_stock", result.productName).catch(
+      () => undefined,
+    );
+  }
+
   logger.info("Сток скорректирован", { storeId, productId, delta: input.delta });
-  return result;
+  return { productId: result.productId, totalStock: result.totalStock, variants: result.variants };
 }
 
 export interface ImportReport {

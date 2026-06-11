@@ -5,6 +5,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
@@ -44,4 +45,9 @@ object FirebaseModule {
     @Singleton
     fun provideFirebaseFirestore(@ApplicationContext context: Context): FirebaseFirestore? =
         if (isFirebaseConfigured(context)) FirebaseFirestore.getInstance() else null
+
+    @Provides
+    @Singleton
+    fun provideFirebaseMessaging(@ApplicationContext context: Context): FirebaseMessaging? =
+        if (isFirebaseConfigured(context)) FirebaseMessaging.getInstance() else null
 }

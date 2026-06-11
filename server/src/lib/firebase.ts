@@ -1,6 +1,7 @@
 import { getApps, initializeApp, type App } from "firebase-admin/app";
 import { getAuth, type Auth } from "firebase-admin/auth";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { getMessaging, type Messaging } from "firebase-admin/messaging";
 
 /**
  * Инициализация Firebase Admin SDK (ТЗ §2, слой 2).
@@ -22,4 +23,9 @@ export function db(): Firestore {
 
 export function auth(): Auth {
   return getAuth(firebaseApp());
+}
+
+/** FCM (FR-B10/FR-A07). Эмулятора FCM нет — отправка best-effort (см. services/push). */
+export function messaging(): Messaging {
+  return getMessaging(firebaseApp());
 }
