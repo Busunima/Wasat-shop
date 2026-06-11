@@ -11,6 +11,7 @@ import com.wasat.shop.feature.admin.InventoryScreen
 import com.wasat.shop.feature.analytics.AnalyticsScreen
 import com.wasat.shop.feature.admin.MyProductsScreen
 import com.wasat.shop.feature.admin.ProductEditScreen
+import com.wasat.shop.feature.admin.PromocodesScreen
 import com.wasat.shop.feature.admin.StoreSettingsScreen
 import com.wasat.shop.feature.auth.AuthRepository
 import com.wasat.shop.feature.auth.SignInScreen
@@ -33,6 +34,7 @@ object Routes {
     const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
     const val STORE_SETTINGS = "storesettings/{storeId}?currency={currency}"
     const val INVENTORY = "inventory/{storeId}"
+    const val PROMOCODES = "promocodes/{storeId}?currency={currency}"
     const val ANALYTICS = "analytics/{storeId}?currency={currency}"
     const val WISHLIST = "wishlist/{storeId}?currency={currency}"
     const val STORE_BY_SLUG = "store/{slug}"
@@ -50,6 +52,8 @@ object Routes {
     fun storeSettings(storeId: String, currency: String): String =
         "storesettings/$storeId?currency=$currency"
     fun inventory(storeId: String): String = "inventory/$storeId"
+    fun promocodes(storeId: String, currency: String): String =
+        "promocodes/$storeId?currency=$currency"
     fun analytics(storeId: String, currency: String): String =
         "analytics/$storeId?currency=$currency"
     fun wishlist(storeId: String, currency: String): String =
@@ -121,6 +125,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 },
                 onOpenInventory = { storeId ->
                     navController.navigate(Routes.inventory(storeId))
+                },
+                onOpenPromocodes = { storeId, currency ->
+                    navController.navigate(Routes.promocodes(storeId, currency))
                 },
                 onOpenAnalytics = { storeId, currency ->
                     navController.navigate(Routes.analytics(storeId, currency))
@@ -209,6 +216,14 @@ fun WasatNavHost(authRepository: AuthRepository) {
         // FR-A03: инвентарь (владелец)
         composable(route = Routes.INVENTORY) {
             InventoryScreen()
+        }
+
+        // FR-A06: промокоды (владелец)
+        composable(
+            route = Routes.PROMOCODES,
+            arguments = listOf(currencyArg),
+        ) {
+            PromocodesScreen()
         }
 
         // FR-A05: дашборд аналитики (владелец)

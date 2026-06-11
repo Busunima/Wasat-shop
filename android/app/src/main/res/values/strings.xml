@@ -23,6 +23,7 @@
     <string name="home_my_products">Мои товары</string>
     <string name="home_settings">Настройки магазина</string>
     <string name="home_inventory">Инвентарь</string>
+    <string name="home_promocodes">Промокоды</string>
     <string name="home_analytics">Аналитика</string>
     <string name="home_scan">Сканировать QR</string>
     <string name="home_last_store">Вернуться в «%1$s»</string>
@@ -141,4 +142,22 @@
     <string name="analytics_conversion">Конверсии: просмотр→корзина %1$.1f%% · корзина→заказ %2$.1f%% · просмотр→заказ %3$.1f%%</string>
     <string name="analytics_top">Топ-товары по просмотрам</string>
     <string name="analytics_views_count">%1$d просм.</string>
+
+    <!-- Промокоды (FR-A06) -->
+    <string name="promo_title">Промокоды</string>
+    <string name="promo_create_title">Новый промокод</string>
+    <string name="promo_code">Код</string>
+    <string name="promo_type_percent">Процент</string>
+    <string name="promo_type_fixed">Сумма</string>
+    <string name="promo_type_free_shipping">Бесплатная доставка</string>
+    <string name="promo_value_percent">Скидка, %</string>
+    <string name="promo_value_fixed">Сумма скидки</string>
+    <string name="promo_min_amount">Мин. сумма заказа (необязательно)</string>
+    <string name="promo_usage_limit">Лимит применений (необязательно)</string>
+    <string name="promo_create">Создать</string>
+    <string name="promo_empty">Промокодов пока нет</string>
+    <string name="promo_inactive">Неактивен</string>
+    <string name="promo_delete">Удалить</string>
+    <string name="promo_delete_title">Удалить промокод?</string>
+    <string name="promo_delete_confirm">Промокод «%1$s» будет удалён без возможности восстановления.</string>
 </resources>

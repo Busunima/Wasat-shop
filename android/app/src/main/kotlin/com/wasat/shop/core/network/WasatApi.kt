@@ -7,6 +7,11 @@ import com.wasat.shop.core.network.dto.InventoryLogResponse
 import com.wasat.shop.core.network.dto.ProductDto
 import com.wasat.shop.core.network.dto.ProductListResponse
 import com.wasat.shop.core.network.dto.ProductUpsertRequest
+import com.wasat.shop.core.network.dto.PromoCreateRequest
+import com.wasat.shop.core.network.dto.PromoDto
+import com.wasat.shop.core.network.dto.PromoListResponse
+import com.wasat.shop.core.network.dto.PromoPreviewRequest
+import com.wasat.shop.core.network.dto.PromoPreviewResponse
 import com.wasat.shop.core.network.dto.StoreInfoDto
 import com.wasat.shop.core.network.dto.StoreInitRequest
 import com.wasat.shop.core.network.dto.StockAdjustRequest
@@ -106,4 +111,30 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @QueryMap params: Map<String, String>,
     ): Response<AnalyticsReportDto>
+
+    // ── Промокоды (FR-A06) ───────────────────────────────────────────────────
+
+    @GET("api/stores/{storeId}/promocodes")
+    suspend fun listPromocodes(
+        @Path("storeId") storeId: String,
+    ): Response<PromoListResponse>
+
+    @POST("api/stores/{storeId}/promocodes")
+    suspend fun createPromocode(
+        @Path("storeId") storeId: String,
+        @Body body: PromoCreateRequest,
+    ): Response<PromoDto>
+
+    @DELETE("api/stores/{storeId}/promocodes/{code}")
+    suspend fun deletePromocode(
+        @Path("storeId") storeId: String,
+        @Path("code") code: String,
+    ): Response<Unit>
+
+    /** Публичный предпросмотр скидки для корзины (FR-B04). */
+    @POST("api/stores/{storeId}/promocodes/preview")
+    suspend fun previewPromocode(
+        @Path("storeId") storeId: String,
+        @Body body: PromoPreviewRequest,
+    ): Response<PromoPreviewResponse>
 }
