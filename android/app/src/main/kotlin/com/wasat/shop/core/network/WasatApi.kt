@@ -5,6 +5,7 @@ import com.wasat.shop.core.network.dto.AnalyticsReportDto
 import com.wasat.shop.core.network.dto.ImportReportDto
 import com.wasat.shop.core.network.dto.InventoryLogResponse
 import com.wasat.shop.core.network.dto.ProductDto
+import com.wasat.shop.core.network.dto.PlanUsageDto
 import com.wasat.shop.core.network.dto.ProductListResponse
 import com.wasat.shop.core.network.dto.ProductUpsertRequest
 import com.wasat.shop.core.network.dto.PromoCreateRequest
@@ -39,6 +40,10 @@ interface WasatApi {
 
     @GET("api/stores/{storeId}")
     suspend fun getStore(@Path("storeId") storeId: String): Response<StoreInfoDto>
+
+    /** Тариф, лимиты и использование (FR-S03), только владелец. */
+    @GET("api/stores/{storeId}/plan")
+    suspend fun storePlan(@Path("storeId") storeId: String): Response<PlanUsageDto>
 
     @GET("api/stores/by-slug/{slug}")
     suspend fun getStoreBySlug(@Path("slug") slug: String): Response<StoreInfoDto>

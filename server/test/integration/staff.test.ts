@@ -16,6 +16,7 @@ before(async () => {
     name: "Staff",
     ownerUid: OWNER_UID,
     currency: "USD",
+    plan: "pro",
     isPublic: true,
   });
   const user = await auth().createUser({ email: "clerk@example.com" });

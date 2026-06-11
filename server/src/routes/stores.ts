@@ -8,7 +8,13 @@ import {
 import { verifyAppCheck } from "../middleware/appCheck.js";
 import { ApiError } from "../middleware/errorHandler.js";
 import { storeInitSchema, storeUpdateSchema } from "../schemas/store.js";
-import { createStore, getStoreInfo, resolveSlug, updateStore } from "../services/stores.js";
+import {
+  createStore,
+  getPlanUsage,
+  getStoreInfo,
+  resolveSlug,
+  updateStore,
+} from "../services/stores.js";
 import { productsRouter } from "./products.js";
 import { inventoryRouter } from "./inventory.js";
 import { analyticsRouter } from "./analytics.js";
@@ -57,6 +63,23 @@ storesRouter.patch(
     try {
       const body = storeUpdateSchema.parse(req.body);
       res.json(await updateStore(String(req.params["storeId"] ?? ""), body));
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+/**
+ * GET /api/stores/:storeId/plan — тариф, лимиты и использование (FR-S03), владелец.
+ */
+storesRouter.get(
+  "/:storeId/plan",
+  verifyAppCheck,
+  requireAuth,
+  requireStoreRole,
+  async (req: AuthedRequest, res, next) => {
+    try {
+      res.json(await getPlanUsage(String(req.params["storeId"] ?? "")));
     } catch (err) {
       next(err);
     }

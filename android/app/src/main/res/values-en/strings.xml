@@ -24,6 +24,9 @@
     <string name="home_promocodes">Promo codes</string>
     <string name="home_staff">Staff</string>
     <string name="home_analytics">Analytics</string>
+    <string name="plan_title">Plan: %1$s</string>
+    <string name="plan_usage_products">Products: %1$d / %2$s</string>
+    <string name="plan_usage_staff">Staff: %1$d / %2$s</string>
     <string name="home_scan">Scan QR</string>
     <string name="home_last_store">Back to “%1$s”</string>
 

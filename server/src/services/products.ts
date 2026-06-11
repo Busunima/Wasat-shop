@@ -12,6 +12,7 @@ import {
   type ProductUpdate,
 } from "../schemas/product.js";
 import { logger } from "../lib/logger.js";
+import { canAdd, limitsFor } from "../config/planLimits.js";
 
 /**
  * CRUD товаров (FR-A02, docs/data-model.md → products/{pid}).
@@ -62,8 +63,24 @@ async function assertStoreExists(storeId: string): Promise<void> {
   if (!snap.exists) throw new ApiError("NOT_FOUND", "Магазин не найден");
 }
 
+/** Проверка лимита товаров тарифа перед созданием (FR-S03). */
+async function assertProductLimit(storeId: string): Promise<void> {
+  const storeSnap = await db().collection("stores").doc(storeId).get();
+  if (!storeSnap.exists) throw new ApiError("NOT_FOUND", "Магазин не найден");
+  const plan = (storeSnap.data()?.["plan"] as string) ?? "free";
+  const limit = limitsFor(plan).maxProducts;
+  if (limit === null) return;
+  const countSnap = await productsCol(storeId).count().get();
+  if (!canAdd(limit, countSnap.data().count)) {
+    throw new ApiError("FORBIDDEN", `Достигнут лимит товаров тарифа (${limit})`, {
+      plan,
+      limit,
+    });
+  }
+}
+
 export async function createProduct(storeId: string, input: ProductCreate): Promise<ApiProduct> {
-  await assertStoreExists(storeId);
+  await assertProductLimit(storeId);
 
   const productId = randomUUID();
   const docData = {

@@ -4,6 +4,7 @@ import { auth, db } from "../lib/firebase.js";
 import { ApiError } from "../middleware/errorHandler.js";
 import type { StoreInit, StoreUpdate } from "../schemas/store.js";
 import { createConnectOnboarding, type OnboardingResult } from "./stripe.js";
+import { limitsFor, type PlanLimits } from "../config/planLimits.js";
 import { logger } from "../lib/logger.js";
 
 export interface CreateStoreResult {
@@ -85,6 +86,31 @@ export async function updateStore(storeId: string, input: StoreUpdate): Promise<
   const updated = await ref.get();
   logger.info("Настройки магазина обновлены", { storeId, fields: Object.keys(patch) });
   return toApiStoreInfo(updated.data()!);
+}
+
+export interface PlanUsage {
+  plan: string;
+  limits: PlanLimits;
+  usage: { products: number; staff: number };
+}
+
+/** Тариф магазина, его лимиты и текущее использование (FR-S03), только владелец. */
+export async function getPlanUsage(storeId: string): Promise<PlanUsage> {
+  const storeRef = db().collection("stores").doc(storeId);
+  const snap = await storeRef.get();
+  if (!snap.exists) throw new ApiError("NOT_FOUND", "Магазин не найден");
+  const plan = (snap.data()?.["plan"] as string) ?? "free";
+
+  const [productsCount, staffCount] = await Promise.all([
+    storeRef.collection("products").count().get(),
+    storeRef.collection("staff").count().get(),
+  ]);
+
+  return {
+    plan,
+    limits: limitsFor(plan),
+    usage: { products: productsCount.data().count, staff: staffCount.data().count },
+  };
 }
 
 /**
