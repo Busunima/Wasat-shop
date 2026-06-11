@@ -21,6 +21,7 @@
     <string name="home_my_products">My products</string>
     <string name="home_settings">Store settings</string>
     <string name="home_inventory">Inventory</string>
+    <string name="home_analytics">Analytics</string>
     <string name="home_scan">Scan QR</string>
     <string name="home_last_store">Back to “%1$s”</string>
 
@@ -124,4 +125,18 @@
     <string name="wishlist_title">Wishlist</string>
     <string name="wishlist_empty">Nothing here yet — tap ♡ on a product</string>
     <string name="catalog_recent">Recently viewed</string>
+
+    <!-- Analytics (FR-A05, §16) -->
+    <string name="analytics_title">Analytics</string>
+    <string name="analytics_revenue">Revenue</string>
+    <string name="analytics_orders">Orders</string>
+    <string name="analytics_avg_check">Avg. order</string>
+    <string name="analytics_funnel">Funnel</string>
+    <string name="analytics_views">Views</string>
+    <string name="analytics_carts">Add to cart</string>
+    <string name="analytics_checkouts">Checkouts</string>
+    <string name="analytics_purchases">Orders</string>
+    <string name="analytics_conversion">Conversion: view→cart %1$.1f%% · cart→order %2$.1f%% · view→order %3$.1f%%</string>
+    <string name="analytics_top">Top products by views</string>
+    <string name="analytics_views_count">%1$d views</string>
 </resources>

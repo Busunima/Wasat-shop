@@ -1,5 +1,7 @@
 package com.wasat.shop.core.network
 
+import com.wasat.shop.core.network.dto.AnalyticsEventRequest
+import com.wasat.shop.core.network.dto.AnalyticsReportDto
 import com.wasat.shop.core.network.dto.ImportReportDto
 import com.wasat.shop.core.network.dto.InventoryLogResponse
 import com.wasat.shop.core.network.dto.ProductDto
@@ -90,4 +92,18 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @QueryMap params: Map<String, String>,
     ): Response<InventoryLogResponse>
+
+    // ── Продуктовые события и аналитика (§16, FR-A05) ────────────────────────
+
+    @POST("api/stores/{storeId}/events")
+    suspend fun recordEvent(
+        @Path("storeId") storeId: String,
+        @Body body: AnalyticsEventRequest,
+    ): Response<Unit>
+
+    @GET("api/stores/{storeId}/analytics")
+    suspend fun analytics(
+        @Path("storeId") storeId: String,
+        @QueryMap params: Map<String, String>,
+    ): Response<AnalyticsReportDto>
 }
