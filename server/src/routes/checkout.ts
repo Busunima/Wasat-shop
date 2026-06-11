@@ -1,19 +1,35 @@
 import { Router } from "express";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, type AuthedRequest } from "../middleware/auth.js";
+import { verifyAppCheck } from "../middleware/appCheck.js";
 import { rateLimit } from "../middleware/rateLimit.js";
 import { ApiError } from "../middleware/errorHandler.js";
+import { checkoutSchema } from "../schemas/order.js";
+import { createOrder } from "../services/orders.js";
 
 export const checkoutRouter: Router = Router();
 
 /**
  * POST /api/checkout — единственный путь создания заказа (ТЗ §FR-B05, §10.1).
- * Серверная транзакция: атомарное списание стока + расчёт налога (Stripe Tax) +
- * валидация промокода + создание Stripe PaymentIntent. Идемпотентность по idempotencyKey.
- *
- * Заглушка: контракт и middleware готовы, бизнес-логика — Фаза 4.
+ * Серверная транзакция: пересчёт цен → атомарное списание стока → промокод →
+ * создание заказа. Идемпотентность по idempotencyKey (повтор → 200 + тот же заказ).
+ * Оплата deferred; Stripe PaymentIntent/Tax встраиваются при появлении ключей.
  */
-checkoutRouter.post("/", rateLimit({ max: 30 }), requireAuth, (_req, _res, next) => {
-  next(
-    new ApiError("NOT_IMPLEMENTED", "checkout: транзакционный чекаут реализуется в Фазе 4"),
-  );
-});
+checkoutRouter.post(
+  "/",
+  rateLimit({ max: 30 }),
+  verifyAppCheck,
+  requireAuth,
+  async (req: AuthedRequest, res, next) => {
+    try {
+      const input = checkoutSchema.parse(req.body);
+      const uid = req.uid;
+      if (!uid) throw new ApiError("UNAUTHENTICATED", "Нет uid после аутентификации");
+      const email = (req.claims?.["email"] as string | undefined) ?? "";
+
+      const { order, replay } = await createOrder(uid, email, input);
+      res.status(replay ? 200 : 201).json(order);
+    } catch (err) {
+      next(err);
+    }
+  },
+);

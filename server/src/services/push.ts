@@ -79,6 +79,30 @@ export async function collectTokensForProduct(
   return [...tokens];
 }
 
+/** Best-effort отправка на токены: сбой (нет FCM в dev/test) — лог, не ошибка. */
+async function sendToTokens(
+  storeId: string,
+  tokens: string[],
+  payload: PushPayload,
+  data: Record<string, string>,
+): Promise<void> {
+  try {
+    const result = await messaging().sendEachForMulticast({
+      tokens,
+      notification: { title: payload.title, body: payload.body },
+      data: { ...payload.data, ...data },
+    });
+    logger.info("Push отправлен", {
+      storeId,
+      success: result.successCount,
+      failure: result.failureCount,
+    });
+  } catch (err) {
+    // Нет FCM-эмулятора/учётных данных (dev/test) — событие фиксируем логом.
+    logger.info("Push не отправлен (FCM недоступен)", { storeId, err: String(err) });
+  }
+}
+
 /**
  * Уведомить адресатов о событии товара. Возвращает число целевых токенов;
  * сама отправка FCM — best-effort (нет ключей/эмулятора → лог, не ошибка).
@@ -94,23 +118,29 @@ export async function notifyProductEvent(
 
   const storeSnap = await db().collection("stores").doc(storeId).get();
   const storeName = (storeSnap.data()?.["name"] as string) ?? "Wasat Shop";
-  const { title, body, data } = buildProductNotification(type, storeName, productName);
-
-  try {
-    const result = await messaging().sendEachForMulticast({
-      tokens,
-      notification: { title, body },
-      data: { ...data, storeId, productId },
-    });
-    logger.info("Push отправлен", {
-      storeId,
-      type,
-      success: result.successCount,
-      failure: result.failureCount,
-    });
-  } catch (err) {
-    // Нет FCM-эмулятора/учётных данных (dev/test) — событие фиксируем логом.
-    logger.info("Push не отправлен (FCM недоступен)", { storeId, type, err: String(err) });
-  }
+  const payload = buildProductNotification(type, storeName, productName);
+  await sendToTokens(storeId, tokens, payload, { storeId, productId });
   return tokens.length;
+}
+
+/**
+ * Push конкретным пользователям магазина (FR-A07: владельцу о новом заказе и т.п.).
+ * Возвращает число целевых токенов; отправка best-effort.
+ */
+export async function sendToUsers(
+  storeId: string,
+  uids: string[],
+  payload: PushPayload,
+  data: Record<string, string> = {},
+): Promise<number> {
+  if (uids.length === 0) return 0;
+  const refs = uids.map((uid) => tokensCol(storeId).doc(uid));
+  const snaps = await db().getAll(...refs);
+  const tokens = new Set<string>();
+  for (const snap of snaps) {
+    for (const t of (snap.data()?.["tokens"] as string[]) ?? []) tokens.add(t);
+  }
+  if (tokens.size === 0) return 0;
+  await sendToTokens(storeId, [...tokens], payload, { storeId, ...data });
+  return tokens.size;
 }
