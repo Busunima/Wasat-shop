@@ -66,6 +66,21 @@ interface WasatApi {
         @Path("productId") productId: String,
     ): Response<ProductDto>
 
+    // ── Рекомендации (FR-B12) ────────────────────────────────────────────────
+
+    @GET("api/stores/{storeId}/recommendations/popular")
+    suspend fun popularProducts(
+        @Path("storeId") storeId: String,
+        @QueryMap params: Map<String, String>,
+    ): Response<ProductListResponse>
+
+    @GET("api/stores/{storeId}/recommendations/related/{productId}")
+    suspend fun relatedProducts(
+        @Path("storeId") storeId: String,
+        @Path("productId") productId: String,
+        @QueryMap params: Map<String, String>,
+    ): Response<ProductListResponse>
+
     @POST("api/stores/{storeId}/products")
     suspend fun createProduct(
         @Path("storeId") storeId: String,

@@ -130,6 +130,8 @@
     <string name="wishlist_title">Wishlist</string>
     <string name="wishlist_empty">Nothing here yet — tap ♡ on a product</string>
     <string name="catalog_recent">Recently viewed</string>
+    <string name="rec_similar_title">Similar products</string>
+    <string name="rec_popular_title">Popular</string>
 
     <!-- Analytics (FR-A05, §16) -->
     <string name="analytics_title">Analytics</string>

@@ -53,6 +53,14 @@ class CatalogViewModel @Inject constructor(
     val recent: StateFlow<List<RecentProduct>> = recentlyViewed.observe(storeId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** «Популярное» (FR-B12) — топ по просмотрам; best-effort, ряд над сеткой. */
+    private val _popular = MutableStateFlow<List<ProductDto>>(emptyList())
+    val popular: StateFlow<List<ProductDto>> = _popular.asStateFlow()
+
+    init {
+        viewModelScope.launch { _popular.value = repository.popular(storeId) }
+    }
+
     fun toggleWishlist(productId: String) {
         viewModelScope.launch {
             wishlistRepository.toggle(storeId, productId, productId in wishlistIds.value)

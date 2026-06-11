@@ -51,9 +51,11 @@ import com.wasat.shop.core.util.PriceFormatter
 @Composable
 fun ProductDetailScreen(
     currency: String,
+    onProductClick: (String) -> Unit = {},
     viewModel: ProductDetailViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val related by viewModel.related.collectAsState()
 
     when (val s = state) {
         ProductDetailUiState.Loading -> Box(
@@ -76,6 +78,8 @@ fun ProductDetailScreen(
         is ProductDetailUiState.Loaded -> ProductDetailContent(
             product = s.product,
             currency = currency,
+            related = related,
+            onProductClick = onProductClick,
             viewModel = viewModel,
         )
     }
@@ -85,6 +89,8 @@ fun ProductDetailScreen(
 private fun ProductDetailContent(
     product: ProductDto,
     currency: String,
+    related: List<ProductDto>,
+    onProductClick: (String) -> Unit,
     viewModel: ProductDetailViewModel,
 ) {
     val justAdded by viewModel.justAdded.collectAsState()
@@ -194,6 +200,14 @@ private fun ProductDetailContent(
 
                 ReviewsSection()
             }
+
+            ProductMiniRow(
+                title = stringResource(R.string.rec_similar_title),
+                products = related,
+                currency = currency,
+                onProductClick = onProductClick,
+                modifier = Modifier.padding(bottom = 24.dp),
+            )
         }
     }
 }

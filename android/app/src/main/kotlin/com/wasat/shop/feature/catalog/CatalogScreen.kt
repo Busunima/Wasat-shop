@@ -60,6 +60,7 @@ fun CatalogScreen(
     val cartCount by viewModel.cartCount.collectAsState()
     val wishlistIds by viewModel.wishlistIds.collectAsState()
     val recent by viewModel.recent.collectAsState()
+    val popular by viewModel.popular.collectAsState()
     val columns = if (LocalWindowWidthSizeClass.current.isExpandedLayout) 3 else 2
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -107,6 +108,17 @@ fun CatalogScreen(
         // «Недавно просмотренные» (FR-B12 MVP) — показываем вне поиска
         if (recent.isNotEmpty() && searchInput.isBlank()) {
             RecentRow(recent = recent, currency = currency, onProductClick = onProductClick)
+        }
+
+        // «Популярное» (FR-B12) — вне поиска
+        if (searchInput.isBlank()) {
+            ProductMiniRow(
+                title = stringResource(R.string.rec_popular_title),
+                products = popular,
+                currency = currency,
+                onProductClick = onProductClick,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
         }
 
         CatalogGrid(

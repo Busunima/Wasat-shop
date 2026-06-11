@@ -57,6 +57,10 @@ class ProductDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<ProductDetailUiState>(ProductDetailUiState.Loading)
     val uiState: StateFlow<ProductDetailUiState> = _uiState.asStateFlow()
 
+    /** Похожие товары (FR-B12) — подгружаются best-effort после карточки. */
+    private val _related = MutableStateFlow<List<ProductDto>>(emptyList())
+    val related: StateFlow<List<ProductDto>> = _related.asStateFlow()
+
     /** Кратковременный флаг «добавлено» для обратной связи на кнопке. */
     private val _justAdded = MutableStateFlow(false)
     val justAdded: StateFlow<Boolean> = _justAdded.asStateFlow()
@@ -92,6 +96,7 @@ class ProductDetailViewModel @Inject constructor(
                         ),
                     )
                     analytics.track(storeId, "product_view", productId = result.data.id)
+                    loadRelated()
                     ProductDetailUiState.Loaded(result.data)
                 }
                 is ApiResult.ApiError -> ProductDetailUiState.Error(result.message)
@@ -99,6 +104,12 @@ class ProductDetailViewModel @Inject constructor(
                     "Нет соединения с сервером",
                 )
             }
+        }
+    }
+
+    private fun loadRelated() {
+        viewModelScope.launch {
+            _related.value = repository.related(storeId, productId)
         }
     }
 }

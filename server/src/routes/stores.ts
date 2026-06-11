@@ -20,6 +20,7 @@ import { inventoryRouter } from "./inventory.js";
 import { analyticsRouter } from "./analytics.js";
 import { promocodesRouter } from "./promocodes.js";
 import { staffRouter } from "./staff.js";
+import { recommendationsRouter } from "./recommendations.js";
 
 export const storesRouter: Router = Router();
 
@@ -34,6 +35,9 @@ storesRouter.use("/:storeId/promocodes", promocodesRouter);
 
 // Сотрудники: /api/stores/:storeId/staff (FR-A09)
 storesRouter.use("/:storeId/staff", staffRouter);
+
+// Рекомендации: /api/stores/:storeId/recommendations (FR-B12)
+storesRouter.use("/:storeId/recommendations", recommendationsRouter);
 
 // События и аналитика: /api/stores/:storeId/{events,analytics} (§16, FR-A05)
 storesRouter.use("/:storeId", analyticsRouter);
