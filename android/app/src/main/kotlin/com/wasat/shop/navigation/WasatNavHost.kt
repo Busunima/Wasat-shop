@@ -21,6 +21,9 @@ import com.wasat.shop.feature.catalog.CatalogScreen
 import com.wasat.shop.feature.catalog.ProductDetailScreen
 import com.wasat.shop.feature.home.HomeScreen
 import com.wasat.shop.feature.onboarding.OnboardingScreen
+import com.wasat.shop.feature.orders.CheckoutScreen
+import com.wasat.shop.feature.orders.MyOrdersScreen
+import com.wasat.shop.feature.orders.StoreOrdersScreen
 import com.wasat.shop.feature.storefront.StoreResolverScreen
 import com.wasat.shop.feature.wishlist.WishlistScreen
 
@@ -31,6 +34,9 @@ object Routes {
     const val CATALOG = "catalog/{storeId}?currency={currency}"
     const val PRODUCT = "product/{storeId}/{productId}?currency={currency}"
     const val CART = "cart/{storeId}?currency={currency}"
+    const val CHECKOUT = "checkout/{storeId}?currency={currency}"
+    const val MY_ORDERS = "myorders/{storeId}?currency={currency}"
+    const val STORE_ORDERS = "storeorders/{storeId}?currency={currency}"
     const val MY_PRODUCTS = "myproducts/{storeId}?currency={currency}"
     const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
     const val STORE_SETTINGS = "storesettings/{storeId}?currency={currency}"
@@ -46,6 +52,12 @@ object Routes {
     fun product(storeId: String, productId: String, currency: String): String =
         "product/$storeId/$productId?currency=$currency"
     fun cart(storeId: String, currency: String): String = "cart/$storeId?currency=$currency"
+    fun checkout(storeId: String, currency: String): String =
+        "checkout/$storeId?currency=$currency"
+    fun myOrders(storeId: String, currency: String): String =
+        "myorders/$storeId?currency=$currency"
+    fun storeOrders(storeId: String, currency: String): String =
+        "storeorders/$storeId?currency=$currency"
     fun myProducts(storeId: String, currency: String): String =
         "myproducts/$storeId?currency=$currency"
     fun productEdit(storeId: String, currency: String, productId: String?): String =
@@ -123,6 +135,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 onOpenMyProducts = { storeId, currency ->
                     navController.navigate(Routes.myProducts(storeId, currency))
                 },
+                onOpenOrders = { storeId, currency ->
+                    navController.navigate(Routes.storeOrders(storeId, currency))
+                },
                 onOpenSettings = { storeId, currency ->
                     navController.navigate(Routes.storeSettings(storeId, currency))
                 },
@@ -183,8 +198,45 @@ fun WasatNavHost(authRepository: AuthRepository) {
             route = Routes.CART,
             arguments = listOf(currencyArg),
         ) { backStackEntry ->
+            val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
             val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
-            CartScreen(currency = currency)
+            CartScreen(
+                currency = currency,
+                onCheckout = { navController.navigate(Routes.checkout(storeId, currency)) },
+                onMyOrders = { navController.navigate(Routes.myOrders(storeId, currency)) },
+            )
+        }
+
+        // FR-B05: оформление заказа из корзины
+        composable(
+            route = Routes.CHECKOUT,
+            arguments = listOf(currencyArg),
+        ) { backStackEntry ->
+            val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
+            CheckoutScreen(
+                onPlaced = {
+                    navController.navigate(Routes.myOrders(storeId, currency)) {
+                        popUpTo(Routes.CHECKOUT) { inclusive = true }
+                    }
+                },
+            )
+        }
+
+        // FR-B06: история заказов покупателя
+        composable(
+            route = Routes.MY_ORDERS,
+            arguments = listOf(currencyArg),
+        ) {
+            MyOrdersScreen()
+        }
+
+        // FR-A04: заказы магазина (владелец/сотрудник)
+        composable(
+            route = Routes.STORE_ORDERS,
+            arguments = listOf(currencyArg),
+        ) {
+            StoreOrdersScreen()
         }
 
         composable(

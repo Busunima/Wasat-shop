@@ -99,7 +99,48 @@
     <string name="cart_added">Добавлено ✓</string>
     <string name="cart_remove">Убрать</string>
     <string name="cart_subtotal">Итого</string>
-    <string name="cart_checkout_later">Оформление заказа — скоро</string>
+    <string name="cart_checkout">Оформить заказ</string>
+    <string name="cart_my_orders">Мои заказы</string>
+
+    <!-- Заказы (FR-B05/A04/B06) -->
+    <string name="home_orders">Заказы</string>
+    <string name="checkout_title">Оформление заказа</string>
+    <string name="checkout_promo">Промокод</string>
+    <string name="checkout_promo_apply">Применить</string>
+    <string name="checkout_promo_applied">Промокод «%1$s» применён</string>
+    <string name="checkout_promo_remove">Убрать</string>
+    <string name="checkout_delivery">Доставка</string>
+    <string name="checkout_pickup">Самовывоз</string>
+    <string name="checkout_courier">Курьер</string>
+    <string name="checkout_address">Адрес доставки</string>
+    <string name="checkout_subtotal">Сумма</string>
+    <string name="checkout_discount">Скидка</string>
+    <string name="checkout_delivery_cost">Доставка</string>
+    <string name="checkout_total">Итого</string>
+    <string name="checkout_place">Оформить заказ</string>
+    <string name="checkout_placing">Оформляем…</string>
+    <string name="my_orders_title">Мои заказы</string>
+    <string name="my_orders_empty">Заказов пока нет</string>
+    <string name="store_orders_title">Заказы магазина</string>
+    <string name="store_orders_all">Все</string>
+    <string name="store_orders_empty">Заказов пока нет</string>
+    <string name="order_number">Заказ #%1$s</string>
+    <string name="order_total">Итого</string>
+    <string name="order_tracking">Трек-номер: %1$s</string>
+    <string name="order_cancel">Отменить заказ</string>
+    <string name="order_ship_title">Передать в доставку</string>
+    <string name="order_tracking_label">Трек-номер (необязательно)</string>
+    <string name="order_ship_confirm">Отправить</string>
+    <string name="order_status_new">Новый</string>
+    <string name="order_status_confirmed">Подтверждён</string>
+    <string name="order_status_processing">В сборке</string>
+    <string name="order_status_shipped">Отправлен</string>
+    <string name="order_status_delivered">Доставлен</string>
+    <string name="order_status_completed">Завершён</string>
+    <string name="order_status_cancelled">Отменён</string>
+    <string name="order_status_return_requested">Запрошен возврат</string>
+    <string name="order_status_returned">Возвращён</string>
+    <string name="order_status_refunded">Возмещён</string>
 
     <!-- Настройки магазина (FR-A01) -->
     <string name="settings_title">Настройки магазина</string>

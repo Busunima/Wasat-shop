@@ -97,7 +97,48 @@
     <string name="cart_added">Added ✓</string>
     <string name="cart_remove">Remove</string>
     <string name="cart_subtotal">Subtotal</string>
-    <string name="cart_checkout_later">Checkout — coming soon</string>
+    <string name="cart_checkout">Checkout</string>
+    <string name="cart_my_orders">My orders</string>
+
+    <!-- Orders (FR-B05/A04/B06) -->
+    <string name="home_orders">Orders</string>
+    <string name="checkout_title">Checkout</string>
+    <string name="checkout_promo">Promo code</string>
+    <string name="checkout_promo_apply">Apply</string>
+    <string name="checkout_promo_applied">Promo "%1$s" applied</string>
+    <string name="checkout_promo_remove">Remove</string>
+    <string name="checkout_delivery">Delivery</string>
+    <string name="checkout_pickup">Pickup</string>
+    <string name="checkout_courier">Courier</string>
+    <string name="checkout_address">Delivery address</string>
+    <string name="checkout_subtotal">Subtotal</string>
+    <string name="checkout_discount">Discount</string>
+    <string name="checkout_delivery_cost">Delivery</string>
+    <string name="checkout_total">Total</string>
+    <string name="checkout_place">Place order</string>
+    <string name="checkout_placing">Placing…</string>
+    <string name="my_orders_title">My orders</string>
+    <string name="my_orders_empty">No orders yet</string>
+    <string name="store_orders_title">Store orders</string>
+    <string name="store_orders_all">All</string>
+    <string name="store_orders_empty">No orders yet</string>
+    <string name="order_number">Order #%1$s</string>
+    <string name="order_total">Total</string>
+    <string name="order_tracking">Tracking: %1$s</string>
+    <string name="order_cancel">Cancel order</string>
+    <string name="order_ship_title">Ship order</string>
+    <string name="order_tracking_label">Tracking number (optional)</string>
+    <string name="order_ship_confirm">Ship</string>
+    <string name="order_status_new">New</string>
+    <string name="order_status_confirmed">Confirmed</string>
+    <string name="order_status_processing">Processing</string>
+    <string name="order_status_shipped">Shipped</string>
+    <string name="order_status_delivered">Delivered</string>
+    <string name="order_status_completed">Completed</string>
+    <string name="order_status_cancelled">Cancelled</string>
+    <string name="order_status_return_requested">Return requested</string>
+    <string name="order_status_returned">Returned</string>
+    <string name="order_status_refunded">Refunded</string>
 
     <!-- Store settings (FR-A01) -->
     <string name="settings_title">Store settings</string>
