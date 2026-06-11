@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
+import com.wasat.shop.core.network.dto.AiDescribeRequest
 import com.wasat.shop.core.network.dto.ProductUpsertRequest
 import com.wasat.shop.core.network.dto.VariantDto
 import com.wasat.shop.core.util.PriceParser
@@ -57,6 +58,8 @@ data class ProductEditUiState(
     val variants: List<VariantDraft> = emptyList(),
     val fieldErrors: Map<ProductField, String> = emptyMap(),
     val save: SaveState = SaveState.Idle,
+    /** Идёт AI-генерация описания (FR-A12). */
+    val aiGenerating: Boolean = false,
 )
 
 /** Маппинг черновика в DTO; null — невалидный stock (pure JVM, под тестом). */
@@ -182,6 +185,45 @@ class ProductEditViewModel @Inject constructor(
 
     fun onStatusChange(value: String) = _uiState.update { it.copy(status = value) }
 
+    /**
+     * AI-генерация описания по текущим полям формы (FR-A12). Существующее описание
+     * передаётся подсказкой; результат заменяет поле. Ошибка — в fieldErrors.
+     */
+    fun generateDescription() {
+        val s = _uiState.value
+        if (s.aiGenerating || s.name.isBlank()) return
+
+        _uiState.update {
+            it.copy(aiGenerating = true, fieldErrors = it.fieldErrors - ProductField.DESCRIPTION)
+        }
+        viewModelScope.launch {
+            val request = AiDescribeRequest(
+                name = s.name.trim(),
+                category = s.category.trim().ifEmpty { null },
+                tags = TagsParser.parse(s.tagsInput),
+                hints = s.description.trim().ifEmpty { null },
+            )
+            when (val result = repository.aiDescribe(storeId, request)) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(aiGenerating = false, description = result.data.description)
+                }
+                is ApiResult.ApiError -> _uiState.update {
+                    it.copy(
+                        aiGenerating = false,
+                        fieldErrors = it.fieldErrors + (ProductField.DESCRIPTION to result.message),
+                    )
+                }
+                is ApiResult.NetworkError -> _uiState.update {
+                    it.copy(
+                        aiGenerating = false,
+                        fieldErrors = it.fieldErrors +
+                            (ProductField.DESCRIPTION to "Нет соединения с сервером"),
+                    )
+                }
+            }
+        }
+    }
+
     // --- Фото (мультизагрузка, FR-A02) ---
 
     fun addImages(uris: List<Pair<Uri, String?>>) {
@@ -246,7 +288,7 @@ class ProductEditViewModel @Inject constructor(
 
     fun save() {
         val s = _uiState.value
-        if (s.save is SaveState.Loading || s.loadingExisting || s.uploadingImages > 0) return
+        if (s.save is SaveState.Loading || s.loadingExisting || s.uploadingImages > 0 || s.aiGenerating) return
 
         val errors = buildMap {
             ProductFormValidation.validateName(s.name)?.let { put(ProductField.NAME, it) }

@@ -22,6 +22,7 @@ import { promocodesRouter } from "./promocodes.js";
 import { staffRouter } from "./staff.js";
 import { recommendationsRouter } from "./recommendations.js";
 import { pushRouter } from "./push.js";
+import { aiRouter } from "./ai.js";
 
 export const storesRouter: Router = Router();
 
@@ -42,6 +43,9 @@ storesRouter.use("/:storeId/recommendations", recommendationsRouter);
 
 // FCM-токены: /api/stores/:storeId/push-tokens (FR-B10)
 storesRouter.use("/:storeId/push-tokens", pushRouter);
+
+// AI-ассист контента: /api/stores/:storeId/ai (FR-A12)
+storesRouter.use("/:storeId/ai", aiRouter);
 
 // События и аналитика: /api/stores/:storeId/{events,analytics} (§16, FR-A05)
 storesRouter.use("/:storeId", analyticsRouter);

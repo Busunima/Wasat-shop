@@ -2,6 +2,8 @@ package com.wasat.shop.feature.admin
 
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.WasatApi
+import com.wasat.shop.core.network.dto.AiDescribeRequest
+import com.wasat.shop.core.network.dto.AiDescribeResponse
 import com.wasat.shop.core.network.dto.ProductDto
 import com.wasat.shop.core.network.dto.ProductListResponse
 import com.wasat.shop.core.network.dto.ProductUpsertRequest
@@ -39,4 +41,11 @@ class AdminProductsRepository @Inject constructor(
 
     suspend fun delete(storeId: String, productId: String): ApiResult<Unit> =
         safeApiCall(json) { api.deleteProduct(storeId, productId) }
+
+    /** AI-генерация описания товара (FR-A12); 501 — если ключ не настроен на сервере. */
+    suspend fun aiDescribe(
+        storeId: String,
+        body: AiDescribeRequest,
+    ): ApiResult<AiDescribeResponse> =
+        safeApiCall(json) { api.aiDescribe(storeId, body) }
 }

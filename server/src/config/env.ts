@@ -16,6 +16,9 @@ const baseSchema = z.object({
   ALGOLIA_APP_ID: z.string().optional(),
   ALGOLIA_ADMIN_KEY: z.string().optional(),
 
+  /** Claude API для AI-ассиста контента (FR-A12); без ключа фича в режиме «отложено». */
+  ANTHROPIC_API_KEY: z.string().optional(),
+
   CRON_SECRET: z.string().optional(),
   SMTP_URL: z.string().optional(),
 });
