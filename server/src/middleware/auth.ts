@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { auth } from "../lib/firebase.js";
 import { ApiError } from "./errorHandler.js";
+import { touchUser } from "../services/activity.js";
 
 /**
  * Аутентификация запроса (ТЗ §4, §13):
@@ -30,6 +31,7 @@ export async function requireAuth(
     const decoded = await auth().verifyIdToken(token);
     req.uid = decoded.uid;
     req.claims = decoded as unknown as Record<string, unknown>;
+    touchUser(decoded.uid); // отметка активности (MAU, FR-S04) — best-effort, не блокирует
     next();
   } catch (err) {
     if (err instanceof ApiError) next(err);

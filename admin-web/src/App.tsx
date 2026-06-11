@@ -8,6 +8,7 @@ import {
 } from "firebase/auth";
 import { firebaseAuth, isFirebaseConfigured } from "./firebase";
 import { StoresPage } from "./StoresPage";
+import { AnalyticsDashboard } from "./AnalyticsDashboard";
 
 type Session =
   | { state: "loading" }
@@ -16,9 +17,12 @@ type Session =
   | { state: "not-superadmin"; user: User }
   | { state: "ready"; user: User };
 
+type Page = "stores" | "analytics";
+
 /** Корень панели: гейт по входу Google + claim superadmin (ТЗ §7). */
 export function App() {
   const [session, setSession] = useState<Session>({ state: "loading" });
+  const [page, setPage] = useState<Page>("stores");
 
   useEffect(() => {
     const auth = firebaseAuth();
@@ -88,7 +92,25 @@ export function App() {
           </div>
         )}
 
-        {session.state === "ready" && <StoresPage />}
+        {session.state === "ready" && (
+          <>
+            <nav className="tabs">
+              <button
+                className={page === "stores" ? "tab active" : "tab"}
+                onClick={() => setPage("stores")}
+              >
+                Магазины
+              </button>
+              <button
+                className={page === "analytics" ? "tab active" : "tab"}
+                onClick={() => setPage("analytics")}
+              >
+                Аналитика
+              </button>
+            </nav>
+            {page === "stores" ? <StoresPage /> : <AnalyticsDashboard />}
+          </>
+        )}
       </main>
     </div>
   );

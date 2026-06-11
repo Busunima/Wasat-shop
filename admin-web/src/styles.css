@@ -95,3 +95,72 @@ select {
   border-radius: 6px;
   border: 1px solid #cdd2d8;
 }
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.tab {
+  background: #fff;
+  color: #2d4a7c;
+  border: 1px solid #cdd2d8;
+}
+
+.tab.active {
+  background: #2d4a7c;
+  color: #fff;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.metric {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.metric-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.metric-label {
+  margin-top: 4px;
+  text-transform: capitalize;
+}
+
+.trend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trend-date {
+  width: 96px;
+  flex-shrink: 0;
+}
+
+.trend-bar {
+  height: 14px;
+  background: #2d4a7c;
+  border-radius: 4px;
+  min-width: 2px;
+}
+
+.trend-val {
+  font-size: 13px;
+}

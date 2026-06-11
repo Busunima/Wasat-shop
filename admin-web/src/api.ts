@@ -91,3 +91,32 @@ export function setStorePlan(storeId: string, plan: Plan): Promise<AdminStore> {
     body: JSON.stringify({ plan }),
   });
 }
+
+/** Глобальная аналитика платформы (FR-S04, зеркало PlatformReport сервера). */
+export interface PlatformAnalytics {
+  from: string;
+  to: string;
+  /** Сумма в минорных единицах (смешанные валюты магазинов). */
+  gmv: number;
+  orders: number;
+  avgCheck: number;
+  searches: number;
+  mau: number;
+  funnel: { views: number; addToCarts: number; checkouts: number; purchases: number };
+  stores: {
+    total: number;
+    public: number;
+    blocked: number;
+    byPlan: Record<Plan, number>;
+  };
+  topStores: Array<{ storeId: string; name: string; slug: string; gmv: number; orders: number }>;
+  daily: Array<{ date: string; gmv: number; orders: number }>;
+}
+
+export function getPlatformAnalytics(params: { from?: string; to?: string } = {}): Promise<PlatformAnalytics> {
+  const search = new URLSearchParams();
+  if (params.from) search.set("from", params.from);
+  if (params.to) search.set("to", params.to);
+  const query = search.toString();
+  return request<PlatformAnalytics>(`api/admin/analytics${query ? `?${query}` : ""}`);
+}

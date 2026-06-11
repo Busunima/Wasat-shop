@@ -34,3 +34,12 @@ export const adminPlanSchema = z.object({
   plan: z.enum(PLANS),
 });
 export type AdminPlan = z.infer<typeof adminPlanSchema>;
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** GET /api/admin/analytics — период дашборда платформы (FR-S04). */
+export const platformAnalyticsQuerySchema = z.object({
+  from: z.string().regex(DATE_RE).optional(),
+  to: z.string().regex(DATE_RE).optional(),
+});
+export type PlatformAnalyticsQuery = z.infer<typeof platformAnalyticsQuerySchema>;
