@@ -134,6 +134,7 @@
     <string name="catalog_recent">Недавно просмотренные</string>
     <string name="rec_similar_title">Похожие товары</string>
     <string name="rec_popular_title">Популярное</string>
+    <string name="push_channel_name">Наличие и цены</string>
 
     <!-- Аналитика (FR-A05, §16) -->
     <string name="analytics_title">Аналитика</string>

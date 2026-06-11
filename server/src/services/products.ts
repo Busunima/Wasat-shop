@@ -13,6 +13,7 @@ import {
 } from "../schemas/product.js";
 import { logger } from "../lib/logger.js";
 import { canAdd, limitsFor } from "../config/planLimits.js";
+import { notifyProductEvent } from "./push.js";
 
 /**
  * CRUD товаров (FR-A02, docs/data-model.md → products/{pid}).
@@ -114,9 +115,10 @@ export async function updateProduct(
 ): Promise<ApiProduct> {
   const ref = productsCol(storeId).doc(productId);
 
-  await db().runTransaction(async (tx) => {
+  const before = await db().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) throw new ApiError("NOT_FOUND", "Товар не найден");
+    const data = snap.data()!;
 
     // undefined = поле не передано (PATCH не трогает); null = явная очистка.
     const patch: Record<string, unknown> = {};
@@ -128,7 +130,15 @@ export async function updateProduct(
       patch["totalStock"] = computeTotalStock(input.variants);
     }
     tx.update(ref, patch);
+    return { price: data["price"] as number, name: data["name"] as string };
   });
+
+  // FR-B10: цена снижена — push покупателям с товаром в вишлисте (fire-and-forget).
+  if (input.price !== undefined && input.price < before.price) {
+    void notifyProductEvent(storeId, productId, "price_drop", before.name).catch(
+      () => undefined,
+    );
+  }
 
   const updated = await ref.get();
   return toApiProduct(updated.data()!);

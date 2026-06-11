@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.wasat.shop.core.push.PushTokenRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.channels.awaitClose
@@ -21,6 +22,7 @@ import kotlinx.coroutines.tasks.await
 class WishlistRepository @Inject constructor(
     private val firestore: FirebaseFirestore?,
     private val auth: FirebaseAuth?,
+    private val pushTokens: PushTokenRepository,
 ) {
     val isAvailable: Boolean
         get() = firestore != null && auth?.currentUser != null
@@ -56,6 +58,9 @@ class WishlistRepository @Inject constructor(
                 .set(mapOf("wishlist" to update), SetOptions.merge())
                 .await()
         }
+        // FR-B10: добавление в вишлист = интерес к товару → регистрируем FCM-токен
+        // (best-effort), чтобы получать push о наличии/снижении цены.
+        if (!inWishlist) pushTokens.register(storeId)
         return !inWishlist
     }
 }

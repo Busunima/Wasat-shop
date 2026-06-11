@@ -13,6 +13,7 @@ import com.wasat.shop.core.network.dto.PromoDto
 import com.wasat.shop.core.network.dto.PromoListResponse
 import com.wasat.shop.core.network.dto.PromoPreviewRequest
 import com.wasat.shop.core.network.dto.PromoPreviewResponse
+import com.wasat.shop.core.network.dto.PushTokenRequest
 import com.wasat.shop.core.network.dto.StaffInviteRequest
 import com.wasat.shop.core.network.dto.StaffListResponse
 import com.wasat.shop.core.network.dto.StaffMemberDto
@@ -161,6 +162,15 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @Body body: PromoPreviewRequest,
     ): Response<PromoPreviewResponse>
+
+    // ── Push-уведомления (FR-B10) ────────────────────────────────────────────
+
+    /** Регистрация FCM-токена устройства (любой авторизованный покупатель). */
+    @POST("api/stores/{storeId}/push-tokens")
+    suspend fun registerPushToken(
+        @Path("storeId") storeId: String,
+        @Body body: PushTokenRequest,
+    ): Response<Unit>
 
     // ── Сотрудники (FR-A09) ──────────────────────────────────────────────────
 
