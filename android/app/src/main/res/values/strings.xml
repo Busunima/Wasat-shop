@@ -26,6 +26,9 @@
     <string name="home_promocodes">Промокоды</string>
     <string name="home_staff">Сотрудники</string>
     <string name="home_analytics">Аналитика</string>
+    <string name="plan_title">Тариф: %1$s</string>
+    <string name="plan_usage_products">Товары: %1$d / %2$s</string>
+    <string name="plan_usage_staff">Сотрудники: %1$d / %2$s</string>
     <string name="home_scan">Сканировать QR</string>
     <string name="home_last_store">Вернуться в «%1$s»</string>
 

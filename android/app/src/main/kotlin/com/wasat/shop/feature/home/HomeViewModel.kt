@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.WasatApi
+import com.wasat.shop.core.network.dto.PlanUsageDto
 import com.wasat.shop.core.network.safeApiCall
 import com.wasat.shop.feature.auth.AuthRepository
 import com.wasat.shop.feature.storefront.LastStore
@@ -37,6 +38,10 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    /** Тариф и использование владельца (FR-S03); best-effort — null для не-владельца. */
+    private val _planUsage = MutableStateFlow<PlanUsageDto?>(null)
+    val planUsage: StateFlow<PlanUsageDto?> = _planUsage.asStateFlow()
+
     /** Последний открытый чужой магазин (FR-B01) — для быстрого возврата. */
     val lastStore: StateFlow<LastStore?> = lastStoreRepository.lastStore
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -47,6 +52,7 @@ class HomeViewModel @Inject constructor(
 
     fun load() {
         _uiState.value = HomeUiState.Loading
+        _planUsage.value = null
         viewModelScope.launch {
             val storeId = authRepository.currentClaims().getOrNull()?.storeId
             if (storeId == null) {
@@ -61,6 +67,9 @@ class HomeViewModel @Inject constructor(
                 )
                 else -> HomeUiState.NoStore
             }
+            // Тариф/использование — best-effort (сотрудник получит 403 → карточка скрыта).
+            val plan = safeApiCall(json) { api.storePlan(storeId) }
+            if (plan is ApiResult.Success) _planUsage.value = plan.data
         }
     }
 }

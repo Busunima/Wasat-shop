@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -42,6 +43,7 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val lastStore by viewModel.lastStore.collectAsState()
+    val planUsage by viewModel.planUsage.collectAsState()
     val context = LocalContext.current
 
     Column(
@@ -65,6 +67,7 @@ fun HomeScreen(
 
             is HomeUiState.MyStore -> {
                 Text(text = s.name, style = MaterialTheme.typography.headlineMedium)
+                planUsage?.let { PlanCard(it) }
                 Button(
                     onClick = { onOpenCatalog(s.storeId, s.currency) },
                     modifier = Modifier.fillMaxWidth(),
@@ -126,6 +129,38 @@ fun HomeScreen(
             ) {
                 Text(stringResource(R.string.home_last_store, last.name))
             }
+        }
+    }
+}
+
+/** Карточка тарифа и использования владельца (FR-S03). */
+@Composable
+private fun PlanCard(plan: com.wasat.shop.core.network.dto.PlanUsageDto) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.plan_title, plan.plan),
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Text(
+                text = stringResource(
+                    R.string.plan_usage_products,
+                    plan.usage.products,
+                    plan.limits.maxProducts?.toString() ?: "∞",
+                ),
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                text = stringResource(
+                    R.string.plan_usage_staff,
+                    plan.usage.staff,
+                    plan.limits.maxStaff?.toString() ?: "∞",
+                ),
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }

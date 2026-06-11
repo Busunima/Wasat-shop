@@ -3,6 +3,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { auth, db } from "../lib/firebase.js";
 import { ApiError } from "../middleware/errorHandler.js";
 import type { StaffRole } from "../schemas/staff.js";
+import { canAdd, limitsFor } from "../config/planLimits.js";
 import { logger } from "../lib/logger.js";
 
 /**
@@ -67,6 +68,19 @@ export async function addStaff(
 ): Promise<ApiStaffMember> {
   const storeSnap = await db().collection("stores").doc(storeId).get();
   if (!storeSnap.exists) throw new ApiError("NOT_FOUND", "Магазин не найден");
+
+  // Лимит сотрудников тарифа (FR-S03).
+  const plan = (storeSnap.data()?.["plan"] as string) ?? "free";
+  const staffLimit = limitsFor(plan).maxStaff;
+  if (staffLimit !== null) {
+    const countSnap = await staffCol(storeId).count().get();
+    if (!canAdd(staffLimit, countSnap.data().count)) {
+      throw new ApiError("FORBIDDEN", `Достигнут лимит сотрудников тарифа (${staffLimit})`, {
+        plan,
+        limit: staffLimit,
+      });
+    }
+  }
 
   let user;
   try {
