@@ -24,6 +24,7 @@
     <string name="home_settings">Настройки магазина</string>
     <string name="home_inventory">Инвентарь</string>
     <string name="home_promocodes">Промокоды</string>
+    <string name="home_staff">Сотрудники</string>
     <string name="home_analytics">Аналитика</string>
     <string name="home_scan">Сканировать QR</string>
     <string name="home_last_store">Вернуться в «%1$s»</string>
@@ -160,4 +161,16 @@
     <string name="promo_delete">Удалить</string>
     <string name="promo_delete_title">Удалить промокод?</string>
     <string name="promo_delete_confirm">Промокод «%1$s» будет удалён без возможности восстановления.</string>
+
+    <!-- Сотрудники (FR-A09) -->
+    <string name="staff_title">Сотрудники</string>
+    <string name="staff_invite_title">Пригласить сотрудника</string>
+    <string name="staff_email">Email сотрудника</string>
+    <string name="staff_role_manager">Менеджер</string>
+    <string name="staff_role_staff">Сотрудник</string>
+    <string name="staff_invite">Пригласить</string>
+    <string name="staff_empty">Сотрудников пока нет</string>
+    <string name="staff_remove">Удалить</string>
+    <string name="staff_remove_title">Удалить сотрудника?</string>
+    <string name="staff_remove_confirm">Сотрудник «%1$s» потеряет доступ к управлению магазином.</string>
 </resources>

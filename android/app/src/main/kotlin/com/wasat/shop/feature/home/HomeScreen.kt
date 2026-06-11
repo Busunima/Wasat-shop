@@ -35,6 +35,7 @@ fun HomeScreen(
     onOpenSettings: (storeId: String, currency: String) -> Unit,
     onOpenInventory: (storeId: String) -> Unit,
     onOpenPromocodes: (storeId: String, currency: String) -> Unit,
+    onOpenStaff: (storeId: String) -> Unit,
     onOpenAnalytics: (storeId: String, currency: String) -> Unit,
     onOpenStore: (slug: String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -93,6 +94,12 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.home_analytics))
+                }
+                OutlinedButton(
+                    onClick = { onOpenStaff(s.storeId) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.home_staff))
                 }
                 OutlinedButton(
                     onClick = { onOpenSettings(s.storeId, s.currency) },

@@ -12,6 +12,10 @@ import com.wasat.shop.core.network.dto.PromoDto
 import com.wasat.shop.core.network.dto.PromoListResponse
 import com.wasat.shop.core.network.dto.PromoPreviewRequest
 import com.wasat.shop.core.network.dto.PromoPreviewResponse
+import com.wasat.shop.core.network.dto.StaffInviteRequest
+import com.wasat.shop.core.network.dto.StaffListResponse
+import com.wasat.shop.core.network.dto.StaffMemberDto
+import com.wasat.shop.core.network.dto.StaffRoleUpdateRequest
 import com.wasat.shop.core.network.dto.StoreInfoDto
 import com.wasat.shop.core.network.dto.StoreInitRequest
 import com.wasat.shop.core.network.dto.StockAdjustRequest
@@ -137,4 +141,30 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @Body body: PromoPreviewRequest,
     ): Response<PromoPreviewResponse>
+
+    // ── Сотрудники (FR-A09) ──────────────────────────────────────────────────
+
+    @GET("api/stores/{storeId}/staff")
+    suspend fun listStaff(
+        @Path("storeId") storeId: String,
+    ): Response<StaffListResponse>
+
+    @POST("api/stores/{storeId}/staff")
+    suspend fun addStaff(
+        @Path("storeId") storeId: String,
+        @Body body: StaffInviteRequest,
+    ): Response<StaffMemberDto>
+
+    @PATCH("api/stores/{storeId}/staff/{uid}")
+    suspend fun updateStaffRole(
+        @Path("storeId") storeId: String,
+        @Path("uid") uid: String,
+        @Body body: StaffRoleUpdateRequest,
+    ): Response<StaffMemberDto>
+
+    @DELETE("api/stores/{storeId}/staff/{uid}")
+    suspend fun removeStaff(
+        @Path("storeId") storeId: String,
+        @Path("uid") uid: String,
+    ): Response<Unit>
 }

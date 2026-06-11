@@ -62,19 +62,29 @@ export async function optionalAuth(
 }
 
 /**
- * Требует, чтобы Custom Claims давали роль в магазине из path-параметра :storeId
- * (ТЗ §4.2, §13): claims.storeId === :storeId и роль owner (staff — Фаза 3).
+ * Фабрика проверки членства в магазине (ТЗ §4.2, §13, FR-A09): Custom Claims
+ * должны давать claims.storeId === :storeId и роль из набора allowedRoles.
  * Ставится ПОСЛЕ requireAuth.
  */
-export function requireStoreRole(req: AuthedRequest, _res: Response, next: NextFunction): void {
-  const storeId = req.params["storeId"];
-  const hasRole =
-    typeof storeId === "string" &&
-    req.claims?.["storeId"] === storeId &&
-    req.claims?.["role"] === "owner";
-  if (hasRole) next();
-  else next(new ApiError("FORBIDDEN", "Нет прав на управление этим магазином"));
+export function requireStoreMember(...allowedRoles: string[]) {
+  return (req: AuthedRequest, _res: Response, next: NextFunction): void => {
+    const storeId = req.params["storeId"];
+    const role = req.claims?.["role"];
+    const ok =
+      typeof storeId === "string" &&
+      req.claims?.["storeId"] === storeId &&
+      typeof role === "string" &&
+      allowedRoles.includes(role);
+    if (ok) next();
+    else next(new ApiError("FORBIDDEN", "Нет прав на управление этим магазином"));
+  };
 }
+
+/** Только владелец магазина (настройки, биллинг, промокоды, управление сотрудниками). */
+export const requireStoreRole = requireStoreMember("owner");
+
+/** Владелец или сотрудник (каталог, остатки, заказы) — FR-A09. */
+export const requireStoreStaff = requireStoreMember("owner", "manager", "staff");
 
 /** Требует роль суперадмина (Custom Claim superadmin: true) — ТЗ §7. */
 export function requireSuperadmin(req: AuthedRequest, _res: Response, next: NextFunction): void {
