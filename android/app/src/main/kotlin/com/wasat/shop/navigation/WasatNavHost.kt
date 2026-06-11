@@ -168,8 +168,15 @@ fun WasatNavHost(authRepository: AuthRepository) {
             route = Routes.PRODUCT,
             arguments = listOf(currencyArg),
         ) { backStackEntry ->
+            val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
             val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
-            ProductDetailScreen(currency = currency)
+            ProductDetailScreen(
+                currency = currency,
+                // FR-B12: переход на похожий товар
+                onProductClick = { productId ->
+                    navController.navigate(Routes.product(storeId, productId, currency))
+                },
+            )
         }
 
         composable(
