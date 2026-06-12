@@ -331,7 +331,7 @@ private fun PhotosSection(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         ProductImage(
                             url = url,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.a11y_product_photo_generic),
                             modifier = Modifier.size(88.dp),
                         )
                         TextButton(

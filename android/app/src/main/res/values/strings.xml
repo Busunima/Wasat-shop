@@ -90,6 +90,16 @@
     <string name="product_in_stock">В наличии</string>
     <string name="stock_notify_subscribe">🔔 Уведомить о поступлении</string>
     <string name="stock_notify_subscribed">Вы подписаны на уведомление ✓</string>
+
+    <!-- Доступность (a11y, ТЗ §11): подписи для TalkBack -->
+    <string name="a11y_wishlist_add">Добавить в избранное</string>
+    <string name="a11y_wishlist_remove">Убрать из избранного</string>
+    <string name="a11y_wishlist_open">Открыть избранное</string>
+    <string name="a11y_rating">Рейтинг %1$d из 5</string>
+    <string name="a11y_rate_stars">Поставить %1$d из 5</string>
+    <string name="a11y_product_photo">Фото товара: %1$s</string>
+    <string name="a11y_product_photo_generic">Фото товара</string>
+    <string name="a11y_store_image">Изображение магазина</string>
     <string name="product_low_stock">Осталось мало: %1$d шт.</string>
     <string name="product_reviews_title">Отзывы</string>
     <string name="product_reviews_empty">Отзывов пока нет — они появятся после первых покупок</string>

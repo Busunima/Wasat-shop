@@ -88,6 +88,16 @@
     <string name="product_in_stock">In stock</string>
     <string name="stock_notify_subscribe">🔔 Notify when available</string>
     <string name="stock_notify_subscribed">You are subscribed ✓</string>
+
+    <!-- Accessibility (a11y, ТЗ §11): TalkBack labels -->
+    <string name="a11y_wishlist_add">Add to wishlist</string>
+    <string name="a11y_wishlist_remove">Remove from wishlist</string>
+    <string name="a11y_wishlist_open">Open wishlist</string>
+    <string name="a11y_rating">Rated %1$d out of 5</string>
+    <string name="a11y_rate_stars">Rate %1$d out of 5</string>
+    <string name="a11y_product_photo">Product photo: %1$s</string>
+    <string name="a11y_product_photo_generic">Product photo</string>
+    <string name="a11y_store_image">Store image</string>
     <string name="product_low_stock">Only %1$d left</string>
     <string name="product_reviews_title">Reviews</string>
     <string name="product_reviews_empty">No reviews yet — they will appear after the first purchases</string>
