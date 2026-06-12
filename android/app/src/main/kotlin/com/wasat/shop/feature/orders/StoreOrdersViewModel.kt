@@ -14,11 +14,21 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** Пресет периода по дате создания (FR-A04). */
+enum class DatePreset(val days: Long?) { ALL(null), WEEK(7), MONTH(30), QUARTER(90) }
+
 data class StoreOrdersUiState(
     val loading: Boolean = true,
     val orders: List<OrderDto> = emptyList(),
     /** Фильтр по статусу; null — все. */
     val filter: OrderStatus? = null,
+    /** Период по дате создания (FR-A04). */
+    val datePreset: DatePreset = DatePreset.ALL,
+    /** Подстрока покупателя (email/uid). */
+    val customer: String = "",
+    /** Диапазон суммы в основных единицах валюты (как вводит владелец). */
+    val minAmount: String = "",
+    val maxAmount: String = "",
     val busy: Boolean = false,
     val error: String? = null,
     val invoice: InvoiceDoc? = null,
@@ -44,13 +54,24 @@ class StoreOrdersViewModel @Inject constructor(
     }
 
     fun load() {
-        val filter = _uiState.value.filter
+        val s = _uiState.value
+        val fromMs = s.datePreset.days?.let {
+            System.currentTimeMillis() - it * 24L * 60 * 60 * 1000
+        }
         _uiState.update { it.copy(loading = true, error = null) }
         viewModelScope.launch {
+            val result = repository.storeOrders(
+                storeId = storeId,
+                status = s.filter?.name,
+                fromMs = fromMs,
+                minTotal = amountToMinor(s.minAmount),
+                maxTotal = amountToMinor(s.maxAmount),
+                customer = s.customer.ifBlank { null },
+            )
             _uiState.update {
-                when (val r = repository.storeOrders(storeId, filter?.name)) {
-                    is ApiResult.Success -> it.copy(loading = false, orders = r.data.items)
-                    is ApiResult.ApiError -> it.copy(loading = false, error = r.message)
+                when (result) {
+                    is ApiResult.Success -> it.copy(loading = false, orders = result.data.items)
+                    is ApiResult.ApiError -> it.copy(loading = false, error = result.message)
                     is ApiResult.NetworkError ->
                         it.copy(loading = false, error = "Нет соединения с сервером")
                 }
@@ -60,6 +81,34 @@ class StoreOrdersViewModel @Inject constructor(
 
     fun onFilterChange(status: OrderStatus?) {
         _uiState.update { it.copy(filter = status) }
+        load()
+    }
+
+    fun onDatePreset(preset: DatePreset) {
+        _uiState.update { it.copy(datePreset = preset) }
+        load()
+    }
+
+    /** Поля покупателя/суммы редактируются без перезагрузки; применяются явно. */
+    fun onCustomerChange(value: String) = _uiState.update { it.copy(customer = value) }
+    fun onMinAmountChange(value: String) = _uiState.update { it.copy(minAmount = value.filterAmount()) }
+    fun onMaxAmountChange(value: String) = _uiState.update { it.copy(maxAmount = value.filterAmount()) }
+
+    /** Применить введённые покупателя/сумму (кнопка «Применить»). */
+    fun applyFilters() = load()
+
+    /**
+     * Основные единицы (как вводит владелец) → минорные единицы для сервера.
+     * Допущение MVP: валюта с 2 знаками (×100); поле пустое/невалидное → фильтр не задан.
+     */
+    private fun amountToMinor(input: String): Long? =
+        input.trim().replace(',', '.').toDoubleOrNull()?.let { (it * 100).toLong() }
+
+    /** Сбросить расширенные фильтры (статус остаётся). */
+    fun clearAdvancedFilters() {
+        _uiState.update {
+            it.copy(datePreset = DatePreset.ALL, customer = "", minAmount = "", maxAmount = "")
+        }
         load()
     }
 
@@ -121,3 +170,7 @@ class StoreOrdersViewModel @Inject constructor(
         }
     }
 }
+
+/** Оставить в поле суммы только цифры и один разделитель дроби. */
+private fun String.filterAmount(): String =
+    filterIndexed { i, c -> c.isDigit() || ((c == '.' || c == ',') && indexOfFirst { it == '.' || it == ',' } == i) }

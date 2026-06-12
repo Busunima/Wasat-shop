@@ -61,8 +61,8 @@ ordersRouter.get("/my", async (req: AuthedRequest, res, next) => {
 // FR-A05: CSV-экспорт заказов — владелец/сотрудник (объявлен ДО /:orderId)
 ordersRouter.get("/export", requireStoreStaff, async (req: AuthedRequest, res, next) => {
   try {
-    const { status, limit } = ordersExportQuerySchema.parse(req.query);
-    const orders = await listOrders(param(req, "storeId"), status, limit);
+    const query = ordersExportQuerySchema.parse(req.query);
+    const orders = await listOrders(param(req, "storeId"), query);
     res
       .type("text/csv; charset=utf-8")
       .set("Content-Disposition", 'attachment; filename="orders.csv"')
@@ -75,8 +75,8 @@ ordersRouter.get("/export", requireStoreStaff, async (req: AuthedRequest, res, n
 // FR-A04: список заказов магазина — владелец/сотрудник
 ordersRouter.get("/", requireStoreStaff, async (req: AuthedRequest, res, next) => {
   try {
-    const { status, limit } = ordersListQuerySchema.parse(req.query);
-    res.json({ items: await listOrders(param(req, "storeId"), status, limit) });
+    const query = ordersListQuerySchema.parse(req.query);
+    res.json({ items: await listOrders(param(req, "storeId"), query) });
   } catch (err) {
     next(err);
   }

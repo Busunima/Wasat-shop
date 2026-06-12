@@ -55,8 +55,17 @@ export const orderStatusUpdateSchema = z.object({
 
 export const ordersListQuerySchema = z.object({
   status: z.enum(ORDER_STATUS).optional(),
+  /** Диапазон даты создания (epoch ms): from ≤ createdAt < to. */
+  from: z.coerce.number().int().min(0).optional(),
+  to: z.coerce.number().int().min(0).optional(),
+  /** Диапазон суммы заказа (total, минорные единицы). */
+  minTotal: z.coerce.number().int().min(0).optional(),
+  maxTotal: z.coerce.number().int().min(0).optional(),
+  /** Подстрока покупателя (email/uid, регистронезависимо). */
+  customer: z.string().trim().max(120).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
+export type OrdersListQuery = z.infer<typeof ordersListQuerySchema>;
 
 /** CSV-экспорт заказов (FR-A05): лимит выше списочного. */
 export const ordersExportQuerySchema = z.object({

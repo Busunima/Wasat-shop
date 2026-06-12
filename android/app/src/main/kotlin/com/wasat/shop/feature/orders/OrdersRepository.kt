@@ -26,13 +26,26 @@ class OrdersRepository @Inject constructor(
     suspend fun order(storeId: String, orderId: String): ApiResult<OrderDto> =
         safeApiCall(json) { api.order(storeId, orderId) }
 
-    suspend fun storeOrders(storeId: String, status: String?): ApiResult<OrderListResponse> =
+    suspend fun storeOrders(
+        storeId: String,
+        status: String?,
+        fromMs: Long? = null,
+        toMs: Long? = null,
+        minTotal: Long? = null,
+        maxTotal: Long? = null,
+        customer: String? = null,
+    ): ApiResult<OrderListResponse> =
         safeApiCall(json) {
             api.storeOrders(
                 storeId,
                 buildMap {
                     put("limit", "50")
                     status?.let { put("status", it) }
+                    fromMs?.let { put("from", it.toString()) }
+                    toMs?.let { put("to", it.toString()) }
+                    minTotal?.let { put("minTotal", it.toString()) }
+                    maxTotal?.let { put("maxTotal", it.toString()) }
+                    customer?.takeIf { it.isNotBlank() }?.let { put("customer", it.trim()) }
                 },
             )
         }

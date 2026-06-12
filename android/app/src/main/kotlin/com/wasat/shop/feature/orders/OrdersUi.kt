@@ -36,6 +36,15 @@ fun statusLabelRes(status: OrderStatus): Int = when (status) {
     OrderStatus.REFUNDED -> R.string.order_status_refunded
 }
 
+/** Локализованная подпись пресета периода (FR-A04). */
+@StringRes
+fun datePresetLabelRes(preset: DatePreset): Int = when (preset) {
+    DatePreset.ALL -> R.string.orders_period_all
+    DatePreset.WEEK -> R.string.orders_period_week
+    DatePreset.MONTH -> R.string.orders_period_month
+    DatePreset.QUARTER -> R.string.orders_period_quarter
+}
+
 /** Карточка заказа: номер, статус, состав, сумма; actions — слот вызывающего. */
 @Composable
 fun OrderCard(
