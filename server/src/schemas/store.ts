@@ -64,6 +64,19 @@ export const storeUpdateSchema = z.object({
       address: optionalTrimmed(200),
     })
     .optional(),
+  /** Соцсети магазина (FR-A01): website — URL, остальные — ник/ссылка. */
+  social: z
+    .object({
+      website: optionalUrl(),
+      instagram: optionalTrimmed(120),
+      telegram: optionalTrimmed(120),
+      whatsapp: optionalTrimmed(40),
+    })
+    .optional(),
+  /** Часы работы (FR-A01), свободный текст, напр. «Пн–Пт 9:00–18:00». */
+  workingHours: optionalTrimmed(200),
+  /** Статус витрины «открыт/закрыт» (FR-A01). */
+  isOpen: z.boolean().optional(),
   /** Стоимость доставки в минорных единицах валюты магазина; null — не задана. */
   deliveryCost: z.number().int().min(0).nullable().optional(),
   /** Порог «низкого остатка» для push владельцу (FR-A03); null — дефолт сервера. */

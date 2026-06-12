@@ -15,6 +15,12 @@ data class StoreInfoDto(
     val bannerUrl: String? = null,
     val theme: ThemeDto? = null,
     val contact: ContactDto? = null,
+    /** Соцсети магазина (FR-A01). */
+    val social: SocialDto? = null,
+    /** Часы работы (FR-A01), свободный текст; null — не задано. */
+    val workingHours: String? = null,
+    /** Статус витрины «открыт/закрыт» (FR-A01); null — не настроено. */
+    val isOpen: Boolean? = null,
     /** Стоимость доставки в минорных единицах; null — не задана. */
     val deliveryCost: Long? = null,
     /** Порог push «низкий остаток» (FR-A03); null — дефолт сервера. */
@@ -31,6 +37,14 @@ data class ContactDto(
     val address: String? = null,
 )
 
+@Serializable
+data class SocialDto(
+    val website: String? = null,
+    val instagram: String? = null,
+    val telegram: String? = null,
+    val whatsapp: String? = null,
+)
+
 /**
  * Тело PATCH /api/stores/{storeId} (FR-A01). Форма владеет полным состоянием —
  * поля кодируются всегда (очистка: "" для url/строк, null для deliveryCost).
@@ -44,6 +58,9 @@ data class StoreUpdateRequest(
     val logoUrl: String,
     val bannerUrl: String,
     val contact: ContactDto,
+    val social: SocialDto,
+    val workingHours: String,
+    val isOpen: Boolean,
     val deliveryCost: Long?,
     val lowStockThreshold: Long?,
     val theme: ThemeDto? = null,

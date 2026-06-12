@@ -199,6 +199,12 @@
     <string name="settings_contact_email">Email для связи</string>
     <string name="settings_contact_phone">Телефон</string>
     <string name="settings_contact_address">Адрес</string>
+    <string name="settings_social_website">Сайт (https://…)</string>
+    <string name="settings_social_instagram">Instagram</string>
+    <string name="settings_social_telegram">Telegram</string>
+    <string name="settings_social_whatsapp">WhatsApp</string>
+    <string name="settings_working_hours">Часы работы</string>
+    <string name="settings_is_open">Магазин открыт</string>
     <string name="settings_delivery_cost">Стоимость доставки</string>
     <string name="settings_low_stock">Порог низкого остатка</string>
     <string name="settings_low_stock_hint">Push владельцу, когда остаток товара упадёт до порога. Пусто — 3.</string>

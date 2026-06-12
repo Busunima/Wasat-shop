@@ -29,6 +29,23 @@ test("storeUpdateSchema: logoUrl — url, '' очищает (null)", () => {
   assert.throws(() => storeUpdateSchema.parse({ logoUrl: "не-урл" }));
 });
 
+test("storeUpdateSchema: соцсети, часы работы, статус открыт/закрыт (FR-A01)", () => {
+  const parsed = storeUpdateSchema.parse({
+    social: { website: "https://shop.example.com", instagram: " @shop ", telegram: "" },
+    workingHours: " Пн–Пт 9:00–18:00 ",
+    isOpen: false,
+  });
+  assert.equal(parsed.social?.website, "https://shop.example.com");
+  assert.equal(parsed.social?.instagram, "@shop"); // trim
+  assert.equal(parsed.social?.telegram, null); // "" → очистка
+  assert.equal(parsed.workingHours, "Пн–Пт 9:00–18:00"); // trim
+  assert.equal(parsed.isOpen, false);
+  // невалидный website — ошибка
+  assert.throws(() => storeUpdateSchema.parse({ social: { website: "не-урл" } }));
+  // пустой PATCH не задаёт новые поля
+  assert.equal(storeUpdateSchema.parse({}).isOpen, undefined);
+});
+
 test("storeUpdateSchema: contact и deliveryCost", () => {
   const parsed = storeUpdateSchema.parse({
     contact: { email: "shop@example.com", phone: " +1 234 ", address: "" },

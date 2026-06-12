@@ -52,6 +52,30 @@ test("updateStore: публикация витрины + тема + контак
   assert.equal(cleared.logoUrl, null);
 });
 
+test("updateStore FR-A01: соцсети, часы работы, статус открыт/закрыт", async () => {
+  const updated = await updateStore(
+    STORE_ID,
+    storeUpdateSchema.parse({
+      social: { website: "https://shop.example.com", instagram: "@shop", whatsapp: "+1999" },
+      workingHours: "Пн–Пт 9:00–18:00",
+      isOpen: true,
+    }),
+  );
+  assert.equal(updated.social?.website, "https://shop.example.com");
+  assert.equal(updated.social?.instagram, "@shop");
+  assert.equal(updated.workingHours, "Пн–Пт 9:00–18:00");
+  assert.equal(updated.isOpen, true);
+
+  // partial-PATCH: смена статуса не трогает соцсети/часы; "" очищает ник
+  const closed = await updateStore(
+    STORE_ID,
+    storeUpdateSchema.parse({ isOpen: false, social: { instagram: "" } }),
+  );
+  assert.equal(closed.isOpen, false);
+  assert.equal(closed.social?.instagram, null);
+  assert.equal(closed.workingHours, "Пн–Пт 9:00–18:00");
+});
+
 test("resolveSlug: публичный магазин резолвится, после снятия публикации — 404", async () => {
   await updateStore(STORE_ID, storeUpdateSchema.parse({ isPublic: true }));
   const info = await resolveSlug(SLUG);

@@ -25,6 +25,16 @@ export interface ApiStoreInfo {
   bannerUrl: string | null;
   theme: { primary: string; secondary: string } | null;
   contact: { email?: string; phone?: string | null; address?: string | null } | null;
+  social: {
+    website?: string | null;
+    instagram?: string | null;
+    telegram?: string | null;
+    whatsapp?: string | null;
+  } | null;
+  /** Часы работы (FR-A01), свободный текст; null — не задано. */
+  workingHours: string | null;
+  /** Статус витрины «открыт/закрыт» (FR-A01); null — не настроено. */
+  isOpen: boolean | null;
   deliveryCost: number | null;
   /** Порог push «низкий остаток» (FR-A03); null — дефолт сервера. */
   lowStockThreshold: number | null;
@@ -42,6 +52,9 @@ function toApiStoreInfo(data: FirebaseFirestore.DocumentData): ApiStoreInfo {
     bannerUrl: (data["bannerUrl"] as string | undefined) ?? null,
     theme: (data["theme"] as ApiStoreInfo["theme"]) ?? null,
     contact: (data["contact"] as ApiStoreInfo["contact"]) ?? null,
+    social: (data["social"] as ApiStoreInfo["social"]) ?? null,
+    workingHours: (data["workingHours"] as string | undefined) ?? null,
+    isOpen: (data["isOpen"] as boolean | undefined) ?? null,
     deliveryCost: (data["deliveryCost"] as number | undefined) ?? null,
     lowStockThreshold: (data["lowStockThreshold"] as number | undefined) ?? null,
   };

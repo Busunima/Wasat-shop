@@ -197,6 +197,12 @@
     <string name="settings_contact_email">Contact email</string>
     <string name="settings_contact_phone">Phone</string>
     <string name="settings_contact_address">Address</string>
+    <string name="settings_social_website">Website (https://…)</string>
+    <string name="settings_social_instagram">Instagram</string>
+    <string name="settings_social_telegram">Telegram</string>
+    <string name="settings_social_whatsapp">WhatsApp</string>
+    <string name="settings_working_hours">Working hours</string>
+    <string name="settings_is_open">Store open</string>
     <string name="settings_delivery_cost">Delivery cost</string>
     <string name="settings_low_stock">Low-stock threshold</string>
     <string name="settings_low_stock_hint">Push the owner when product stock drops to this level. Empty — 3.</string>
