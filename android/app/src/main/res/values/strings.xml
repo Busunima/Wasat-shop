@@ -88,6 +88,8 @@
     <string name="catalog_sort_rating">По рейтингу</string>
     <string name="product_out_of_stock">Нет в наличии</string>
     <string name="product_in_stock">В наличии</string>
+    <string name="stock_notify_subscribe">🔔 Уведомить о поступлении</string>
+    <string name="stock_notify_subscribed">Вы подписаны на уведомление ✓</string>
     <string name="product_low_stock">Осталось мало: %1$d шт.</string>
     <string name="product_reviews_title">Отзывы</string>
     <string name="product_reviews_empty">Отзывов пока нет — они появятся после первых покупок</string>

@@ -79,6 +79,53 @@ export async function collectTokensForProduct(
   return [...tokens];
 }
 
+/**
+ * Явные подписчики «снова в наличии» (FR-B10): кнопка «Уведомить о поступлении»
+ * пишет productId в customers/{uid}.stockNotifications. Подписка одноразовая —
+ * после уведомления снимается (в отличие от постоянного вишлиста).
+ */
+export async function collectStockSubscriberUids(
+  storeId: string,
+  productId: string,
+): Promise<string[]> {
+  const customers = await db()
+    .collection("stores")
+    .doc(storeId)
+    .collection("customers")
+    .where("stockNotifications", "array-contains", productId)
+    .get();
+  return customers.docs.map((doc) => doc.id);
+}
+
+/** Токены набора пользователей магазина (объединение, без дублей). */
+async function tokensForUids(storeId: string, uids: string[]): Promise<string[]> {
+  if (uids.length === 0) return [];
+  const snaps = await db().getAll(...uids.map((uid) => tokensCol(storeId).doc(uid)));
+  const tokens = new Set<string>();
+  for (const snap of snaps) {
+    for (const t of (snap.data()?.["tokens"] as string[]) ?? []) tokens.add(t);
+  }
+  return [...tokens];
+}
+
+/** Снять одноразовые подписки после уведомления (batch arrayRemove). */
+async function clearStockSubscriptions(
+  storeId: string,
+  productId: string,
+  uids: string[],
+): Promise<void> {
+  if (uids.length === 0) return;
+  const batch = db().batch();
+  for (const uid of uids) {
+    batch.set(
+      db().collection("stores").doc(storeId).collection("customers").doc(uid),
+      { stockNotifications: FieldValue.arrayRemove(productId) },
+      { merge: true },
+    );
+  }
+  await batch.commit();
+}
+
 export interface DeliveryStats {
   targets: number;
   success: number;
@@ -129,8 +176,10 @@ export async function collectUserTokens(storeId: string, uid: string): Promise<s
 }
 
 /**
- * Уведомить адресатов о событии товара. Возвращает число целевых токенов;
- * сама отправка FCM — best-effort (нет ключей/эмулятора → лог, не ошибка).
+ * Уведомить адресатов о событии товара. Адресаты: вишлист (всегда) + явные
+ * подписчики stockNotifications (только back_in_stock, одноразово — подписка
+ * снимается после уведомления). Возвращает число целевых токенов; сама отправка
+ * FCM — best-effort (нет ключей/эмулятора → лог, не ошибка).
  */
 export async function notifyProductEvent(
   storeId: string,
@@ -138,14 +187,23 @@ export async function notifyProductEvent(
   type: ProductEventType,
   productName: string,
 ): Promise<number> {
-  const tokens = await collectTokensForProduct(storeId, productId);
-  if (tokens.length === 0) return 0;
+  const tokens = new Set(await collectTokensForProduct(storeId, productId));
+  let subscriberUids: string[] = [];
+  if (type === "back_in_stock") {
+    subscriberUids = await collectStockSubscriberUids(storeId, productId);
+    for (const t of await tokensForUids(storeId, subscriberUids)) tokens.add(t);
+  }
+  if (tokens.size === 0 && subscriberUids.length === 0) return 0;
 
-  const storeSnap = await db().collection("stores").doc(storeId).get();
-  const storeName = (storeSnap.data()?.["name"] as string) ?? "Wasat Shop";
-  const payload = buildProductNotification(type, storeName, productName);
-  await sendToTokens(storeId, tokens, payload, { storeId, productId });
-  return tokens.length;
+  if (tokens.size > 0) {
+    const storeSnap = await db().collection("stores").doc(storeId).get();
+    const storeName = (storeSnap.data()?.["name"] as string) ?? "Wasat Shop";
+    const payload = buildProductNotification(type, storeName, productName);
+    await sendToTokens(storeId, [...tokens], payload, { storeId, productId });
+  }
+  // Одноразовость: подписка выполнена — снимаем независимо от исхода доставки.
+  await clearStockSubscriptions(storeId, productId, subscriberUids);
+  return tokens.size;
 }
 
 /**

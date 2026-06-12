@@ -86,6 +86,8 @@
     <string name="catalog_sort_rating">By rating</string>
     <string name="product_out_of_stock">Out of stock</string>
     <string name="product_in_stock">In stock</string>
+    <string name="stock_notify_subscribe">🔔 Notify when available</string>
+    <string name="stock_notify_subscribed">You are subscribed ✓</string>
     <string name="product_low_stock">Only %1$d left</string>
     <string name="product_reviews_title">Reviews</string>
     <string name="product_reviews_empty">No reviews yet — they will appear after the first purchases</string>
