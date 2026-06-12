@@ -30,6 +30,36 @@ export function buildProductNotification(
   return { ...payload, data: { type } };
 }
 
+/** Подписи статусов заказа для push покупателю (FR-B06). */
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  NEW: "принят",
+  CONFIRMED: "подтверждён",
+  PROCESSING: "собирается",
+  SHIPPED: "отправлен",
+  DELIVERED: "доставлен",
+  COMPLETED: "завершён",
+  CANCELLED: "отменён",
+  RETURN_REQUESTED: "ожидает возврата",
+  RETURNED: "возвращён",
+  REFUNDED: "возмещён",
+};
+
+/** Текст push о смене статуса заказа (pure — под unit-тестом). */
+export function buildOrderStatusNotification(
+  orderId: string,
+  status: string,
+  trackingNo?: string | null,
+): PushPayload {
+  const label = ORDER_STATUS_LABELS[status] ?? status;
+  const no = orderId.slice(0, 8).toUpperCase();
+  const tracking = status === "SHIPPED" && trackingNo ? `, трек ${trackingNo}` : "";
+  return {
+    title: `Заказ №${no}`,
+    body: `Статус: ${label}${tracking}`,
+    data: { type: "order_status", orderId, status },
+  };
+}
+
 function tokensCol(storeId: string) {
   return db().collection("stores").doc(storeId).collection("fcmTokens");
 }

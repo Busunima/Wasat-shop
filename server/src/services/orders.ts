@@ -12,7 +12,7 @@ import { isCancellableByBuyer, type OrderStatus } from "../schemas/orderStatus.j
 import { applyPromo, type PromoEvaluable } from "../schemas/promocode.js";
 import { computeTotalStock, type ProductVariant } from "../schemas/product.js";
 import { recordCustomerType, recordEvent } from "./analytics.js";
-import { sendToUsers } from "./push.js";
+import { buildOrderStatusNotification, sendToUsers } from "./push.js";
 import { crossedLowStock, notifyLowStock, type LowStockAlert } from "./lowStock.js";
 import { DEFAULT_LOW_STOCK_THRESHOLD } from "../schemas/store.js";
 import { logger } from "../lib/logger.js";
@@ -371,8 +371,17 @@ export async function updateOrderStatus(
     return updated;
   });
 
+  const order = toApiOrder(data);
+  // FR-B06: push покупателю о смене статуса (fire-and-forget, best-effort)
+  void sendToUsers(
+    storeId,
+    [order.customerUid],
+    buildOrderStatusNotification(orderId, next, order.delivery.trackingNo),
+    { orderId },
+  ).catch(() => undefined);
+
   logger.info("Статус заказа изменён", { storeId, orderId, status: next });
-  return toApiOrder(data);
+  return order;
 }
 
 /** Отмена покупателем (FR-B06): только свой заказ в NEW/CONFIRMED/PROCESSING. */

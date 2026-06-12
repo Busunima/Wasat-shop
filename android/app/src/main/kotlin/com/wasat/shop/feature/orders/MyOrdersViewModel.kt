@@ -30,6 +30,7 @@ data class MyOrdersUiState(
 class MyOrdersViewModel @Inject constructor(
     private val repository: OrdersRepository,
     private val cartRepository: CartRepository,
+    ordersLive: OrdersLiveRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -41,6 +42,18 @@ class MyOrdersViewModel @Inject constructor(
 
     init {
         load()
+        // FR-B06: live-обновление — каждый снапшот своих заказов перечитывает список
+        viewModelScope.launch {
+            ordersLive.observeMyOrders(storeId).collect { refresh() }
+        }
+    }
+
+    /** Тихая перезагрузка (без спиннера) по сигналу live-листенера. */
+    private suspend fun refresh() {
+        when (val r = repository.myOrders(storeId)) {
+            is ApiResult.Success -> _uiState.update { it.copy(loading = false, orders = r.data.items) }
+            else -> Unit // тихий сбой: список остаётся прежним, явный load() покажет ошибку
+        }
     }
 
     fun load() {
