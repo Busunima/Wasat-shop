@@ -131,6 +131,64 @@ export async function setStoreBlocked(
   return toAdminStore(updated.data()!);
 }
 
+/** Сводка инспекции магазина суперадмином (FR-S02): обзор «глазами владельца». */
+export interface StoreInspection {
+  store: AdminStore;
+  usage: { products: number; orders: number; staff: number };
+  recentOrders: Array<{
+    id: string;
+    status: string;
+    total: number;
+    currency: string;
+    customerEmail: string;
+    createdAt: number | null;
+  }>;
+}
+
+/**
+ * Инспекция магазина (FR-S02 «войти в магазин» для поддержки): read-only обзор
+ * настроек, использования и последних заказов через Admin SDK. Подмену claims НЕ
+ * выполняем (это сломало бы аудит и атрибуцию) — только просмотр. Факт инспекции
+ * фиксируется в auditLog.
+ */
+export async function inspectStore(actorUid: string, storeId: string): Promise<StoreInspection> {
+  const storeRef = db().collection("stores").doc(storeId);
+  const snap = await storeRef.get();
+  if (!snap.exists) throw new ApiError("NOT_FOUND", "Магазин не найден");
+
+  const [productsCount, staffCount, ordersSnap] = await Promise.all([
+    storeRef.collection("products").count().get(),
+    storeRef.collection("staff").count().get(),
+    storeRef.collection("orders").orderBy("createdAt", "desc").limit(10).get(),
+  ]);
+
+  const recentOrders = ordersSnap.docs.map((doc) => {
+    const o = doc.data();
+    const createdAt = o["createdAt"];
+    return {
+      id: (o["id"] as string) ?? doc.id,
+      status: (o["status"] as string) ?? "NEW",
+      total: (o["total"] as number) ?? 0,
+      currency: (o["currency"] as string) ?? "",
+      customerEmail: (o["customerEmail"] as string) ?? "",
+      createdAt: createdAt instanceof Timestamp ? createdAt.toMillis() : null,
+    };
+  });
+
+  await writeAuditLog(actorUid, "store.inspect", storeId, { orders: recentOrders.length });
+  logger.info("Суперадмин инспектировал магазин", { storeId });
+
+  return {
+    store: toAdminStore(snap.data()!),
+    usage: {
+      products: productsCount.data().count,
+      orders: ordersSnap.size,
+      staff: staffCount.data().count,
+    },
+    recentOrders,
+  };
+}
+
 /** Смена тарифа магазина (FR-S02/S03) + запись в auditLog. */
 export async function setStorePlan(
   actorUid: string,

@@ -1,19 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  inspectStore,
   listStores,
   setStoreBlocked,
   setStorePlan,
   PLANS,
   type AdminStore,
   type Plan,
+  type StoreInspection,
 } from "./api";
+import { StoreInspectModal } from "./StoreInspectModal";
 
-/** FR-S01 список магазинов + FR-S02 блокировка/тариф. */
+/** FR-S01 список магазинов + FR-S02 блокировка/тариф/инспекция. */
 export function StoresPage() {
   const [stores, setStores] = useState<AdminStore[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [inspection, setInspection] = useState<StoreInspection | null>(null);
+  const [inspecting, setInspecting] = useState<string | null>(null);
 
   const load = useCallback(async (q: string) => {
     setLoading(true);
@@ -49,6 +54,18 @@ export function StoresPage() {
       setStores((prev) => prev.map((s) => (s.storeId === updated.storeId ? updated : s)));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось сменить тариф");
+    }
+  }
+
+  async function openInspect(store: AdminStore) {
+    setInspecting(store.storeId);
+    setError(null);
+    try {
+      setInspection(await inspectStore(store.storeId));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось открыть магазин");
+    } finally {
+      setInspecting(null);
     }
   }
 
@@ -107,6 +124,12 @@ export function StoresPage() {
                 </td>
                 <td>{store.isBlocked ? "🚫 заблокирован" : store.isPublic ? "🟢 публичный" : "⚪ черновик"}</td>
                 <td>
+                  <button
+                    onClick={() => void openInspect(store)}
+                    disabled={inspecting === store.storeId}
+                  >
+                    {inspecting === store.storeId ? "Открываю…" : "Заглянуть"}
+                  </button>
                   <button onClick={() => void toggleBlock(store)}>
                     {store.isBlocked ? "Разблокировать" : "Заблокировать"}
                   </button>
@@ -115,6 +138,10 @@ export function StoresPage() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {inspection && (
+        <StoreInspectModal inspection={inspection} onClose={() => setInspection(null)} />
       )}
     </section>
   );

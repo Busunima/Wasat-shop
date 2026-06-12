@@ -2,7 +2,12 @@ import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import { FieldValue } from "firebase-admin/firestore";
 import { db } from "../../src/lib/firebase.ts";
-import { listStores, setStoreBlocked, setStorePlan } from "../../src/services/admin.ts";
+import {
+  inspectStore,
+  listStores,
+  setStoreBlocked,
+  setStorePlan,
+} from "../../src/services/admin.ts";
 import { adminStoreListQuerySchema } from "../../src/schemas/admin.ts";
 import { ApiError } from "../../src/middleware/errorHandler.ts";
 
@@ -84,6 +89,41 @@ test("setStoreBlocked/Plan: несуществующий магазин — NOT_
   );
   await assert.rejects(
     () => setStorePlan(ADMIN, "nope", "pro"),
+    (e: unknown) => e instanceof ApiError && e.code === "NOT_FOUND",
+  );
+});
+
+test("inspectStore: обзор магазина с usage и заказами + auditLog (FR-S02)", async () => {
+  // Заказ и товар в магазине s-b
+  await db().collection("stores").doc("s-b").collection("orders").doc("ord-1").set({
+    id: "ord-1",
+    status: "DELIVERED",
+    total: 9900,
+    currency: "USD",
+    customerEmail: "buyer@example.com",
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  await db().collection("stores").doc("s-b").collection("products").doc("prod-1").set({
+    id: "prod-1",
+    name: "Товар",
+    status: "active",
+  });
+
+  const inspection = await inspectStore(ADMIN, "s-b");
+  assert.equal(inspection.store.storeId, "s-b");
+  assert.equal(inspection.usage.products, 1);
+  assert.equal(inspection.usage.orders, 1);
+  assert.equal(inspection.recentOrders[0]!.id, "ord-1");
+  assert.equal(inspection.recentOrders[0]!.total, 9900);
+
+  // факт инспекции зафиксирован в auditLog
+  const audit = await db().collection("auditLog").where("action", "==", "store.inspect").get();
+  assert.ok(audit.docs.some((d) => d.data()["target"] === "s-b" && d.data()["actorUid"] === ADMIN));
+});
+
+test("inspectStore: несуществующий магазин — NOT_FOUND", async () => {
+  await assert.rejects(
+    () => inspectStore(ADMIN, "nope"),
     (e: unknown) => e instanceof ApiError && e.code === "NOT_FOUND",
   );
 });

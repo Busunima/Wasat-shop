@@ -8,7 +8,7 @@ import {
   adminStoreListQuerySchema,
   platformAnalyticsQuerySchema,
 } from "../schemas/admin.js";
-import { listStores, setStoreBlocked, setStorePlan } from "../services/admin.js";
+import { inspectStore, listStores, setStoreBlocked, setStorePlan } from "../services/admin.js";
 import { getPlatformAnalytics } from "../services/platformAnalytics.js";
 
 /**
@@ -55,6 +55,15 @@ adminRouter.patch("/stores/:storeId/plan", async (req: AuthedRequest, res, next)
   try {
     const { plan } = adminPlanSchema.parse(req.body);
     res.json(await setStorePlan(actorUid(req), param(req, "storeId"), plan));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// FR-S02: инспекция магазина «глазами владельца» (read-only, аудируется)
+adminRouter.get("/stores/:storeId/inspect", async (req: AuthedRequest, res, next) => {
+  try {
+    res.json(await inspectStore(actorUid(req), param(req, "storeId")));
   } catch (err) {
     next(err);
   }
