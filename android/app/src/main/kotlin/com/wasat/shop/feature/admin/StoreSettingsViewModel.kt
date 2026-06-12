@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-enum class SettingsField { NAME, DESCRIPTION, EMAIL, DELIVERY, THEME }
+enum class SettingsField { NAME, DESCRIPTION, EMAIL, DELIVERY, THEME, LOW_STOCK }
 
 /** Валидация настроек (зеркало storeUpdateSchema). Pure JVM — под unit-тестом. */
 object SettingsValidation {
@@ -55,6 +55,8 @@ data class StoreSettingsUiState(
     val contactPhone: String = "",
     val contactAddress: String = "",
     val deliveryCostInput: String = "",
+    /** Порог push «низкий остаток» (FR-A03); пусто — дефолт сервера. */
+    val lowStockInput: String = "",
     val uploading: Boolean = false,
     val fieldErrors: Map<SettingsField, String> = emptyMap(),
     val save: SaveState = SaveState.Idle,
@@ -97,6 +99,7 @@ class StoreSettingsViewModel @Inject constructor(
                         contactPhone = store.contact?.phone.orEmpty(),
                         contactAddress = store.contact?.address.orEmpty(),
                         deliveryCostInput = store.deliveryCost?.let(::minorToInput) ?: "",
+                        lowStockInput = store.lowStockThreshold?.toString() ?: "",
                     )
                 }
                 else -> _uiState.update {
@@ -126,6 +129,8 @@ class StoreSettingsViewModel @Inject constructor(
     fun onAddressChange(v: String) = update { copy(contactAddress = v) }
     fun onDeliveryChange(v: String) =
         update { copy(deliveryCostInput = v, fieldErrors = fieldErrors - SettingsField.DELIVERY) }
+    fun onLowStockChange(v: String) =
+        update { copy(lowStockInput = v, fieldErrors = fieldErrors - SettingsField.LOW_STOCK) }
     fun removeLogo() = update { copy(logoUrl = "") }
     fun removeBanner() = update { copy(bannerUrl = "") }
 
@@ -168,6 +173,11 @@ class StoreSettingsViewModel @Inject constructor(
             ) {
                 put(SettingsField.DELIVERY, "Некорректная сумма")
             }
+            if (s.lowStockInput.isNotBlank() &&
+                (s.lowStockInput.toLongOrNull() == null || s.lowStockInput.toLong() !in 0..10000)
+            ) {
+                put(SettingsField.LOW_STOCK, "Целое число 0–10000")
+            }
             if (themeSet) {
                 val err = SettingsValidation.validateHex(s.themePrimary.ifBlank { "x" })
                     ?: SettingsValidation.validateHex(s.themeSecondary.ifBlank { "x" })
@@ -192,6 +202,7 @@ class StoreSettingsViewModel @Inject constructor(
             ),
             deliveryCost = s.deliveryCostInput.takeIf { it.isNotBlank() }
                 ?.let { PriceParser.parse(it, currency) },
+            lowStockThreshold = s.lowStockInput.takeIf { it.isNotBlank() }?.toLongOrNull(),
             theme = if (themeSet) ThemeDto(s.themePrimary.trim(), s.themeSecondary.trim()) else null,
         )
 

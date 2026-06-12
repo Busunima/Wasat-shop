@@ -207,6 +207,23 @@ fun StoreSettingsScreen(
                 singleLine = true,
             )
 
+            // FR-A03: порог push «низкий остаток» (пусто — дефолт сервера)
+            OutlinedTextField(
+                value = state.lowStockInput,
+                onValueChange = viewModel::onLowStockChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.settings_low_stock)) },
+                isError = SettingsField.LOW_STOCK in state.fieldErrors,
+                supportingText = {
+                    Text(
+                        state.fieldErrors[SettingsField.LOW_STOCK]
+                            ?: stringResource(R.string.settings_low_stock_hint),
+                    )
+                },
+                enabled = !isSaving,
+                singleLine = true,
+            )
+
             (state.save as? SaveState.Failed)?.let { failed ->
                 Card {
                     Text(
