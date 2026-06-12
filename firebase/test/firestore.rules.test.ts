@@ -53,6 +53,14 @@ beforeEach(async () => {
     await setDoc(doc(db, "stores", STORE_ID, "staff", STAFF), { role: "manager" });
     await setDoc(doc(db, "stores", STORE_ID, "products", "p1"), { name: "Item" });
     await setDoc(doc(db, "stores", STORE_ID, "orders", "o1"), { customerUid: BUYER });
+    await setDoc(doc(db, "stores", STORE_ID, "reviews", "r1"), {
+      productId: "p1",
+      customerUid: BUYER,
+      rating: 5,
+    });
+    await setDoc(doc(db, "stores", STORE_ID, "promocodes", "SALE"), { type: "percent" });
+    await setDoc(doc(db, "stores", STORE_ID, "fcmTokens", BUYER), { tokens: ["t1"] });
+    await setDoc(doc(db, "stores", STORE_ID, "returns", "ret1"), { customerUid: BUYER });
   });
 });
 
@@ -128,4 +136,53 @@ test("customers: читают сам покупатель и владелец; �
   await assertFails(
     getDoc(doc(env.authenticatedContext(OUTSIDER).firestore(), "stores", STORE_ID, "customers", BUYER)),
   );
+});
+
+test("отзывы (FR-B08): читаются публично, клиентская запись запрещена", async () => {
+  const anon = env.unauthenticatedContext().firestore();
+  await assertSucceeds(getDoc(doc(anon, "stores", STORE_ID, "reviews", "r1")));
+
+  // даже покупатель не пишет отзыв напрямую — только через REST (Admin SDK)
+  const buyer = env.authenticatedContext(BUYER).firestore();
+  await assertFails(
+    setDoc(doc(buyer, "stores", STORE_ID, "reviews", "r2"), {
+      productId: "p1",
+      customerUid: BUYER,
+      rating: 1,
+    }),
+  );
+});
+
+test("серверные коллекции: клиент не читает и не пишет promocodes/staff/fcmTokens", async () => {
+  const owner = env.authenticatedContext(OWNER).firestore();
+  // даже владелец не имеет прямого доступа — эти данные идут через REST/Admin SDK
+  await assertFails(getDoc(doc(owner, "stores", STORE_ID, "promocodes", "SALE")));
+  await assertFails(getDoc(doc(owner, "stores", STORE_ID, "staff", STAFF)));
+  await assertFails(getDoc(doc(owner, "stores", STORE_ID, "fcmTokens", BUYER)));
+  await assertFails(
+    setDoc(doc(owner, "stores", STORE_ID, "promocodes", "NEW"), { type: "fixed" }),
+  );
+  await assertFails(
+    setDoc(doc(owner, "stores", STORE_ID, "inventoryLog", "l1"), { delta: 1 }),
+  );
+});
+
+test("isStaff всё ещё работает несмотря на закрытую коллекцию staff", async () => {
+  // staff-документ закрыт для прямого чтения, но exists() в правилах привилегирован —
+  // сотрудник по-прежнему может писать товар (проверка через isStaff)
+  const staff = env.authenticatedContext(STAFF).firestore();
+  await assertSucceeds(
+    setDoc(doc(staff, "stores", STORE_ID, "products", "p-staff"), { name: "OK" }),
+  );
+});
+
+test("возвраты (FR-A11): читает свой покупатель; запись только сервером", async () => {
+  const buyer = env.authenticatedContext(BUYER).firestore();
+  await assertSucceeds(getDoc(doc(buyer, "stores", STORE_ID, "returns", "ret1")));
+  await assertFails(
+    setDoc(doc(buyer, "stores", STORE_ID, "returns", "ret2"), { customerUid: BUYER }),
+  );
+
+  const outsider = env.authenticatedContext(OUTSIDER).firestore();
+  await assertFails(getDoc(doc(outsider, "stores", STORE_ID, "returns", "ret1")));
 });

@@ -53,6 +53,30 @@ service cloud.firestore {
                        (request.auth.uid == uid || isOwner(storeId) || isStaff(storeId));
         allow write: if request.auth != null && request.auth.uid == uid;
       }
+
+      // Отзывы (FR-B08): публичный контент карточки; пишет только сервер
+      // (право на отзыв проверяется по заказу в Admin SDK).
+      match /reviews/{rid} {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      // Возвраты (FR-A11/B09): чтение — владелец/сотрудник или сам покупатель;
+      // переходы статусов и Stripe Refund — только сервер.
+      match /returns/{ret} {
+        allow read: if isOwner(storeId) || isStaff(storeId)
+                       || resource.data.customerUid == request.auth.uid;
+        allow write: if false;
+      }
+
+      // Серверные коллекции (Admin SDK) — прямой клиентский доступ запрещён:
+      // промокоды (превью только через REST), членство сотрудников, FCM-токены
+      // устройств (ПДн), журналы остатков/аудита, агрегаты выручки.
+      match /promocodes/{code} { allow read, write: if false; }
+      match /staff/{uid}       { allow read, write: if false; }
+      match /fcmTokens/{uid}   { allow read, write: if false; }
+      match /inventoryLog/{id} { allow read, write: if false; }
+      match /auditLog/{id}     { allow read, write: if false; }
     }
 
     // Публичный обратный индекс slug -> storeId (резолв витрины по ссылке/QR).
