@@ -12,6 +12,7 @@ import com.wasat.shop.feature.analytics.AnalyticsScreen
 import com.wasat.shop.feature.admin.MyProductsScreen
 import com.wasat.shop.feature.admin.ProductEditScreen
 import com.wasat.shop.feature.admin.PromocodesScreen
+import com.wasat.shop.feature.admin.BroadcastScreen
 import com.wasat.shop.feature.admin.StaffScreen
 import com.wasat.shop.feature.admin.StoreSettingsScreen
 import com.wasat.shop.feature.auth.AuthRepository
@@ -49,6 +50,7 @@ object Routes {
     const val INVENTORY = "inventory/{storeId}"
     const val PROMOCODES = "promocodes/{storeId}?currency={currency}"
     const val STAFF = "staff/{storeId}"
+    const val BROADCAST = "broadcast/{storeId}"
     const val ANALYTICS = "analytics/{storeId}?currency={currency}"
     const val WISHLIST = "wishlist/{storeId}?currency={currency}"
     const val STORE_BY_SLUG = "store/{slug}"
@@ -81,6 +83,7 @@ object Routes {
     fun promocodes(storeId: String, currency: String): String =
         "promocodes/$storeId?currency=$currency"
     fun staff(storeId: String): String = "staff/$storeId"
+    fun broadcast(storeId: String): String = "broadcast/$storeId"
     fun analytics(storeId: String, currency: String): String =
         "analytics/$storeId?currency=$currency"
     fun wishlist(storeId: String, currency: String): String =
@@ -164,6 +167,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 },
                 onOpenStaff = { storeId ->
                     navController.navigate(Routes.staff(storeId))
+                },
+                onOpenBroadcast = { storeId ->
+                    navController.navigate(Routes.broadcast(storeId))
                 },
                 onOpenAnalytics = { storeId, currency ->
                     navController.navigate(Routes.analytics(storeId, currency))
@@ -339,6 +345,11 @@ fun WasatNavHost(authRepository: AuthRepository) {
         // FR-A09: сотрудники и роли (владелец)
         composable(route = Routes.STAFF) {
             StaffScreen()
+        }
+
+        // FR-A07: broadcast-рассылка покупателям (владелец)
+        composable(route = Routes.BROADCAST) {
+            BroadcastScreen()
         }
 
         // FR-A05: дашборд аналитики (владелец)

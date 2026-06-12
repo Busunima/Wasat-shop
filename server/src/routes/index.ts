@@ -3,6 +3,7 @@ import { storesRouter } from "./stores.js";
 import { checkoutRouter } from "./checkout.js";
 import { webhooksRouter } from "./webhooks.js";
 import { adminRouter } from "./admin.js";
+import { cronRouter } from "./cron.js";
 
 /**
  * Сборка всех маршрутов под /api (ТЗ §9).
@@ -15,3 +16,4 @@ apiRouter.use("/stores", storesRouter);
 apiRouter.use("/checkout", checkoutRouter);
 apiRouter.use("/webhooks", webhooksRouter);
 apiRouter.use("/admin", adminRouter);
+apiRouter.use("/cron", cronRouter);

@@ -79,13 +79,20 @@ export async function collectTokensForProduct(
   return [...tokens];
 }
 
+export interface DeliveryStats {
+  targets: number;
+  success: number;
+  failure: number;
+}
+
 /** Best-effort отправка на токены: сбой (нет FCM в dev/test) — лог, не ошибка. */
-async function sendToTokens(
+export async function sendToTokens(
   storeId: string,
   tokens: string[],
   payload: PushPayload,
   data: Record<string, string>,
-): Promise<void> {
+): Promise<DeliveryStats> {
+  if (tokens.length === 0) return { targets: 0, success: 0, failure: 0 };
   try {
     const result = await messaging().sendEachForMulticast({
       tokens,
@@ -97,10 +104,28 @@ async function sendToTokens(
       success: result.successCount,
       failure: result.failureCount,
     });
+    return { targets: tokens.length, success: result.successCount, failure: result.failureCount };
   } catch (err) {
     // Нет FCM-эмулятора/учётных данных (dev/test) — событие фиксируем логом.
     logger.info("Push не отправлен (FCM недоступен)", { storeId, err: String(err) });
+    return { targets: tokens.length, success: 0, failure: tokens.length };
   }
+}
+
+/** Все токены покупателей магазина (адресаты broadcast-рассылки FR-A07). */
+export async function collectAllStoreTokens(storeId: string): Promise<string[]> {
+  const snap = await tokensCol(storeId).get();
+  const tokens = new Set<string>();
+  for (const doc of snap.docs) {
+    for (const t of (doc.data()["tokens"] as string[]) ?? []) tokens.add(t);
+  }
+  return [...tokens];
+}
+
+/** Токены конкретного покупателя магазина. */
+export async function collectUserTokens(storeId: string, uid: string): Promise<string[]> {
+  const snap = await tokensCol(storeId).doc(uid).get();
+  return (snap.data()?.["tokens"] as string[]) ?? [];
 }
 
 /**

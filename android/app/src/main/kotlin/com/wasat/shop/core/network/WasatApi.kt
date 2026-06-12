@@ -4,7 +4,9 @@ import com.wasat.shop.core.network.dto.AiDescribeRequest
 import com.wasat.shop.core.network.dto.AiDescribeResponse
 import com.wasat.shop.core.network.dto.AnalyticsEventRequest
 import com.wasat.shop.core.network.dto.AnalyticsReportDto
+import com.wasat.shop.core.network.dto.BroadcastRequest
 import com.wasat.shop.core.network.dto.CheckoutRequest
+import com.wasat.shop.core.network.dto.DeliveryStatsDto
 import com.wasat.shop.core.network.dto.OrderDto
 import com.wasat.shop.core.network.dto.OrderListResponse
 import com.wasat.shop.core.network.dto.OrderStatusUpdateRequest
@@ -284,6 +286,15 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @Body body: PushTokenRequest,
     ): Response<Unit>
+
+    // ── Рассылки владельца (FR-A07) ──────────────────────────────────────────
+
+    /** Broadcast-рассылка всем покупателям магазина; возвращает статистику доставки. */
+    @POST("api/stores/{storeId}/notify")
+    suspend fun broadcast(
+        @Path("storeId") storeId: String,
+        @Body body: BroadcastRequest,
+    ): Response<DeliveryStatsDto>
 
     // ── Сотрудники (FR-A09) ──────────────────────────────────────────────────
 
