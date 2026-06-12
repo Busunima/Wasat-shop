@@ -25,6 +25,7 @@
     <string name="home_inventory">Инвентарь</string>
     <string name="home_promocodes">Промокоды</string>
     <string name="home_staff">Сотрудники</string>
+    <string name="home_broadcast">Рассылка покупателям</string>
     <string name="home_analytics">Аналитика</string>
     <string name="plan_title">Тариф: %1$s</string>
     <string name="plan_usage_products">Товары: %1$d / %2$s</string>
@@ -228,4 +229,13 @@
     <string name="staff_remove">Удалить</string>
     <string name="staff_remove_title">Удалить сотрудника?</string>
     <string name="staff_remove_confirm">Сотрудник «%1$s» потеряет доступ к управлению магазином.</string>
+
+    <!-- FR-A07: рассылка покупателям -->
+    <string name="broadcast_title">Рассылка покупателям</string>
+    <string name="broadcast_hint">Push-уведомление получат все покупатели магазина с включёнными уведомлениями.</string>
+    <string name="broadcast_field_title">Заголовок</string>
+    <string name="broadcast_field_body">Текст сообщения</string>
+    <string name="broadcast_send">Отправить</string>
+    <string name="broadcast_sent_title">Рассылка отправлена</string>
+    <string name="broadcast_sent_stats">Адресатов: %1$d · доставлено: %2$d · ошибок: %3$d</string>
 </resources>

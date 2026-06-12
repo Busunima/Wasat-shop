@@ -2,6 +2,7 @@ package com.wasat.shop.feature.cart
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.wasat.shop.core.db.CartDao
@@ -32,7 +33,14 @@ class CartSyncRepository @Inject constructor(
         val items = dao.getAll(storeId)
         runCatching {
             customerDoc(fs, storeId, uid)
-                .set(mapOf("cart" to items.map(::toMap)), SetOptions.merge())
+                .set(
+                    mapOf(
+                        "cart" to items.map(::toMap),
+                        // Метка для cron-триггера «брошенная корзина» (FR-A07).
+                        "cartUpdatedAt" to FieldValue.serverTimestamp(),
+                    ),
+                    SetOptions.merge(),
+                )
                 .await()
         }
     }
@@ -54,7 +62,13 @@ class CartSyncRepository @Inject constructor(
                 )
                 dao.replaceAll(storeId, merged)
                 customerDoc(fs, storeId, uid)
-                    .set(mapOf("cart" to merged.map(::toMap)), SetOptions.merge())
+                    .set(
+                        mapOf(
+                            "cart" to merged.map(::toMap),
+                            "cartUpdatedAt" to FieldValue.serverTimestamp(),
+                        ),
+                        SetOptions.merge(),
+                    )
                     .await()
             }
         }

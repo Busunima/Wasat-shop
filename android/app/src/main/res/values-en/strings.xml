@@ -23,6 +23,7 @@
     <string name="home_inventory">Inventory</string>
     <string name="home_promocodes">Promo codes</string>
     <string name="home_staff">Staff</string>
+    <string name="home_broadcast">Broadcast to customers</string>
     <string name="home_analytics">Analytics</string>
     <string name="plan_title">Plan: %1$s</string>
     <string name="plan_usage_products">Products: %1$d / %2$s</string>
@@ -226,4 +227,13 @@
     <string name="staff_remove">Remove</string>
     <string name="staff_remove_title">Remove staff member?</string>
     <string name="staff_remove_confirm">"%1$s" will lose access to managing the store.</string>
+
+    <!-- FR-A07: customer broadcast -->
+    <string name="broadcast_title">Broadcast to customers</string>
+    <string name="broadcast_hint">A push notification will reach every customer of the store who has notifications enabled.</string>
+    <string name="broadcast_field_title">Title</string>
+    <string name="broadcast_field_body">Message</string>
+    <string name="broadcast_send">Send</string>
+    <string name="broadcast_sent_title">Broadcast sent</string>
+    <string name="broadcast_sent_stats">Recipients: %1$d · delivered: %2$d · failed: %3$d</string>
 </resources>

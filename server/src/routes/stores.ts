@@ -24,6 +24,7 @@ import { recommendationsRouter } from "./recommendations.js";
 import { pushRouter } from "./push.js";
 import { aiRouter } from "./ai.js";
 import { ordersRouter } from "./orders.js";
+import { notifyRouter } from "./notify.js";
 
 export const storesRouter: Router = Router();
 
@@ -50,6 +51,9 @@ storesRouter.use("/:storeId/ai", aiRouter);
 
 // Заказы: /api/stores/:storeId/orders (FR-A04/B06; создание — POST /api/checkout)
 storesRouter.use("/:storeId/orders", ordersRouter);
+
+// Рассылки: /api/stores/:storeId/notify (FR-A07)
+storesRouter.use("/:storeId/notify", notifyRouter);
 
 // События и аналитика: /api/stores/:storeId/{events,analytics} (§16, FR-A05)
 storesRouter.use("/:storeId", analyticsRouter);
