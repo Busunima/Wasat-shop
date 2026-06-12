@@ -140,6 +140,8 @@
     <string name="checkout_pickup">Самовывоз</string>
     <string name="checkout_courier">Курьер</string>
     <string name="checkout_address">Адрес доставки</string>
+    <string name="checkout_saved_addresses">Сохранённые адреса</string>
+    <string name="checkout_save_address">Сохранить адрес для будущих заказов</string>
     <string name="checkout_subtotal">Сумма</string>
     <string name="checkout_discount">Скидка</string>
     <string name="checkout_delivery_cost">Доставка</string>
@@ -156,6 +158,7 @@
     <string name="order_total">Итого</string>
     <string name="order_tracking">Трек-номер: %1$s</string>
     <string name="order_cancel">Отменить заказ</string>
+    <string name="order_reorder">Повторить заказ</string>
     <string name="order_invoice">Инвойс (PDF)</string>
     <string name="order_ship_title">Передать в доставку</string>
     <string name="order_tracking_label">Трек-номер (необязательно)</string>

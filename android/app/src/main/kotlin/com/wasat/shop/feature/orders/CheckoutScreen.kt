@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -22,8 +24,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.wasat.shop.R
@@ -150,6 +154,33 @@ fun CheckoutScreen(
                 supportingText = { state.addressError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
             )
+            // FR-B11: адресная книга — быстрый выбор сохранённого адреса
+            if (state.savedAddresses.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.checkout_saved_addresses),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                state.savedAddresses.forEach { saved ->
+                    AssistChip(
+                        onClick = { viewModel.onPickAddress(saved) },
+                        label = { Text(saved, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Checkbox(
+                    checked = state.saveAddress,
+                    onCheckedChange = viewModel::onSaveAddressChange,
+                )
+                Text(
+                    text = stringResource(R.string.checkout_save_address),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
         }
 
         HorizontalDivider()

@@ -37,6 +37,10 @@ data class CheckoutUiState(
     val method: String = "pickup",
     val address: String = "",
     val addressError: String? = null,
+    /** Адресная книга покупателя (FR-B11), свежие сверху. */
+    val savedAddresses: List<String> = emptyList(),
+    /** Сохранить адрес после успешного заказа. */
+    val saveAddress: Boolean = true,
     /** Стоимость курьерской доставки магазина (минорные), null — не задана. */
     val deliveryCost: Long? = null,
     val busy: Boolean = false,
@@ -54,6 +58,7 @@ data class CheckoutUiState(
 class CheckoutViewModel @Inject constructor(
     private val ordersRepository: OrdersRepository,
     private val cartRepository: CartRepository,
+    private val addressBook: AddressBookRepository,
     private val api: WasatApi,
     private val json: Json,
     savedStateHandle: SavedStateHandle,
@@ -77,6 +82,13 @@ class CheckoutViewModel @Inject constructor(
             val store = safeApiCall(json) { api.getStore(storeId) }
             if (store is ApiResult.Success) {
                 _uiState.update { it.copy(deliveryCost = store.data.deliveryCost) }
+            }
+        }
+        // FR-B11: адресная книга — подсказки для курьерской доставки
+        viewModelScope.launch {
+            val saved = addressBook.load(storeId)
+            if (saved.isNotEmpty()) {
+                _uiState.update { it.copy(savedAddresses = saved) }
             }
         }
     }
@@ -104,6 +116,13 @@ class CheckoutViewModel @Inject constructor(
 
     fun onAddressChange(value: String) =
         _uiState.update { it.copy(address = value, addressError = null) }
+
+    /** Подстановка адреса из адресной книги (FR-B11). */
+    fun onPickAddress(value: String) =
+        _uiState.update { it.copy(address = value, addressError = null) }
+
+    fun onSaveAddressChange(value: Boolean) =
+        _uiState.update { it.copy(saveAddress = value) }
 
     /** Серверный предпросмотр промокода (FR-A06 /preview) на текущей корзине. */
     fun applyPromo() {
@@ -179,6 +198,10 @@ class CheckoutViewModel @Inject constructor(
             when (val result = ordersRepository.checkout(request)) {
                 is ApiResult.Success -> {
                     cartRepository.clear(storeId)
+                    // FR-B11: сохранить адрес доставки в адресную книгу (best-effort)
+                    if (s.method == "courier" && s.saveAddress && s.address.isNotBlank()) {
+                        addressBook.save(storeId, s.savedAddresses, s.address)
+                    }
                     _uiState.update { it.copy(busy = false, placedOrder = result.data) }
                 }
                 is ApiResult.ApiError ->
