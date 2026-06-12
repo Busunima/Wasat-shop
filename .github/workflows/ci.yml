@@ -129,3 +129,32 @@ jobs:
         working-directory: server
       - run: npm run test:integration
         working-directory: server
+
+  android-ui:
+    name: Android · UI-тесты (instrumentation)
+    needs: changes
+    if: ${{ needs.changes.outputs.android == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      # Аппаратное ускорение KVM для эмулятора Android на ubuntu-раннере.
+      - name: Включить KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      # Compose UI-тесты критических флоу (connectedDebugAndroidTest) на эмуляторе.
+      - name: UI-тесты на эмуляторе
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          target: google_apis
+          working-directory: android
+          script: ./gradlew connectedDebugAndroidTest
