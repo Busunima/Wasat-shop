@@ -49,4 +49,12 @@ class OrdersRepository @Inject constructor(
 
     suspend fun cancel(storeId: String, orderId: String): ApiResult<OrderDto> =
         safeApiCall(json) { api.cancelOrder(storeId, orderId) }
+
+    /** HTML-инвойс заказа (FR-A04) для печати в PDF на клиенте. */
+    suspend fun invoiceHtml(storeId: String, orderId: String): ApiResult<String> =
+        when (val r = safeApiCall(json) { api.orderInvoice(storeId, orderId) }) {
+            is ApiResult.Success -> ApiResult.Success(r.data.string())
+            is ApiResult.ApiError -> r
+            is ApiResult.NetworkError -> r
+        }
 }

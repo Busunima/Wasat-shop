@@ -18,6 +18,7 @@ data class MyOrdersUiState(
     val orders: List<OrderDto> = emptyList(),
     val busy: Boolean = false,
     val error: String? = null,
+    val invoice: InvoiceDoc? = null,
 )
 
 /** История заказов покупателя (FR-B06) + отмена до отгрузки. */
@@ -50,6 +51,25 @@ class MyOrdersViewModel @Inject constructor(
             }
         }
     }
+
+    /** Загрузить HTML-инвойс заказа (FR-A04); экран печатает его в PDF. */
+    fun printInvoice(orderId: String) {
+        if (_uiState.value.busy) return
+        _uiState.update { it.copy(busy = true, error = null) }
+        viewModelScope.launch {
+            when (val r = repository.invoiceHtml(storeId, orderId)) {
+                is ApiResult.Success ->
+                    _uiState.update { it.copy(busy = false, invoice = InvoiceDoc(orderId, r.data)) }
+                is ApiResult.ApiError ->
+                    _uiState.update { it.copy(busy = false, error = r.message) }
+                is ApiResult.NetworkError ->
+                    _uiState.update { it.copy(busy = false, error = "Нет соединения с сервером") }
+            }
+        }
+    }
+
+    /** Сбросить инвойс после передачи его в системную печать. */
+    fun consumeInvoice() = _uiState.update { it.copy(invoice = null) }
 
     fun cancel(orderId: String) {
         if (_uiState.value.busy) return

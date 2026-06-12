@@ -155,6 +155,7 @@
     <string name="order_total">Итого</string>
     <string name="order_tracking">Трек-номер: %1$s</string>
     <string name="order_cancel">Отменить заказ</string>
+    <string name="order_invoice">Инвойс (PDF)</string>
     <string name="order_ship_title">Передать в доставку</string>
     <string name="order_tracking_label">Трек-номер (необязательно)</string>
     <string name="order_ship_confirm">Отправить</string>

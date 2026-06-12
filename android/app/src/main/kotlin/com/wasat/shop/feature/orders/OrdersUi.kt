@@ -18,6 +18,9 @@ import com.wasat.shop.core.network.dto.OrderDto
 import com.wasat.shop.core.util.PriceFormatter
 import com.wasat.shop.domain.model.OrderStatus
 
+/** Готовый к печати инвойс (FR-A04): HTML документа + id заказа для имени задания. */
+data class InvoiceDoc(val orderId: String, val html: String)
+
 /** Локализованная подпись статуса заказа (канонический enum). */
 @StringRes
 fun statusLabelRes(status: OrderStatus): Int = when (status) {
