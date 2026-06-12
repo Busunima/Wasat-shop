@@ -185,6 +185,8 @@
     <string name="settings_contact_phone">Телефон</string>
     <string name="settings_contact_address">Адрес</string>
     <string name="settings_delivery_cost">Стоимость доставки</string>
+    <string name="settings_low_stock">Порог низкого остатка</string>
+    <string name="settings_low_stock_hint">Push владельцу, когда остаток товара упадёт до порога. Пусто — 3.</string>
 
     <!-- Открытие витрины по ссылке/QR (FR-B01) -->
     <string name="store_not_found">Магазин «%1$s» не найден или закрыт</string>

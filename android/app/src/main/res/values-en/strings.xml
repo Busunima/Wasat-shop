@@ -183,6 +183,8 @@
     <string name="settings_contact_phone">Phone</string>
     <string name="settings_contact_address">Address</string>
     <string name="settings_delivery_cost">Delivery cost</string>
+    <string name="settings_low_stock">Low-stock threshold</string>
+    <string name="settings_low_stock_hint">Push the owner when product stock drops to this level. Empty — 3.</string>
 
     <!-- Open storefront by link/QR (FR-B01) -->
     <string name="store_not_found">Store “%1$s” not found or closed</string>

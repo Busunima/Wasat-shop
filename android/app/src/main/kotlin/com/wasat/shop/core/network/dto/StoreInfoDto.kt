@@ -17,6 +17,8 @@ data class StoreInfoDto(
     val contact: ContactDto? = null,
     /** Стоимость доставки в минорных единицах; null — не задана. */
     val deliveryCost: Long? = null,
+    /** Порог push «низкий остаток» (FR-A03); null — дефолт сервера. */
+    val lowStockThreshold: Long? = null,
 )
 
 @Serializable
@@ -43,5 +45,6 @@ data class StoreUpdateRequest(
     val bannerUrl: String,
     val contact: ContactDto,
     val deliveryCost: Long?,
+    val lowStockThreshold: Long?,
     val theme: ThemeDto? = null,
 )

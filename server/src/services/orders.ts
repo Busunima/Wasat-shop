@@ -13,6 +13,8 @@ import { applyPromo, type PromoEvaluable } from "../schemas/promocode.js";
 import { computeTotalStock, type ProductVariant } from "../schemas/product.js";
 import { recordCustomerType, recordEvent } from "./analytics.js";
 import { sendToUsers } from "./push.js";
+import { crossedLowStock, notifyLowStock, type LowStockAlert } from "./lowStock.js";
+import { DEFAULT_LOW_STOCK_THRESHOLD } from "../schemas/store.js";
 import { logger } from "../lib/logger.js";
 
 /**
@@ -122,7 +124,12 @@ export async function createOrder(
     // Идемпотентный повтор — вернуть существующий заказ без побочных эффектов
     const existing = await tx.get(orderRef);
     if (existing.exists) {
-      return { data: existing.data()!, replay: true, ownerUid: null as string | null };
+      return {
+        data: existing.data()!,
+        replay: true,
+        ownerUid: null as string | null,
+        lowStock: [] as LowStockAlert[],
+      };
     }
 
     const storeSnap = await tx.get(db().collection("stores").doc(storeId));
@@ -159,6 +166,9 @@ export async function createOrder(
     // Пересчёт позиций + списание стока
     const items: OrderItem[] = [];
     const itemCategories: string[] = [];
+    const lowStock: LowStockAlert[] = [];
+    const threshold =
+      (store["lowStockThreshold"] as number | undefined) ?? DEFAULT_LOW_STOCK_THRESHOLD;
     let subtotal = 0;
 
     input.items.forEach((item, i) => {
@@ -180,7 +190,11 @@ export async function createOrder(
             available: stock,
           });
         }
-        tx.update(snap.ref, { totalStock: stock - item.qty });
+        const remaining = stock - item.qty;
+        tx.update(snap.ref, { totalStock: remaining });
+        if (crossedLowStock(stock, remaining, threshold)) {
+          lowStock.push({ productId: item.productId, name, remaining });
+        }
       } else {
         if (!item.variant) {
           throw new ApiError("VALIDATION_ERROR", `Укажите вариант товара: ${name}`);
@@ -193,8 +207,13 @@ export async function createOrder(
             available: target.stock,
           });
         }
+        const before = (product["totalStock"] as number) ?? computeTotalStock(variants);
         target.stock -= item.qty;
-        tx.update(snap.ref, { variants, totalStock: computeTotalStock(variants) });
+        const remaining = computeTotalStock(variants);
+        tx.update(snap.ref, { variants, totalStock: remaining });
+        if (crossedLowStock(before, remaining, threshold)) {
+          lowStock.push({ productId: item.productId, name, remaining });
+        }
       }
 
       subtotal += price * item.qty;
@@ -259,7 +278,7 @@ export async function createOrder(
       createdAt: FieldValue.serverTimestamp(),
     };
     tx.set(orderRef, orderData);
-    return { data: orderData, replay: false, ownerUid: store["ownerUid"] as string };
+    return { data: orderData, replay: false, ownerUid: store["ownerUid"] as string, lowStock };
   });
 
   const order = toApiOrder(result.data);
@@ -284,6 +303,8 @@ export async function createOrder(
         },
         { orderId: order.id },
       ).catch(() => undefined);
+      // FR-A03: push о низком остатке — только при пересечении порога этой продажей
+      void notifyLowStock(storeId, result.ownerUid, result.lowStock).catch(() => undefined);
     }
     logger.info("Заказ создан", { storeId, orderId: order.id, total: order.total });
   }
