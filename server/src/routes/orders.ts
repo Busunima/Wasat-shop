@@ -6,7 +6,11 @@ import {
 } from "../middleware/auth.js";
 import { verifyAppCheck } from "../middleware/appCheck.js";
 import { ApiError } from "../middleware/errorHandler.js";
-import { ordersListQuerySchema, orderStatusUpdateSchema } from "../schemas/order.js";
+import {
+  ordersExportQuerySchema,
+  ordersListQuerySchema,
+  orderStatusUpdateSchema,
+} from "../schemas/order.js";
 import {
   cancelOrderByBuyer,
   getOrder,
@@ -15,6 +19,7 @@ import {
   updateOrderStatus,
 } from "../services/orders.js";
 import { renderInvoice } from "../services/invoice.js";
+import { buildOrdersCsv } from "../services/exportCsv.js";
 
 /**
  * Заказы магазина: /api/stores/:storeId/orders (создание — POST /api/checkout).
@@ -48,6 +53,20 @@ ordersRouter.get("/my", async (req: AuthedRequest, res, next) => {
   try {
     const { limit } = ordersListQuerySchema.parse(req.query);
     res.json({ items: await listMyOrders(param(req, "storeId"), actorUid(req), limit) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// FR-A05: CSV-экспорт заказов — владелец/сотрудник (объявлен ДО /:orderId)
+ordersRouter.get("/export", requireStoreStaff, async (req: AuthedRequest, res, next) => {
+  try {
+    const { status, limit } = ordersExportQuerySchema.parse(req.query);
+    const orders = await listOrders(param(req, "storeId"), status, limit);
+    res
+      .type("text/csv; charset=utf-8")
+      .set("Content-Disposition", 'attachment; filename="orders.csv"')
+      .send(buildOrdersCsv(orders));
   } catch (err) {
     next(err);
   }

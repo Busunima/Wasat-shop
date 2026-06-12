@@ -49,6 +49,17 @@ export async function recordEvent(storeId: string, event: AnalyticsEvent): Promi
   await ref.set(update, { merge: true });
 }
 
+/**
+ * Учёт нового/вернувшегося покупателя в дневном агрегате (FR-A05 new-vs-returning).
+ * Вызывается из чекаута (fire-and-forget) после определения первизны по заказам.
+ */
+export async function recordCustomerType(storeId: string, isNew: boolean): Promise<void> {
+  await analyticsDoc(storeId, todayUtc()).set(
+    { [isNew ? "newCustomers" : "returningCustomers"]: FieldValue.increment(1) },
+    { merge: true },
+  );
+}
+
 export interface AnalyticsFunnel {
   views: number;
   addToCarts: number;
@@ -69,6 +80,8 @@ export interface AnalyticsReport {
   conversion: { viewToCart: number; cartToOrder: number; viewToOrder: number };
   topProducts: Array<{ productId: string; views: number }>;
   daily: Array<{ date: string; views: number; orders: number; revenue: number }>;
+  /** Новые и вернувшиеся покупатели за период (FR-A05). */
+  customers: { new: number; returning: number };
 }
 
 function pct(part: number, whole: number): number {
@@ -87,6 +100,8 @@ export async function getAnalytics(
   const funnel: AnalyticsFunnel = { views: 0, addToCarts: 0, checkouts: 0, purchases: 0 };
   let revenue = 0;
   let searches = 0;
+  let newCustomers = 0;
+  let returningCustomers = 0;
   const productViews = new Map<string, number>();
   const daily: AnalyticsReport["daily"] = [];
 
@@ -108,6 +123,8 @@ export async function getAnalytics(
     funnel.purchases += purchases;
     revenue += dayRevenue;
     searches += (data["searches"] as number) ?? 0;
+    newCustomers += (data["newCustomers"] as number) ?? 0;
+    returningCustomers += (data["returningCustomers"] as number) ?? 0;
 
     const pv = (data["productViews"] as Record<string, number>) ?? {};
     for (const [pid, count] of Object.entries(pv)) {
@@ -137,5 +154,6 @@ export async function getAnalytics(
     },
     topProducts,
     daily,
+    customers: { new: newCustomers, returning: returningCustomers },
   };
 }

@@ -45,6 +45,17 @@
             </intent-filter>
         </activity>
 
+        <!-- FileProvider: share CSV-экспорта заказов (ТЗ §FR-A05) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <!-- FCM: push о наличии/цене из вишлиста (ТЗ §FR-B10) -->
         <service
             android:name=".core.push.WasatMessagingService"

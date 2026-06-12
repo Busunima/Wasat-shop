@@ -147,6 +147,7 @@
     <string name="my_orders_title">My orders</string>
     <string name="my_orders_empty">No orders yet</string>
     <string name="store_orders_title">Store orders</string>
+    <string name="orders_export_csv">Export CSV</string>
     <string name="store_orders_all">All</string>
     <string name="store_orders_empty">No orders yet</string>
     <string name="order_number">Order #%1$s</string>
@@ -218,6 +219,8 @@
     <string name="analytics_conversion">Conversion: view→cart %1$.1f%% · cart→order %2$.1f%% · view→order %3$.1f%%</string>
     <string name="analytics_top">Top products by views</string>
     <string name="analytics_views_count">%1$d views</string>
+    <string name="analytics_new_customers">New customers</string>
+    <string name="analytics_returning_customers">Returning</string>
 
     <!-- Promo codes (FR-A06) -->
     <string name="promo_title">Promo codes</string>

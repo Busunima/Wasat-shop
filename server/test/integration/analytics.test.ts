@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import { db } from "../../src/lib/firebase.ts";
-import { getAnalytics, recordEvent } from "../../src/services/analytics.ts";
+import { getAnalytics, recordCustomerType, recordEvent } from "../../src/services/analytics.ts";
 import { todayUtc } from "../../src/schemas/analytics.ts";
 
 /** Интеграционные тесты §16/FR-A05: события → агрегат → воронка. */
@@ -64,4 +64,14 @@ test("getAnalytics: пустой период — нули, без падени�
   assert.equal(report.conversion.viewToCart, 0);
   assert.deepEqual(report.topProducts, []);
   assert.equal(report.daily.length, 3);
+  assert.deepEqual(report.customers, { new: 0, returning: 0 });
+});
+
+test("recordCustomerType: new-vs-returning суммируется в отчёте (FR-A05)", async () => {
+  await recordCustomerType(STORE_ID, true);
+  await recordCustomerType(STORE_ID, true);
+  await recordCustomerType(STORE_ID, false);
+  const report = await getAnalytics(STORE_ID, {});
+  assert.equal(report.customers.new, 2);
+  assert.equal(report.customers.returning, 1);
 });

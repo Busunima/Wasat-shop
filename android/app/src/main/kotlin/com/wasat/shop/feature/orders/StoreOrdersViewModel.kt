@@ -22,6 +22,8 @@ data class StoreOrdersUiState(
     val busy: Boolean = false,
     val error: String? = null,
     val invoice: InvoiceDoc? = null,
+    /** Одноразовый CSV-экспорт (FR-A05): экран отдаёт его в share sheet. */
+    val csvExport: String? = null,
 )
 
 /** Заказы магазина (FR-A04): список с фильтром + смена статусов по переходам. */
@@ -60,6 +62,25 @@ class StoreOrdersViewModel @Inject constructor(
         _uiState.update { it.copy(filter = status) }
         load()
     }
+
+    /** CSV-экспорт заказов с текущим фильтром (FR-A05). */
+    fun exportCsv() {
+        if (_uiState.value.busy) return
+        _uiState.update { it.copy(busy = true, error = null) }
+        viewModelScope.launch {
+            when (val r = repository.exportCsv(storeId, _uiState.value.filter?.name)) {
+                is ApiResult.Success ->
+                    _uiState.update { it.copy(busy = false, csvExport = r.data) }
+                is ApiResult.ApiError ->
+                    _uiState.update { it.copy(busy = false, error = r.message) }
+                is ApiResult.NetworkError ->
+                    _uiState.update { it.copy(busy = false, error = "Нет соединения с сервером") }
+            }
+        }
+    }
+
+    /** Сбросить CSV после передачи в share sheet. */
+    fun consumeCsv() = _uiState.update { it.copy(csvExport = null) }
 
     /** Загрузить HTML-инвойс заказа (FR-A04); экран печатает его в PDF. */
     fun printInvoice(orderId: String) {

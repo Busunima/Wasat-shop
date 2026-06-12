@@ -11,7 +11,7 @@ import {
 import { isCancellableByBuyer, type OrderStatus } from "../schemas/orderStatus.js";
 import { applyPromo, type PromoEvaluable } from "../schemas/promocode.js";
 import { computeTotalStock, type ProductVariant } from "../schemas/product.js";
-import { recordEvent } from "./analytics.js";
+import { recordCustomerType, recordEvent } from "./analytics.js";
 import { sendToUsers } from "./push.js";
 import { logger } from "../lib/logger.js";
 
@@ -266,6 +266,13 @@ export async function createOrder(
   if (!result.replay) {
     // Побочные эффекты вне транзакции (fire-and-forget): аналитика + push владельцу
     void recordEvent(storeId, { type: "purchase", value: order.total }).catch(() => undefined);
+    // FR-A05 new-vs-returning: первый заказ покупателя в магазине → новый клиент
+    void ordersCol(storeId)
+      .where("customerUid", "==", uid)
+      .limit(2)
+      .get()
+      .then((snap) => recordCustomerType(storeId, snap.size <= 1))
+      .catch(() => undefined);
     if (result.ownerUid) {
       void sendToUsers(
         storeId,
