@@ -11,6 +11,7 @@ import {
   listOrders,
   updateOrderStatus,
 } from "../../src/services/orders.ts";
+import { renderInvoice } from "../../src/services/invoice.ts";
 import type { ProductCreate } from "../../src/schemas/product.ts";
 
 /** Интеграционные тесты ядра заказов (FR-B05/A04/B06) против эмулятора. */
@@ -196,6 +197,15 @@ test("списки: владелец видит все, покупатель —
 
   const one = await getOrder(STORE_ID, ids.order1!);
   assert.equal(one.id, ids.order1);
+});
+
+test("инвойс FR-A04: рендер HTML с именем магазина и позициями заказа", async () => {
+  const order = await getOrder(STORE_ID, ids.order1!);
+  const html = await renderInvoice(STORE_ID, order);
+  assert.ok(html.includes("<!DOCTYPE html>"));
+  assert.ok(html.includes("Orders")); // имя магазина из стора
+  assert.ok(html.includes(`Инвойс №${order.id.slice(0, 8).toUpperCase()}`));
+  assert.ok(html.includes(order.items[0]!.name)); // позиция заказа
 });
 
 test("PROMO_INVALID: несуществующий промокод — отказ без списания", async () => {

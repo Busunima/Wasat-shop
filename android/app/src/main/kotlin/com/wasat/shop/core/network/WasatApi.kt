@@ -39,6 +39,7 @@ import com.wasat.shop.core.network.dto.StockAdjustRequest
 import com.wasat.shop.core.network.dto.StockResultDto
 import com.wasat.shop.core.network.dto.StoreUpdateRequest
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import com.wasat.shop.core.network.dto.StoreInitResponse
 import retrofit2.Response
 import retrofit2.http.Body
@@ -219,6 +220,13 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @Path("orderId") orderId: String,
     ): Response<OrderDto>
+
+    /** HTML-инвойс заказа (FR-A04); клиент печатает в PDF через системную печать. */
+    @GET("api/stores/{storeId}/orders/{orderId}/invoice")
+    suspend fun orderInvoice(
+        @Path("storeId") storeId: String,
+        @Path("orderId") orderId: String,
+    ): Response<ResponseBody>
 
     @POST("api/stores/{storeId}/orders/{orderId}/status")
     suspend fun updateOrderStatus(

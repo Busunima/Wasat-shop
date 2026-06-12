@@ -14,6 +14,7 @@ import {
   listOrders,
   updateOrderStatus,
 } from "../services/orders.js";
+import { renderInvoice } from "../services/invoice.js";
 
 /**
  * Заказы магазина: /api/stores/:storeId/orders (создание — POST /api/checkout).
@@ -70,6 +71,20 @@ ordersRouter.get("/:orderId", async (req: AuthedRequest, res, next) => {
       throw new ApiError("FORBIDDEN", "Нет доступа к этому заказу");
     }
     res.json(order);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// FR-A04: HTML-инвойс заказа (клиент печатает в PDF). Доступ как у карточки заказа.
+ordersRouter.get("/:orderId/invoice", async (req: AuthedRequest, res, next) => {
+  try {
+    const storeId = param(req, "storeId");
+    const order = await getOrder(storeId, param(req, "orderId"));
+    if (!isStoreMember(req) && order.customerUid !== actorUid(req)) {
+      throw new ApiError("FORBIDDEN", "Нет доступа к этому заказу");
+    }
+    res.type("html").send(await renderInvoice(storeId, order));
   } catch (err) {
     next(err);
   }
