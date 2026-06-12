@@ -45,6 +45,9 @@ export async function recordEvent(storeId: string, event: AnalyticsEvent): Promi
     case "search":
       update["searches"] = FieldValue.increment(1);
       break;
+    case "return_requested":
+      update["returnRequests"] = FieldValue.increment(1);
+      break;
   }
   await ref.set(update, { merge: true });
 }

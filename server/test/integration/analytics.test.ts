@@ -30,6 +30,8 @@ test("recordEvent + getAnalytics: воронка, выручка, средний
   await recordEvent(STORE_ID, { type: "begin_checkout" });
   await recordEvent(STORE_ID, { type: "purchase", value: 9990 });
   await recordEvent(STORE_ID, { type: "search", query: "кеды" });
+  // return_requested принимается и считается (§16), не ломает воронку
+  await recordEvent(STORE_ID, { type: "return_requested" });
 
   const report = await getAnalytics(STORE_ID, {});
   assert.equal(report.funnel.views, 4);
