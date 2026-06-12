@@ -58,6 +58,9 @@
 | GET | `/api/stores/:id/orders/:oid` | Карточка заказа (member или свой) | Authenticated |
 | POST | `/api/stores/:id/orders/:oid/status` | Смена статуса (валидация переходов) + push | Member |
 | POST | `/api/stores/:id/orders/:oid/cancel` | Отмена покупателем до отгрузки + ресток | Buyer |
+| POST | `/api/stores/:id/returns` | Заявка на возврат (FR-B09) | Buyer |
+| GET | `/api/stores/:id/returns[/my]` | Очередь магазина (Member) / свои (Buyer) | Member/Buyer |
+| POST | `/api/stores/:id/returns/:rid/{resolve,receive,refund}` | Решение/приём (ресток)/возмещение; Stripe Refund deferred | Member |
 
 ### Суперадмин (FR-S01–S04)
 
@@ -73,7 +76,7 @@
 | Метод | Путь | Описание | Блокер |
 | --- | --- | --- | --- |
 | — | Stripe PaymentSheet/Tax в `/api/checkout` | Реальная оплата вместо deferred | Stripe test-ключ |
-| POST | `/api/stores/:id/returns/:rid/resolve` | Возврат + Stripe Refund (FR-A11/B09) | Stripe |
+| — | Реальный Stripe Refund в `/returns/:rid/refund` | Сейчас deferred (флоу/ресток готовы) | Stripe |
 | POST | `/api/webhooks/stripe[-billing]` | Вебхуки платежей/подписок (FR-S05) | Stripe |
 | GET | `/api/stores/:id/stripe/onboard-link` | Онбординг Stripe Connect | Stripe |
 | POST | `/api/search/reindex` | Переиндексация (Algolia, FR-B02) | решение Algolia |

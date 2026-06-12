@@ -109,6 +109,26 @@
 
     <!-- Orders (FR-B05/A04/B06) -->
     <string name="home_orders">Orders</string>
+    <string name="home_returns">Returns</string>
+    <string name="return_title">Request a return</string>
+    <string name="return_request">Request return</string>
+    <string name="return_reason">Return reason</string>
+    <string name="return_submit">Submit request</string>
+    <string name="return_submitting">Submitting…</string>
+    <string name="returns_title">Returns</string>
+    <string name="returns_empty">No returns yet</string>
+    <string name="return_for_order">Return for order #%1$s</string>
+    <string name="return_refund_amount">Refund: %1$s</string>
+    <string name="return_refund_deferred">payment deferred</string>
+    <string name="return_approve">Approve</string>
+    <string name="return_reject">Reject</string>
+    <string name="return_receive">Item received</string>
+    <string name="return_refund">Refund</string>
+    <string name="return_status_requested">Requested</string>
+    <string name="return_status_approved">Approved</string>
+    <string name="return_status_rejected">Rejected</string>
+    <string name="return_status_received">Received</string>
+    <string name="return_status_refunded">Refunded</string>
     <string name="checkout_title">Checkout</string>
     <string name="checkout_promo">Promo code</string>
     <string name="checkout_promo_apply">Apply</string>

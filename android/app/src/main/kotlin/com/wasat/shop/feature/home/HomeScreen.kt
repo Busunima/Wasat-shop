@@ -40,6 +40,7 @@ fun HomeScreen(
     onOpenCatalog: (storeId: String, currency: String) -> Unit,
     onOpenMyProducts: (storeId: String, currency: String) -> Unit,
     onOpenOrders: (storeId: String, currency: String) -> Unit,
+    onOpenReturns: (storeId: String, currency: String) -> Unit,
     onOpenSettings: (storeId: String, currency: String) -> Unit,
     onOpenInventory: (storeId: String) -> Unit,
     onOpenPromocodes: (storeId: String, currency: String) -> Unit,
@@ -106,6 +107,12 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.home_orders))
+                }
+                OutlinedButton(
+                    onClick = { onOpenReturns(s.storeId, s.currency) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.home_returns))
                 }
                 OutlinedButton(
                     onClick = { onOpenInventory(s.storeId) },

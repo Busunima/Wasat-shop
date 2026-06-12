@@ -23,6 +23,9 @@ class OrdersRepository @Inject constructor(
     suspend fun myOrders(storeId: String): ApiResult<OrderListResponse> =
         safeApiCall(json) { api.myOrders(storeId, mapOf("limit" to "50")) }
 
+    suspend fun order(storeId: String, orderId: String): ApiResult<OrderDto> =
+        safeApiCall(json) { api.order(storeId, orderId) }
+
     suspend fun storeOrders(storeId: String, status: String?): ApiResult<OrderListResponse> =
         safeApiCall(json) {
             api.storeOrders(

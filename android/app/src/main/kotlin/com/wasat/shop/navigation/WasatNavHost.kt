@@ -24,7 +24,9 @@ import com.wasat.shop.feature.home.HomeScreen
 import com.wasat.shop.feature.onboarding.OnboardingScreen
 import com.wasat.shop.feature.orders.CheckoutScreen
 import com.wasat.shop.feature.orders.MyOrdersScreen
+import com.wasat.shop.feature.orders.RequestReturnScreen
 import com.wasat.shop.feature.orders.StoreOrdersScreen
+import com.wasat.shop.feature.orders.StoreReturnsScreen
 import com.wasat.shop.feature.orders.WriteReviewScreen
 import com.wasat.shop.feature.storefront.StoreResolverScreen
 import com.wasat.shop.feature.wishlist.WishlistScreen
@@ -40,6 +42,8 @@ object Routes {
     const val MY_ORDERS = "myorders/{storeId}?currency={currency}"
     const val STORE_ORDERS = "storeorders/{storeId}?currency={currency}"
     const val WRITE_REVIEW = "review/{storeId}/{productId}/{orderId}"
+    const val REQUEST_RETURN = "return/{storeId}/{orderId}?currency={currency}"
+    const val STORE_RETURNS = "storereturns/{storeId}?currency={currency}"
     const val MY_PRODUCTS = "myproducts/{storeId}?currency={currency}"
     const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
     const val STORE_SETTINGS = "storesettings/{storeId}?currency={currency}"
@@ -64,6 +68,10 @@ object Routes {
         "storeorders/$storeId?currency=$currency"
     fun writeReview(storeId: String, productId: String, orderId: String): String =
         "review/$storeId/$productId/$orderId"
+    fun requestReturn(storeId: String, orderId: String, currency: String): String =
+        "return/$storeId/$orderId?currency=$currency"
+    fun storeReturns(storeId: String, currency: String): String =
+        "storereturns/$storeId?currency=$currency"
     fun myProducts(storeId: String, currency: String): String =
         "myproducts/$storeId?currency=$currency"
     fun productEdit(storeId: String, currency: String, productId: String?): String =
@@ -144,6 +152,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 },
                 onOpenOrders = { storeId, currency ->
                     navController.navigate(Routes.storeOrders(storeId, currency))
+                },
+                onOpenReturns = { storeId, currency ->
+                    navController.navigate(Routes.storeReturns(storeId, currency))
                 },
                 onOpenSettings = { storeId, currency ->
                     navController.navigate(Routes.storeSettings(storeId, currency))
@@ -239,9 +250,13 @@ fun WasatNavHost(authRepository: AuthRepository) {
             arguments = listOf(currencyArg),
         ) { backStackEntry ->
             val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
             MyOrdersScreen(
                 onWriteReview = { productId, orderId ->
                     navController.navigate(Routes.writeReview(storeId, productId, orderId))
+                },
+                onRequestReturn = { orderId ->
+                    navController.navigate(Routes.requestReturn(storeId, orderId, currency))
                 },
             )
         }
@@ -257,6 +272,22 @@ fun WasatNavHost(authRepository: AuthRepository) {
         // FR-B08: форма отзыва о товаре из полученного заказа
         composable(route = Routes.WRITE_REVIEW) {
             WriteReviewScreen(onDone = { navController.popBackStack() })
+        }
+
+        // FR-B09: заявка на возврат покупателем
+        composable(
+            route = Routes.REQUEST_RETURN,
+            arguments = listOf(currencyArg),
+        ) {
+            RequestReturnScreen(onDone = { navController.popBackStack() })
+        }
+
+        // FR-A11: очередь возвратов магазина (владелец/сотрудник)
+        composable(
+            route = Routes.STORE_RETURNS,
+            arguments = listOf(currencyArg),
+        ) {
+            StoreReturnsScreen()
         }
 
         composable(

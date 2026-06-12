@@ -26,6 +26,7 @@ import com.wasat.shop.domain.model.OrderStatus
 @Composable
 fun MyOrdersScreen(
     onWriteReview: (productId: String, orderId: String) -> Unit = { _, _ -> },
+    onRequestReturn: (orderId: String) -> Unit = {},
     viewModel: MyOrdersViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -81,6 +82,10 @@ fun MyOrdersScreen(
                         TextButton(onClick = { onWriteReview(item.productId, order.id) }) {
                             Text(stringResource(R.string.review_for, item.name))
                         }
+                    }
+                    // FR-B09: запрос возврата по полученному заказу
+                    TextButton(onClick = { onRequestReturn(order.id) }) {
+                        Text(stringResource(R.string.return_request))
                     }
                 }
             }
