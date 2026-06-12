@@ -62,6 +62,14 @@ fun StoreOrdersScreen(viewModel: StoreOrdersViewModel = hiltViewModel()) {
         }
     }
 
+    // FR-A05: получив CSV-экспорт, отдаём его в share sheet и сбрасываем состояние.
+    LaunchedEffect(state.csvExport) {
+        state.csvExport?.let { csv ->
+            CsvShare.share(context, csv, "orders.csv")
+            viewModel.consumeCsv()
+        }
+    }
+
     shippingOrderId?.let { orderId ->
         AlertDialog(
             onDismissRequest = { shippingOrderId = null },
@@ -94,11 +102,22 @@ fun StoreOrdersScreen(viewModel: StoreOrdersViewModel = hiltViewModel()) {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        Text(
-            text = stringResource(R.string.store_orders_title),
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(16.dp),
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.store_orders_title),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            // FR-A05: выгрузка заказов в CSV (учитывает выбранный фильтр)
+            TextButton(onClick = viewModel::exportCsv, enabled = !state.busy) {
+                Text(stringResource(R.string.orders_export_csv))
+            }
+        }
 
         Row(
             modifier = Modifier

@@ -57,4 +57,19 @@ class OrdersRepository @Inject constructor(
             is ApiResult.ApiError -> r
             is ApiResult.NetworkError -> r
         }
+
+    /** CSV-экспорт заказов магазина (FR-A05); экран отдаёт файл в share sheet. */
+    suspend fun exportCsv(storeId: String, status: String?): ApiResult<String> =
+        when (
+            val r = safeApiCall(json) {
+                api.exportOrdersCsv(
+                    storeId,
+                    buildMap { status?.let { put("status", it) } },
+                )
+            }
+        ) {
+            is ApiResult.Success -> ApiResult.Success(r.data.string())
+            is ApiResult.ApiError -> r
+            is ApiResult.NetworkError -> r
+        }
 }

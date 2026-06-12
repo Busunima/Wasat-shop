@@ -94,6 +94,20 @@ private fun AnalyticsContent(report: AnalyticsReportDto, currency: String) {
             )
         }
 
+        // FR-A05: новые vs вернувшиеся покупатели за период
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+            Kpi(
+                label = stringResource(R.string.analytics_new_customers),
+                value = report.customers.new.toString(),
+                modifier = Modifier.weight(1f),
+            )
+            Kpi(
+                label = stringResource(R.string.analytics_returning_customers),
+                value = report.customers.returning.toString(),
+                modifier = Modifier.weight(1f),
+            )
+        }
+
         HorizontalDivider()
 
         // Воронка просмотр → корзина → оформление → заказ

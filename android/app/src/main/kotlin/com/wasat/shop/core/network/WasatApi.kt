@@ -208,6 +208,13 @@ interface WasatApi {
         @QueryMap params: Map<String, String>,
     ): Response<OrderListResponse>
 
+    /** CSV-экспорт заказов магазина (FR-A05), владелец/сотрудник. */
+    @GET("api/stores/{storeId}/orders/export")
+    suspend fun exportOrdersCsv(
+        @Path("storeId") storeId: String,
+        @QueryMap params: Map<String, String>,
+    ): Response<ResponseBody>
+
     /** Заказы покупателя (FR-B06). */
     @GET("api/stores/{storeId}/orders/my")
     suspend fun myOrders(

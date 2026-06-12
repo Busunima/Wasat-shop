@@ -40,6 +40,12 @@ data class DailyPointDto(
 )
 
 @Serializable
+data class CustomersDto(
+    val new: Int = 0,
+    val returning: Int = 0,
+)
+
+@Serializable
 data class AnalyticsReportDto(
     val from: String,
     val to: String,
@@ -51,4 +57,6 @@ data class AnalyticsReportDto(
     val conversion: ConversionDto = ConversionDto(),
     val topProducts: List<TopProductDto> = emptyList(),
     val daily: List<DailyPointDto> = emptyList(),
+    /** Новые и вернувшиеся покупатели за период (FR-A05). */
+    val customers: CustomersDto = CustomersDto(),
 )

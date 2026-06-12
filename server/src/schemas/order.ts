@@ -58,6 +58,12 @@ export const ordersListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
+/** CSV-экспорт заказов (FR-A05): лимит выше списочного. */
+export const ordersExportQuerySchema = z.object({
+  status: z.enum(ORDER_STATUS).optional(),
+  limit: z.coerce.number().int().min(1).max(5000).default(1000),
+});
+
 // ── Чистая логика (под unit-тестами) ─────────────────────────────────────────
 
 /**

@@ -149,6 +149,7 @@
     <string name="my_orders_title">Мои заказы</string>
     <string name="my_orders_empty">Заказов пока нет</string>
     <string name="store_orders_title">Заказы магазина</string>
+    <string name="orders_export_csv">Экспорт CSV</string>
     <string name="store_orders_all">Все</string>
     <string name="store_orders_empty">Заказов пока нет</string>
     <string name="order_number">Заказ #%1$s</string>
@@ -220,6 +221,8 @@
     <string name="analytics_conversion">Конверсии: просмотр→корзина %1$.1f%% · корзина→заказ %2$.1f%% · просмотр→заказ %3$.1f%%</string>
     <string name="analytics_top">Топ-товары по просмотрам</string>
     <string name="analytics_views_count">%1$d просм.</string>
+    <string name="analytics_new_customers">Новые покупатели</string>
+    <string name="analytics_returning_customers">Вернувшиеся</string>
 
     <!-- Промокоды (FR-A06) -->
     <string name="promo_title">Промокоды</string>
