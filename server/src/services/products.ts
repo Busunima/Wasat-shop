@@ -13,7 +13,7 @@ import {
 } from "../schemas/product.js";
 import { logger } from "../lib/logger.js";
 import { canAdd, limitsFor } from "../config/planLimits.js";
-import { notifyProductEvent } from "./push.js";
+import { notifyNewProduct, notifyProductEvent } from "./push.js";
 
 /**
  * CRUD товаров (FR-A02, docs/data-model.md → products/{pid}).
@@ -108,6 +108,12 @@ export async function createProduct(storeId: string, input: ProductCreate): Prom
     createdAt: FieldValue.serverTimestamp(),
   };
   await productsCol(storeId).doc(productId).set(docData);
+
+  // FR-A07: триггер «новый товар» — push покупателям только для опубликованных
+  // товаров (черновики/архив не анонсируем); fire-and-forget.
+  if (input.status === "active") {
+    void notifyNewProduct(storeId, productId, input.name).catch(() => undefined);
+  }
 
   logger.info("Товар создан", { storeId, productId });
   return toApiProduct(docData);

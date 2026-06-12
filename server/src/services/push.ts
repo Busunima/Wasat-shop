@@ -9,7 +9,7 @@ import { logger } from "../lib/logger.js";
  * поэтому отправка best-effort: сбой логируется и не влияет на вызвавшую операцию.
  */
 
-export type ProductEventType = "back_in_stock" | "price_drop";
+export type ProductEventType = "back_in_stock" | "price_drop" | "new_product";
 
 export interface PushPayload {
   title: string;
@@ -23,11 +23,13 @@ export function buildProductNotification(
   storeName: string,
   productName: string,
 ): PushPayload {
-  const payload =
+  const body =
     type === "back_in_stock"
-      ? { title: storeName, body: `«${productName}» снова в наличии` }
-      : { title: storeName, body: `Цена на «${productName}» снижена` };
-  return { ...payload, data: { type } };
+      ? `«${productName}» снова в наличии`
+      : type === "price_drop"
+        ? `Цена на «${productName}» снижена`
+        : `Новинка: «${productName}»`;
+  return { title: storeName, body, data: { type } };
 }
 
 /** Подписи статусов заказа для push покупателю (FR-B06). */
@@ -234,6 +236,25 @@ export async function notifyProductEvent(
   // Одноразовость: подписка выполнена — снимаем независимо от исхода доставки.
   await clearStockSubscriptions(storeId, productId, subscriberUids);
   return tokens.size;
+}
+
+/**
+ * Уведомить покупателей магазина о новинке (FR-A07: триггер «новый товар»).
+ * Адресаты — все покупатели магазина с зарегистрированными токенами (как broadcast).
+ * Возвращает число целевых токенов; отправка FCM — best-effort.
+ */
+export async function notifyNewProduct(
+  storeId: string,
+  productId: string,
+  productName: string,
+): Promise<number> {
+  const tokens = await collectAllStoreTokens(storeId);
+  if (tokens.length === 0) return 0;
+  const storeSnap = await db().collection("stores").doc(storeId).get();
+  const storeName = (storeSnap.data()?.["name"] as string) ?? "Wasat Shop";
+  const payload = buildProductNotification("new_product", storeName, productName);
+  await sendToTokens(storeId, tokens, payload, { storeId, productId });
+  return tokens.length;
 }
 
 /**

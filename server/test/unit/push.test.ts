@@ -24,6 +24,12 @@ test("buildProductNotification: тексты и data.type", () => {
   const drop = buildProductNotification("price_drop", "Кеды и Ко", "Air Max");
   assert.ok(drop.body.includes("снижена"));
   assert.equal(drop.data["type"], "price_drop");
+
+  const fresh = buildProductNotification("new_product", "Кеды и Ко", "Air Max");
+  assert.equal(fresh.title, "Кеды и Ко");
+  assert.ok(fresh.body.includes("Air Max"));
+  assert.ok(fresh.body.includes("Новинка"));
+  assert.equal(fresh.data["type"], "new_product");
 });
 
 test("buildOrderStatusNotification: номер, подпись статуса, трек для SHIPPED", () => {
