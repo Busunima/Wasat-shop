@@ -277,7 +277,11 @@ private fun BrandingRow(
             style = MaterialTheme.typography.titleMedium,
         )
         if (url.isNotBlank()) {
-            ProductImage(url = url, contentDescription = null, modifier = Modifier.size(48.dp))
+            ProductImage(
+                url = url,
+                contentDescription = stringResource(R.string.a11y_store_image),
+                modifier = Modifier.size(48.dp),
+            )
             TextButton(onClick = onRemove, enabled = enabled) {
                 Text(stringResource(R.string.product_edit_photo_remove))
             }

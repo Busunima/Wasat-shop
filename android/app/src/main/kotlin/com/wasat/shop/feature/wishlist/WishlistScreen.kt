@@ -22,6 +22,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -90,8 +93,16 @@ fun WishlistScreen(
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
-                            TextButton(onClick = { viewModel.remove(product.id) }) {
-                                Text("♥", color = MaterialTheme.colorScheme.error)
+                            val removeLabel = stringResource(R.string.a11y_wishlist_remove)
+                            TextButton(
+                                onClick = { viewModel.remove(product.id) },
+                                modifier = Modifier.semantics { contentDescription = removeLabel },
+                            ) {
+                                Text(
+                                    "♥",
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.clearAndSetSemantics {},
+                                )
                             }
                         }
                     }

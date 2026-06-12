@@ -29,6 +29,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -77,7 +80,13 @@ fun CatalogScreen(
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (viewModel.wishlistAvailable) {
-                    TextButton(onClick = onOpenWishlist) { Text("♥") }
+                    val openWishLabel = stringResource(R.string.a11y_wishlist_open)
+                    TextButton(
+                        onClick = onOpenWishlist,
+                        modifier = Modifier.semantics { contentDescription = openWishLabel },
+                    ) {
+                        Text("♥", modifier = Modifier.clearAndSetSemantics {})
+                    }
                 }
                 TextButton(onClick = onOpenCart) {
                     Text(stringResource(R.string.cart_open, cartCount))
@@ -325,13 +334,19 @@ private fun ProductCard(
                         .aspectRatio(1f),
                 )
                 if (wishlistAvailable) {
+                    val toggleWishLabel = stringResource(
+                        if (inWishlist) R.string.a11y_wishlist_remove else R.string.a11y_wishlist_add,
+                    )
                     TextButton(
                         onClick = onToggleWishlist,
-                        modifier = Modifier.align(Alignment.TopEnd),
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .semantics { contentDescription = toggleWishLabel },
                     ) {
                         Text(
                             text = if (inWishlist) "♥" else "♡",
                             color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.clearAndSetSemantics {},
                         )
                     }
                 }

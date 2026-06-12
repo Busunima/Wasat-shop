@@ -35,6 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -137,11 +140,18 @@ private fun ProductDetailContent(
                         modifier = Modifier.weight(1f),
                     )
                     if (viewModel.wishlistAvailable) {
-                        TextButton(onClick = viewModel::toggleWishlist) {
+                        val wishLabel = stringResource(
+                            if (inWishlist) R.string.a11y_wishlist_remove else R.string.a11y_wishlist_add,
+                        )
+                        TextButton(
+                            onClick = viewModel::toggleWishlist,
+                            modifier = Modifier.semantics { contentDescription = wishLabel },
+                        ) {
                             Text(
                                 text = if (inWishlist) "♥" else "♡",
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.clearAndSetSemantics {},
                             )
                         }
                     }
