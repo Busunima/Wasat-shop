@@ -66,7 +66,12 @@ export const storeUpdateSchema = z.object({
     .optional(),
   /** Стоимость доставки в минорных единицах валюты магазина; null — не задана. */
   deliveryCost: z.number().int().min(0).nullable().optional(),
+  /** Порог «низкого остатка» для push владельцу (FR-A03); null — дефолт сервера. */
+  lowStockThreshold: z.number().int().min(0).max(10000).nullable().optional(),
 });
+
+/** Порог низкого остатка, если магазин не настроил свой (FR-A03). */
+export const DEFAULT_LOW_STOCK_THRESHOLD = 3;
 
 export type StoreUpdate = z.infer<typeof storeUpdateSchema>;
 

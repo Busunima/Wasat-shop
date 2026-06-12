@@ -26,6 +26,8 @@ export interface ApiStoreInfo {
   theme: { primary: string; secondary: string } | null;
   contact: { email?: string; phone?: string | null; address?: string | null } | null;
   deliveryCost: number | null;
+  /** Порог push «низкий остаток» (FR-A03); null — дефолт сервера. */
+  lowStockThreshold: number | null;
 }
 
 function toApiStoreInfo(data: FirebaseFirestore.DocumentData): ApiStoreInfo {
@@ -41,6 +43,7 @@ function toApiStoreInfo(data: FirebaseFirestore.DocumentData): ApiStoreInfo {
     theme: (data["theme"] as ApiStoreInfo["theme"]) ?? null,
     contact: (data["contact"] as ApiStoreInfo["contact"]) ?? null,
     deliveryCost: (data["deliveryCost"] as number | undefined) ?? null,
+    lowStockThreshold: (data["lowStockThreshold"] as number | undefined) ?? null,
   };
 }
 
