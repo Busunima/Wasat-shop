@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.dto.OrderItemDto
 import com.wasat.shop.core.network.dto.ReturnItemDto
+import com.wasat.shop.feature.analytics.AnalyticsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,7 @@ data class RequestReturnUiState(
 class RequestReturnViewModel @Inject constructor(
     private val ordersRepository: OrdersRepository,
     private val returnsRepository: ReturnsRepository,
+    private val analytics: AnalyticsRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -82,7 +84,10 @@ class RequestReturnViewModel @Inject constructor(
             val result = returnsRepository.create(storeId, orderId, items, s.reason.trim())
             _uiState.update {
                 when (result) {
-                    is ApiResult.Success -> it.copy(busy = false, done = true)
+                    is ApiResult.Success -> {
+                        analytics.track(storeId, "return_requested") // §16
+                        it.copy(busy = false, done = true)
+                    }
                     is ApiResult.ApiError -> it.copy(busy = false, error = result.message)
                     is ApiResult.NetworkError -> it.copy(busy = false, error = "Нет соединения с сервером")
                 }

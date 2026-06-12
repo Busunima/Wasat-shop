@@ -12,6 +12,7 @@ import com.wasat.shop.core.network.dto.CheckoutRequest
 import com.wasat.shop.core.network.dto.OrderDto
 import com.wasat.shop.core.network.dto.PromoPreviewRequest
 import com.wasat.shop.core.network.safeApiCall
+import com.wasat.shop.feature.analytics.AnalyticsRepository
 import com.wasat.shop.feature.cart.CartRepository
 import com.wasat.shop.feature.cart.CartTotals
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -59,6 +60,7 @@ class CheckoutViewModel @Inject constructor(
     private val ordersRepository: OrdersRepository,
     private val cartRepository: CartRepository,
     private val addressBook: AddressBookRepository,
+    private val analytics: AnalyticsRepository,
     private val api: WasatApi,
     private val json: Json,
     savedStateHandle: SavedStateHandle,
@@ -77,6 +79,8 @@ class CheckoutViewModel @Inject constructor(
     val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
 
     init {
+        // §16: старт оформления — числитель воронки begin_checkout
+        analytics.track(storeId, "begin_checkout")
         // Стоимость доставки магазина — для отображения суммы до оформления
         viewModelScope.launch {
             val store = safeApiCall(json) { api.getStore(storeId) }

@@ -24,12 +24,23 @@ class AnalyticsRepository @Inject constructor(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    fun track(storeId: String, type: String, productId: String? = null, value: Long? = null) {
+    fun track(
+        storeId: String,
+        type: String,
+        productId: String? = null,
+        value: Long? = null,
+        query: String? = null,
+    ) {
         scope.launch {
             runCatching {
                 api.recordEvent(
                     storeId,
-                    AnalyticsEventRequest(type = type, productId = productId, value = value),
+                    AnalyticsEventRequest(
+                        type = type,
+                        productId = productId,
+                        value = value,
+                        query = query,
+                    ),
                 )
             }
         }

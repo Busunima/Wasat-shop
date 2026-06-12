@@ -8,6 +8,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.wasat.shop.core.network.dto.ProductDto
+import com.wasat.shop.feature.analytics.AnalyticsRepository
 import com.wasat.shop.feature.cart.CartRepository
 import com.wasat.shop.feature.storefront.RecentProduct
 import com.wasat.shop.feature.storefront.RecentlyViewedRepository
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -37,6 +39,7 @@ class CatalogViewModel @Inject constructor(
     cartRepository: CartRepository,
     private val wishlistRepository: WishlistRepository,
     recentlyViewed: RecentlyViewedRepository,
+    private val analytics: AnalyticsRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -59,6 +62,12 @@ class CatalogViewModel @Inject constructor(
 
     init {
         viewModelScope.launch { _popular.value = repository.popular(storeId) }
+        // §16: фиксируем поисковый запрос (после debounce) — качество поиска + воронка
+        viewModelScope.launch {
+            _searchInput.debounce(300).distinctUntilChanged()
+                .filter { it.isNotBlank() }
+                .collect { analytics.track(storeId, "search", query = it) }
+        }
     }
 
     fun toggleWishlist(productId: String) {

@@ -12,6 +12,7 @@ export const ANALYTICS_EVENTS = [
   "begin_checkout",
   "purchase",
   "search",
+  "return_requested",
 ] as const;
 export type AnalyticsEventType = (typeof ANALYTICS_EVENTS)[number];
 
