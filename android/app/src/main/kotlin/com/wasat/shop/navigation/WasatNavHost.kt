@@ -24,6 +24,7 @@ import com.wasat.shop.feature.onboarding.OnboardingScreen
 import com.wasat.shop.feature.orders.CheckoutScreen
 import com.wasat.shop.feature.orders.MyOrdersScreen
 import com.wasat.shop.feature.orders.StoreOrdersScreen
+import com.wasat.shop.feature.orders.WriteReviewScreen
 import com.wasat.shop.feature.storefront.StoreResolverScreen
 import com.wasat.shop.feature.wishlist.WishlistScreen
 
@@ -37,6 +38,7 @@ object Routes {
     const val CHECKOUT = "checkout/{storeId}?currency={currency}"
     const val MY_ORDERS = "myorders/{storeId}?currency={currency}"
     const val STORE_ORDERS = "storeorders/{storeId}?currency={currency}"
+    const val WRITE_REVIEW = "review/{storeId}/{productId}/{orderId}"
     const val MY_PRODUCTS = "myproducts/{storeId}?currency={currency}"
     const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
     const val STORE_SETTINGS = "storesettings/{storeId}?currency={currency}"
@@ -58,6 +60,8 @@ object Routes {
         "myorders/$storeId?currency=$currency"
     fun storeOrders(storeId: String, currency: String): String =
         "storeorders/$storeId?currency=$currency"
+    fun writeReview(storeId: String, productId: String, orderId: String): String =
+        "review/$storeId/$productId/$orderId"
     fun myProducts(storeId: String, currency: String): String =
         "myproducts/$storeId?currency=$currency"
     fun productEdit(storeId: String, currency: String, productId: String?): String =
@@ -227,8 +231,13 @@ fun WasatNavHost(authRepository: AuthRepository) {
         composable(
             route = Routes.MY_ORDERS,
             arguments = listOf(currencyArg),
-        ) {
-            MyOrdersScreen()
+        ) { backStackEntry ->
+            val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
+            MyOrdersScreen(
+                onWriteReview = { productId, orderId ->
+                    navController.navigate(Routes.writeReview(storeId, productId, orderId))
+                },
+            )
         }
 
         // FR-A04: заказы магазина (владелец/сотрудник)
@@ -237,6 +246,11 @@ fun WasatNavHost(authRepository: AuthRepository) {
             arguments = listOf(currencyArg),
         ) {
             StoreOrdersScreen()
+        }
+
+        // FR-B08: форма отзыва о товаре из полученного заказа
+        composable(route = Routes.WRITE_REVIEW) {
+            WriteReviewScreen(onDone = { navController.popBackStack() })
         }
 
         composable(

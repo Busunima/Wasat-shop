@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.wasat.shop.R
 import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
@@ -56,6 +57,7 @@ fun ProductDetailScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val related by viewModel.related.collectAsState()
+    val reviews by viewModel.reviews.collectAsState()
 
     when (val s = state) {
         ProductDetailUiState.Loading -> Box(
@@ -79,6 +81,7 @@ fun ProductDetailScreen(
             product = s.product,
             currency = currency,
             related = related,
+            reviews = reviews,
             onProductClick = onProductClick,
             viewModel = viewModel,
         )
@@ -90,6 +93,7 @@ private fun ProductDetailContent(
     product: ProductDto,
     currency: String,
     related: List<ProductDto>,
+    reviews: List<com.wasat.shop.core.network.dto.ReviewDto>,
     onProductClick: (String) -> Unit,
     viewModel: ProductDetailViewModel,
 ) {
@@ -139,6 +143,25 @@ private fun ProductDetailContent(
                                 color = MaterialTheme.colorScheme.error,
                             )
                         }
+                    }
+                }
+
+                // Рейтинг товара (FR-B08)
+                if (product.reviewCount > 0) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        com.wasat.shop.feature.orders.StarRow(
+                            rating = kotlin.math.round(product.rating).toInt(),
+                            starSize = 16.sp,
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.product_rating_summary,
+                                product.rating,
+                                product.reviewCount,
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(start = 6.dp),
+                        )
                     }
                 }
 
@@ -198,7 +221,7 @@ private fun ProductDetailContent(
                     )
                 }
 
-                ReviewsSection()
+                ReviewsSection(reviews)
             }
 
             ProductMiniRow(
@@ -289,19 +312,33 @@ private fun StockIndicator(product: ProductDto, selectedVariant: VariantDto?) {
     )
 }
 
-/** Отзывы (FR-B03/FR-B08): каркас — полноценные отзывы требуют доставленных заказов. */
+/** Отзывы о товаре (FR-B08): список с рейтингом и текстом, новые сверху. */
 @Composable
-private fun ReviewsSection() {
+private fun ReviewsSection(reviews: List<com.wasat.shop.core.network.dto.ReviewDto>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         HorizontalDivider()
         Text(
             text = stringResource(R.string.product_reviews_title),
             style = MaterialTheme.typography.titleMedium,
         )
-        Text(
-            text = stringResource(R.string.product_reviews_empty),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.outline,
-        )
+        if (reviews.isEmpty()) {
+            Text(
+                text = stringResource(R.string.product_reviews_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.outline,
+            )
+        } else {
+            reviews.forEach { review ->
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    com.wasat.shop.feature.orders.StarRow(
+                        rating = review.rating,
+                        starSize = 14.sp,
+                    )
+                    review.text?.takeIf { it.isNotBlank() }?.let {
+                        Text(text = it, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
     }
 }

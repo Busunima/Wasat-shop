@@ -88,6 +88,12 @@
     <string name="product_low_stock">Only %1$d left</string>
     <string name="product_reviews_title">Reviews</string>
     <string name="product_reviews_empty">No reviews yet — they will appear after the first purchases</string>
+    <string name="product_rating_summary">%1$.1f · %2$d rev.</string>
+    <string name="review_title">Write a review</string>
+    <string name="review_text">Review text (optional)</string>
+    <string name="review_submit">Submit</string>
+    <string name="review_submitting">Submitting…</string>
+    <string name="review_for">Review: %1$s</string>
 
     <!-- Cart -->
     <string name="cart_title">Cart</string>
