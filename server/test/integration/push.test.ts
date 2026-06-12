@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import { db } from "../../src/lib/firebase.ts";
 import {
+  collectAllStoreTokens,
   collectStockSubscriberUids,
   collectTokensForProduct,
+  notifyNewProduct,
   notifyProductEvent,
   registerPushToken,
 } from "../../src/services/push.ts";
@@ -113,6 +115,15 @@ test("stockNotifications: явный подписчик получает back_in
   assert.equal(priceTargets, 2);
   assert.deepEqual((await cust3.get()).data()?.["stockNotifications"], [productId]);
   await cust3.set({ stockNotifications: [] });
+});
+
+test("notifyNewProduct: адресаты — все токены магазина; 0 для пустого магазина", async () => {
+  const all = await collectAllStoreTokens(STORE_ID);
+  assert.ok(all.length >= 3); // cust-1 (2) + cust-2 (1) + cust-3 (1)
+  const targets = await notifyNewProduct(STORE_ID, "any-product-id", "Новинка");
+  assert.equal(targets, all.length); // broadcast по всем покупателям, не по вишлисту
+  const none = await notifyNewProduct("empty-store-xyz", "p1", "P");
+  assert.equal(none, 0);
 });
 
 test("триггеры: снижение цены и переход 0→в наличии не ломают операции", async () => {
