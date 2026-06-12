@@ -48,6 +48,13 @@
 | POST | `/api/stores/:id/push-tokens` | Регистрация FCM-токена (FR-B10) | Buyer |
 | POST | `/api/stores/:id/ai/describe` | AI-описание товара (FR-A12; 501 без ключа) | Member |
 
+### Cron (системные, Cloud Scheduler)
+
+| Метод | Путь | Описание | Auth |
+| --- | --- | --- | --- |
+| POST | `/api/cron/abandoned-carts` | Напоминание о брошенной корзине >24ч (FR-A07) | CRON_SECRET |
+| POST | `/api/cron/cleanup` | Очистка устаревших журналов auditLog/inventoryLog (§9) | CRON_SECRET |
+
 ### Заказы (ядро, оплата deferred)
 
 | Метод | Путь | Описание | Auth |
@@ -80,7 +87,6 @@
 | POST | `/api/webhooks/stripe[-billing]` | Вебхуки платежей/подписок (FR-S05) | Stripe |
 | GET | `/api/stores/:id/stripe/onboard-link` | Онбординг Stripe Connect | Stripe |
 | POST | `/api/search/reindex` | Переиндексация (Algolia, FR-B02) | решение Algolia |
-| POST | `/api/cron/cleanup` | Очистка устаревших данных | — |
 
 ¹ **Public с повышением прав** (`optionalAuth`): анонимный запрос видит только
 `active`-товары и магазин с `isPublic && !isBlocked`; запрос с member-токеном
