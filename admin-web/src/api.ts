@@ -92,6 +92,24 @@ export function setStorePlan(storeId: string, plan: Plan): Promise<AdminStore> {
   });
 }
 
+/** Инспекция магазина суперадмином (FR-S02, зеркало StoreInspection сервера). */
+export interface StoreInspection {
+  store: AdminStore;
+  usage: { products: number; orders: number; staff: number };
+  recentOrders: Array<{
+    id: string;
+    status: string;
+    total: number;
+    currency: string;
+    customerEmail: string;
+    createdAt: number | null;
+  }>;
+}
+
+export function inspectStore(storeId: string): Promise<StoreInspection> {
+  return request<StoreInspection>(`api/admin/stores/${storeId}/inspect`);
+}
+
 /** Глобальная аналитика платформы (FR-S04, зеркало PlatformReport сервера). */
 export interface PlatformAnalytics {
   from: string;
