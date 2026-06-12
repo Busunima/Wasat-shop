@@ -110,6 +110,26 @@
 
     <!-- Заказы (FR-B05/A04/B06) -->
     <string name="home_orders">Заказы</string>
+    <string name="home_returns">Возвраты</string>
+    <string name="return_title">Запрос возврата</string>
+    <string name="return_request">Запросить возврат</string>
+    <string name="return_reason">Причина возврата</string>
+    <string name="return_submit">Отправить заявку</string>
+    <string name="return_submitting">Отправляем…</string>
+    <string name="returns_title">Возвраты</string>
+    <string name="returns_empty">Возвратов пока нет</string>
+    <string name="return_for_order">Возврат по заказу #%1$s</string>
+    <string name="return_refund_amount">К возмещению: %1$s</string>
+    <string name="return_refund_deferred">оплата отложена</string>
+    <string name="return_approve">Одобрить</string>
+    <string name="return_reject">Отклонить</string>
+    <string name="return_receive">Товар принят</string>
+    <string name="return_refund">Возместить</string>
+    <string name="return_status_requested">Запрошен</string>
+    <string name="return_status_approved">Одобрен</string>
+    <string name="return_status_rejected">Отклонён</string>
+    <string name="return_status_received">Принят</string>
+    <string name="return_status_refunded">Возмещён</string>
     <string name="checkout_title">Оформление заказа</string>
     <string name="checkout_promo">Промокод</string>
     <string name="checkout_promo_apply">Применить</string>

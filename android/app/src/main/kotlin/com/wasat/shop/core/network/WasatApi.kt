@@ -20,6 +20,10 @@ import com.wasat.shop.core.network.dto.PromoListResponse
 import com.wasat.shop.core.network.dto.PromoPreviewRequest
 import com.wasat.shop.core.network.dto.PromoPreviewResponse
 import com.wasat.shop.core.network.dto.PushTokenRequest
+import com.wasat.shop.core.network.dto.ReturnCreateRequest
+import com.wasat.shop.core.network.dto.ReturnDto
+import com.wasat.shop.core.network.dto.ReturnListResponse
+import com.wasat.shop.core.network.dto.ReturnResolveRequest
 import com.wasat.shop.core.network.dto.ReviewCreateRequest
 import com.wasat.shop.core.network.dto.ReviewDto
 import com.wasat.shop.core.network.dto.ReviewListResponse
@@ -208,6 +212,12 @@ interface WasatApi {
         @QueryMap params: Map<String, String>,
     ): Response<OrderListResponse>
 
+    @GET("api/stores/{storeId}/orders/{orderId}")
+    suspend fun order(
+        @Path("storeId") storeId: String,
+        @Path("orderId") orderId: String,
+    ): Response<OrderDto>
+
     @POST("api/stores/{storeId}/orders/{orderId}/status")
     suspend fun updateOrderStatus(
         @Path("storeId") storeId: String,
@@ -220,6 +230,42 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @Path("orderId") orderId: String,
     ): Response<OrderDto>
+
+    // ── Возвраты (FR-B09/A11) ────────────────────────────────────────────────
+
+    @POST("api/stores/{storeId}/returns")
+    suspend fun createReturn(
+        @Path("storeId") storeId: String,
+        @Body body: ReturnCreateRequest,
+    ): Response<ReturnDto>
+
+    @GET("api/stores/{storeId}/returns/my")
+    suspend fun myReturns(@Path("storeId") storeId: String): Response<ReturnListResponse>
+
+    @GET("api/stores/{storeId}/returns")
+    suspend fun storeReturns(
+        @Path("storeId") storeId: String,
+        @QueryMap params: Map<String, String>,
+    ): Response<ReturnListResponse>
+
+    @POST("api/stores/{storeId}/returns/{returnId}/resolve")
+    suspend fun resolveReturn(
+        @Path("storeId") storeId: String,
+        @Path("returnId") returnId: String,
+        @Body body: ReturnResolveRequest,
+    ): Response<ReturnDto>
+
+    @POST("api/stores/{storeId}/returns/{returnId}/receive")
+    suspend fun receiveReturn(
+        @Path("storeId") storeId: String,
+        @Path("returnId") returnId: String,
+    ): Response<ReturnDto>
+
+    @POST("api/stores/{storeId}/returns/{returnId}/refund")
+    suspend fun refundReturn(
+        @Path("storeId") storeId: String,
+        @Path("returnId") returnId: String,
+    ): Response<ReturnDto>
 
     // ── AI-ассист контента (FR-A12) ──────────────────────────────────────────
 
