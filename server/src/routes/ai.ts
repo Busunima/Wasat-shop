@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth, requireStoreStaff, type AuthedRequest } from "../middleware/auth.js";
 import { verifyAppCheck } from "../middleware/appCheck.js";
+import { rateLimit } from "../middleware/rateLimit.js";
 import { aiDescribeSchema } from "../schemas/ai.js";
 import { generateDescription } from "../services/ai.js";
 import { db } from "../lib/firebase.js";
@@ -19,7 +20,8 @@ function param(req: AuthedRequest, name: string): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-aiRouter.post("/describe", async (req: AuthedRequest, res, next) => {
+// Платный внешний вызов (Anthropic) — отдельный жёсткий лимит на ключ.
+aiRouter.post("/describe", rateLimit({ max: 20 }), async (req: AuthedRequest, res, next) => {
   try {
     const input = aiDescribeSchema.parse(req.body);
     const storeSnap = await db().collection("stores").doc(param(req, "storeId")).get();
