@@ -75,4 +75,26 @@ class CartRepository @Inject constructor(
         dao.clear(storeId)
         sync.push(storeId)
     }
+
+    /**
+     * Повторный заказ (FR-B11): позиции добавляются в корзину по снапшоту заказа
+     * (имя/цена на момент покупки — сервер пересчитает актуальные на чекауте).
+     * Существующие позиции суммируются с ограничением количества.
+     */
+    suspend fun addSnapshots(storeId: String, items: List<CartItemEntity>) {
+        for (item in items) {
+            val existing = dao.find(storeId, item.productId, item.variantKey)
+            if (existing != null) {
+                dao.updateQuantity(
+                    storeId,
+                    item.productId,
+                    item.variantKey,
+                    CartTotals.clampQuantity(existing.quantity + item.quantity),
+                )
+            } else {
+                dao.upsert(item.copy(quantity = CartTotals.clampQuantity(item.quantity)))
+            }
+        }
+        sync.push(storeId)
+    }
 }

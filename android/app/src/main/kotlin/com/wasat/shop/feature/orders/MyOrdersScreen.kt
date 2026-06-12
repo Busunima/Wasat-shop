@@ -29,10 +29,19 @@ import com.wasat.shop.domain.model.OrderStatus
 fun MyOrdersScreen(
     onWriteReview: (productId: String, orderId: String) -> Unit = { _, _ -> },
     onRequestReturn: (orderId: String) -> Unit = {},
+    onOpenCart: () -> Unit = {},
     viewModel: MyOrdersViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    // FR-B11: позиции повторного заказа добавлены — открываем корзину
+    LaunchedEffect(state.reordered) {
+        if (state.reordered) {
+            viewModel.consumeReorder()
+            onOpenCart()
+        }
+    }
 
     // FR-A04: получив HTML-инвойс, печатаем его в PDF и сбрасываем одноразовое состояние.
     LaunchedEffect(state.invoice) {
@@ -93,6 +102,15 @@ fun MyOrdersScreen(
                     enabled = !state.busy,
                 ) {
                     Text(stringResource(R.string.order_invoice))
+                }
+                // FR-B11: повторный заказ по завершённому/отменённому
+                if (ReorderLogic.isReorderable(status)) {
+                    TextButton(
+                        onClick = { viewModel.reorder(order) },
+                        enabled = !state.busy,
+                    ) {
+                        Text(stringResource(R.string.order_reorder))
+                    }
                 }
                 // FR-B08: отзыв на каждый товар полученного заказа
                 if (canReview) {

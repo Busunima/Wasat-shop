@@ -3,8 +3,10 @@ package com.wasat.shop.feature.orders
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wasat.shop.core.db.CartItemEntity
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.dto.OrderDto
+import com.wasat.shop.feature.cart.CartRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,12 +21,15 @@ data class MyOrdersUiState(
     val busy: Boolean = false,
     val error: String? = null,
     val invoice: InvoiceDoc? = null,
+    /** Одноразовый флаг (FR-B11): позиции добавлены в корзину — открыть её. */
+    val reordered: Boolean = false,
 )
 
 /** История заказов покупателя (FR-B06) + отмена до отгрузки. */
 @HiltViewModel
 class MyOrdersViewModel @Inject constructor(
     private val repository: OrdersRepository,
+    private val cartRepository: CartRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -51,6 +56,32 @@ class MyOrdersViewModel @Inject constructor(
             }
         }
     }
+
+    /** Повторный заказ (FR-B11): позиции заказа → локальная корзина → экран корзины. */
+    fun reorder(order: OrderDto) {
+        if (_uiState.value.busy) return
+        _uiState.update { it.copy(busy = true, error = null) }
+        viewModelScope.launch {
+            val snapshots = order.items.map { item ->
+                CartItemEntity(
+                    storeId = storeId,
+                    productId = item.productId,
+                    variantKey = ReorderLogic.variantKeyOf(item.variant),
+                    name = item.name,
+                    price = item.price,
+                    currency = currency,
+                    imageUrl = null,
+                    quantity = item.qty,
+                    addedAt = System.currentTimeMillis(),
+                )
+            }
+            cartRepository.addSnapshots(storeId, snapshots)
+            _uiState.update { it.copy(busy = false, reordered = true) }
+        }
+    }
+
+    /** Сбросить флаг после навигации в корзину. */
+    fun consumeReorder() = _uiState.update { it.copy(reordered = false) }
 
     /** Загрузить HTML-инвойс заказа (FR-A04); экран печатает его в PDF. */
     fun printInvoice(orderId: String) {

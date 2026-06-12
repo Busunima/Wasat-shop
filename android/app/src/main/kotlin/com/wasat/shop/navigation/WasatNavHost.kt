@@ -258,6 +258,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 onRequestReturn = { orderId ->
                     navController.navigate(Routes.requestReturn(storeId, orderId, currency))
                 },
+                onOpenCart = {
+                    navController.navigate(Routes.cart(storeId, currency))
+                },
             )
         }
 
