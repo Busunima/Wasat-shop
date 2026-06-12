@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import { db } from "../../src/lib/firebase.ts";
 import {
+  collectStockSubscriberUids,
   collectTokensForProduct,
   notifyProductEvent,
   registerPushToken,
@@ -86,6 +87,32 @@ test("notifyProductEvent: возвращает число целей, не бр�
   assert.equal(targets, 2);
   const none = await notifyProductEvent(STORE_ID, "ghost-product", "price_drop", "Ghost");
   assert.equal(none, 0);
+});
+
+test("stockNotifications: явный подписчик получает back_in_stock и подписка снимается", async () => {
+  // cust-3: товара НЕТ в вишлисте, но есть явная подписка «уведомить о поступлении»
+  const cust3 = db().collection("stores").doc(STORE_ID).collection("customers").doc("cust-3");
+  await cust3.set({ stockNotifications: [productId] });
+  await registerPushToken(STORE_ID, "cust-3", "tok-cust-3-cccccccc", "android");
+
+  assert.deepEqual(await collectStockSubscriberUids(STORE_ID, productId), ["cust-3"]);
+
+  // back_in_stock: вишлист (cust-1, 2 токена) + подписчик (cust-3, 1 токен)
+  const targets = await notifyProductEvent(STORE_ID, productId, "back_in_stock", "Кеды");
+  assert.equal(targets, 3);
+
+  // одноразовость: подписка снята, вишлист cust-1 не тронут
+  assert.deepEqual((await cust3.get()).data()?.["stockNotifications"], []);
+  const cust1 = await db()
+    .collection("stores").doc(STORE_ID).collection("customers").doc("cust-1").get();
+  assert.deepEqual(cust1.data()?.["wishlist"], [productId]);
+
+  // price_drop подписчиков stockNotifications не трогает (только вишлист)
+  await cust3.set({ stockNotifications: [productId] });
+  const priceTargets = await notifyProductEvent(STORE_ID, productId, "price_drop", "Кеды");
+  assert.equal(priceTargets, 2);
+  assert.deepEqual((await cust3.get()).data()?.["stockNotifications"], [productId]);
+  await cust3.set({ stockNotifications: [] });
 });
 
 test("триггеры: снижение цены и переход 0→в наличии не ломают операции", async () => {

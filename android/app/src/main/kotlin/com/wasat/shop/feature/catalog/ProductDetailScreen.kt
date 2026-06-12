@@ -22,6 +22,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -212,6 +213,27 @@ private fun ProductDetailContent(
                             if (justAdded) R.string.cart_added else R.string.cart_add,
                         ),
                     )
+                }
+
+                // FR-B10: явная подписка «уведомить о поступлении» — когда товара нет
+                if (StockInfo.availableStock(product, selectedVariant) <= 0 &&
+                    viewModel.stockNotifyAvailable
+                ) {
+                    val stockSubscribed by viewModel.stockSubscribed.collectAsState()
+                    OutlinedButton(
+                        onClick = viewModel::toggleStockNotify,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (stockSubscribed) {
+                                    R.string.stock_notify_subscribed
+                                } else {
+                                    R.string.stock_notify_subscribe
+                                },
+                            ),
+                        )
+                    }
                 }
 
                 if (product.description.isNotBlank()) {

@@ -12,6 +12,7 @@ import com.wasat.shop.feature.analytics.AnalyticsRepository
 import com.wasat.shop.feature.cart.CartRepository
 import com.wasat.shop.feature.storefront.RecentProduct
 import com.wasat.shop.feature.storefront.RecentlyViewedRepository
+import com.wasat.shop.feature.wishlist.StockNotifyRepository
 import com.wasat.shop.feature.wishlist.WishlistRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -35,6 +36,7 @@ class ProductDetailViewModel @Inject constructor(
     private val repository: CatalogRepository,
     private val cartRepository: CartRepository,
     private val wishlistRepository: WishlistRepository,
+    private val stockNotifyRepository: StockNotifyRepository,
     private val recentlyViewed: RecentlyViewedRepository,
     private val analytics: AnalyticsRepository,
     private val reviewsRepository: ReviewsRepository,
@@ -54,6 +56,19 @@ class ProductDetailViewModel @Inject constructor(
     fun toggleWishlist() {
         viewModelScope.launch {
             wishlistRepository.toggle(storeId, productId, inWishlist.value)
+        }
+    }
+
+    /** Явная подписка «уведомить о поступлении» (FR-B10), только авторизованным. */
+    val stockNotifyAvailable: Boolean get() = stockNotifyRepository.isAvailable
+
+    val stockSubscribed: StateFlow<Boolean> = stockNotifyRepository.observe(storeId)
+        .map { productId in it }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    fun toggleStockNotify() {
+        viewModelScope.launch {
+            stockNotifyRepository.toggle(storeId, productId, stockSubscribed.value)
         }
     }
 
