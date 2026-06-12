@@ -6,6 +6,7 @@ import {
   type AuthedRequest,
 } from "../middleware/auth.js";
 import { verifyAppCheck } from "../middleware/appCheck.js";
+import { rateLimit } from "../middleware/rateLimit.js";
 import { analyticsEventSchema, analyticsQuerySchema } from "../schemas/analytics.js";
 import { getAnalytics, recordEvent } from "../services/analytics.js";
 
@@ -21,9 +22,10 @@ function param(req: AuthedRequest, name: string): string {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-// Фиксация события витрины (доступно гостю; App Check защищает от спама)
+// Фиксация события витрины (доступно гостю; App Check + rate limit от спама)
 analyticsRouter.post(
   "/events",
+  rateLimit({ max: 120 }),
   verifyAppCheck,
   optionalAuth,
   async (req: AuthedRequest, res, next) => {
