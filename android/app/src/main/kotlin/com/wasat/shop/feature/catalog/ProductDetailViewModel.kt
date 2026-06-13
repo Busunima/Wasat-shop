@@ -123,9 +123,12 @@ class ProductDetailViewModel @Inject constructor(
                     ProductDetailUiState.Loaded(result.data)
                 }
                 is ApiResult.ApiError -> ProductDetailUiState.Error(result.message)
-                is ApiResult.NetworkError -> ProductDetailUiState.Error(
-                    "Нет соединения с сервером",
-                )
+                is ApiResult.NetworkError -> {
+                    // Офлайн-фолбэк (Фаза 1c): показать ранее открытую карточку из кэша.
+                    val cached = repository.cachedProduct(storeId, productId)
+                    if (cached != null) ProductDetailUiState.Loaded(cached)
+                    else ProductDetailUiState.Error("Нет соединения с сервером")
+                }
             }
         }
     }

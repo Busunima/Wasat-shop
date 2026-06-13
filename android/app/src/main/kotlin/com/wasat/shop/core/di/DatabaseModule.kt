@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.wasat.shop.core.db.CartDao
 import com.wasat.shop.core.db.OrderDao
 import com.wasat.shop.core.db.PendingOperationDao
+import com.wasat.shop.core.db.ProductDao
 import com.wasat.shop.core.db.WasatDatabase
 import dagger.Module
 import dagger.Provides
@@ -25,6 +26,7 @@ object DatabaseModule {
                 WasatDatabase.MIGRATION_1_2,
                 WasatDatabase.MIGRATION_2_3,
                 WasatDatabase.MIGRATION_3_4,
+                WasatDatabase.MIGRATION_4_5,
             )
             .build()
 
@@ -36,4 +38,7 @@ object DatabaseModule {
 
     @Provides
     fun providePendingOperationDao(db: WasatDatabase): PendingOperationDao = db.pendingOperationDao()
+
+    @Provides
+    fun provideProductDao(db: WasatDatabase): ProductDao = db.productDao()
 }
