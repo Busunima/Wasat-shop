@@ -40,6 +40,26 @@ test("buildDescriptionPrompt: английский вариант без лиш�
   assert.ok(!prompt.includes("Подсказки"));
 });
 
+test("aiDescribeSchema: rewrite требует current", () => {
+  const ok = aiDescribeSchema.parse({ name: "Кеды", mode: "rewrite", current: "старый текст" });
+  assert.equal(ok.mode, "rewrite");
+  assert.throws(() => aiDescribeSchema.parse({ name: "Кеды", mode: "rewrite" })); // нет current
+  assert.throws(() => aiDescribeSchema.parse({ name: "Кеды", mode: "rewrite", current: "  " }));
+});
+
+test("buildDescriptionPrompt: режим rewrite просит переписать и включает исходный текст", () => {
+  const prompt = buildDescriptionPrompt(
+    aiDescribeSchema.parse({
+      name: "Кеды Air",
+      mode: "rewrite",
+      current: "Старое скучное описание.",
+    }),
+    "Кеды и Ко",
+  );
+  assert.ok(prompt.includes("Перепиши и улучши"));
+  assert.ok(prompt.includes("Исходное описание: Старое скучное описание."));
+});
+
 test("isAiConfigured: в тестовой среде ключа нет", () => {
   assert.equal(isAiConfigured(), false);
 });

@@ -49,6 +49,7 @@
     <string name="product_edit_price">Цена</string>
     <string name="product_edit_description">Описание (необязательно)</string>
     <string name="product_edit_ai_describe">✨ Сгенерировать описание</string>
+    <string name="product_edit_ai_rewrite">✨ Переписать</string>
     <string name="product_edit_ai_generating">Генерация…</string>
     <string name="product_edit_publish">Опубликовать</string>
     <string name="product_edit_publish_hint">Опубликованный товар виден покупателям</string>

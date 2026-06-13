@@ -34,14 +34,22 @@ export function isAiConfigured(): boolean {
  * описания без преамбул; границы длины зеркалят схему товара (description ≤5000).
  */
 export function buildDescriptionPrompt(input: AiDescribe, storeName: string): string {
+  const rewrite = input.mode === "rewrite" && Boolean(input.current?.trim());
   const lines = [
-    input.language === "ru"
-      ? `Напиши продающее описание товара для интернет-магазина «${storeName}».`
-      : `Write a compelling product description for the online store "${storeName}".`,
+    rewrite
+      ? input.language === "ru"
+        ? `Перепиши и улучши описание товара для интернет-магазина «${storeName}», ` +
+            "сохранив факты и характеристики из исходного текста."
+        : `Rewrite and improve the product description for the online store ` +
+            `"${storeName}", preserving the facts and specs from the original.`
+      : input.language === "ru"
+        ? `Напиши продающее описание товара для интернет-магазина «${storeName}».`
+        : `Write a compelling product description for the online store "${storeName}".`,
     `Товар: ${input.name}`,
   ];
   if (input.category) lines.push(`Категория: ${input.category}`);
   if (input.tags.length > 0) lines.push(`Теги: ${input.tags.join(", ")}`);
+  if (rewrite) lines.push(`Исходное описание: ${input.current!.trim()}`);
   if (input.hints) lines.push(`Подсказки продавца: ${input.hints}`);
   lines.push(
     input.language === "ru"

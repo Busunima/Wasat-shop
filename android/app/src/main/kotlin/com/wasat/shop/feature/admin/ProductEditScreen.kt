@@ -201,17 +201,26 @@ fun ProductEditScreen(
                 minLines = 3,
             )
 
-            // AI-ассист (FR-A12): генерация описания по названию/категории/тегам
-            TextButton(
-                onClick = viewModel::generateDescription,
-                enabled = !isLoading && !state.aiGenerating && state.name.isNotBlank(),
-            ) {
-                Text(
-                    stringResource(
-                        if (state.aiGenerating) R.string.product_edit_ai_generating
-                        else R.string.product_edit_ai_describe,
-                    ),
-                )
+            // AI-ассист (FR-A12): генерация с нуля + переписывание существующего
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(
+                    onClick = viewModel::generateDescription,
+                    enabled = !isLoading && !state.aiGenerating && state.name.isNotBlank(),
+                ) {
+                    Text(
+                        stringResource(
+                            if (state.aiGenerating) R.string.product_edit_ai_generating
+                            else R.string.product_edit_ai_describe,
+                        ),
+                    )
+                }
+                TextButton(
+                    onClick = viewModel::rewriteDescription,
+                    enabled = !isLoading && !state.aiGenerating &&
+                        state.name.isNotBlank() && state.description.isNotBlank(),
+                ) {
+                    Text(stringResource(R.string.product_edit_ai_rewrite))
+                }
             }
 
             PhotosSection(state = state, viewModel = viewModel, enabled = !isLoading)
