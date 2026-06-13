@@ -91,15 +91,51 @@ class OrdersRepository @Inject constructor(
             )
         }
 
+    // ── Offline-first (Фаза 1b): кэш заказов магазина в Room ─────────────────────
+
+    /** Поток заказов магазина из кэша (Room); кэш отражает последний фильтр. */
+    fun observeStoreOrders(storeId: String): Flow<List<OrderDto>> =
+        orderDao.observe(storeId, SCOPE_STORE).map { rows ->
+            rows.mapNotNull { runCatching { json.decodeFromString<OrderDto>(it.json) }.getOrNull() }
+        }
+
+    /** Сетевое обновление кэша заказов магазина по фильтру; UI обновится через Flow. */
+    suspend fun refreshStoreOrders(
+        storeId: String,
+        status: String?,
+        fromMs: Long? = null,
+        toMs: Long? = null,
+        minTotal: Long? = null,
+        maxTotal: Long? = null,
+        customer: String? = null,
+    ): ApiResult<Unit> =
+        when (
+            val r = storeOrders(storeId, status, fromMs, toMs, minTotal, maxTotal, customer)
+        ) {
+            is ApiResult.Success -> {
+                orderDao.replaceScope(
+                    storeId,
+                    SCOPE_STORE,
+                    r.data.items.map { it.toEntity(storeId, SCOPE_STORE) },
+                )
+                ApiResult.Success(Unit)
+            }
+            is ApiResult.ApiError -> r
+            is ApiResult.NetworkError -> r
+        }
+
     suspend fun updateStatus(
         storeId: String,
         orderId: String,
         status: String,
         trackingNo: String? = null,
-    ): ApiResult<OrderDto> =
-        safeApiCall(json) {
+    ): ApiResult<OrderDto> {
+        val r = safeApiCall(json) {
             api.updateOrderStatus(storeId, orderId, OrderStatusUpdateRequest(status, trackingNo))
         }
+        if (r is ApiResult.Success) orderDao.upsert(r.data.toEntity(storeId, SCOPE_STORE))
+        return r
+    }
 
     suspend fun cancel(storeId: String, orderId: String): ApiResult<OrderDto> {
         val r = safeApiCall(json) { api.cancelOrder(storeId, orderId) }
@@ -132,5 +168,6 @@ class OrdersRepository @Inject constructor(
 
     private companion object {
         const val SCOPE_MINE = "mine"
+        const val SCOPE_STORE = "store"
     }
 }

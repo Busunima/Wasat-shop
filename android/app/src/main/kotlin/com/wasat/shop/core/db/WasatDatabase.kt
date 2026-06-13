@@ -7,13 +7,13 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
  * Локальная БД (офлайн-режим, ТЗ §2 слой 1). v1 — корзина; v2 (offline-first
- * Фаза 1) добавляет кэш заказов `cached_order` для чтения без сети. Миграция
- * аддитивная — таблица корзины не трогается. Очередь синхронизации (outbox) —
- * Фаза 2.
+ * Фаза 1) добавляет кэш заказов `cached_order`; v3 (Фаза 1b) вносит `scope` в
+ * первичный ключ, чтобы заказ кэшировался и как «свой», и как «магазина» без
+ * коллизии. Таблица корзины не трогается. Очередь синхронизации (outbox) — Фаза 2.
  */
 @Database(
     entities = [CartItemEntity::class, CachedOrderEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class WasatDatabase : RoomDatabase() {
@@ -34,6 +34,24 @@ abstract class WasatDatabase : RoomDatabase() {
                         "`json` TEXT NOT NULL, " +
                         "`cachedAt` INTEGER NOT NULL, " +
                         "PRIMARY KEY(`storeId`, `id`))",
+                )
+            }
+        }
+
+        /** v2 → v3: `scope` в первичном ключе. cached_order — кэш, безопасно пересоздать. */
+        val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS `cached_order`")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `cached_order` (" +
+                        "`storeId` TEXT NOT NULL, " +
+                        "`id` TEXT NOT NULL, " +
+                        "`scope` TEXT NOT NULL, " +
+                        "`status` TEXT NOT NULL, " +
+                        "`createdAt` INTEGER NOT NULL, " +
+                        "`json` TEXT NOT NULL, " +
+                        "`cachedAt` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`storeId`, `scope`, `id`))",
                 )
             }
         }
