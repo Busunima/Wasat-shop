@@ -186,13 +186,28 @@ class ProductEditViewModel @Inject constructor(
     fun onStatusChange(value: String) = _uiState.update { it.copy(status = value) }
 
     /**
-     * AI-генерация описания по текущим полям формы (FR-A12). Существующее описание
-     * передаётся подсказкой; результат заменяет поле. Ошибка — в fieldErrors.
+     * AI-генерация описания с нуля по текущим полям формы (FR-A12). Текст в поле
+     * описания используется как подсказка; результат заменяет поле.
      */
     fun generateDescription() {
         val s = _uiState.value
-        if (s.aiGenerating || s.name.isBlank()) return
+        if (s.name.isBlank()) return
+        runAi(mode = "generate", current = null, hints = s.description.trim().ifEmpty { null })
+    }
 
+    /**
+     * AI-переписывание существующего описания (FR-A12, режим rewrite). Доступно
+     * только при непустом описании; факты сохраняются, текст улучшается.
+     */
+    fun rewriteDescription() {
+        val s = _uiState.value
+        if (s.name.isBlank() || s.description.isBlank()) return
+        runAi(mode = "rewrite", current = s.description.trim(), hints = null)
+    }
+
+    private fun runAi(mode: String, current: String?, hints: String?) {
+        val s = _uiState.value
+        if (s.aiGenerating) return
         _uiState.update {
             it.copy(aiGenerating = true, fieldErrors = it.fieldErrors - ProductField.DESCRIPTION)
         }
@@ -201,7 +216,9 @@ class ProductEditViewModel @Inject constructor(
                 name = s.name.trim(),
                 category = s.category.trim().ifEmpty { null },
                 tags = TagsParser.parse(s.tagsInput),
-                hints = s.description.trim().ifEmpty { null },
+                hints = hints,
+                mode = mode,
+                current = current,
             )
             when (val result = repository.aiDescribe(storeId, request)) {
                 is ApiResult.Success -> _uiState.update {

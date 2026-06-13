@@ -12,6 +12,10 @@ data class AiDescribeRequest(
     /** Свободные подсказки продавца (материал, особенности). */
     val hints: String? = null,
     val language: String = "ru",
+    /** "generate" — с нуля; "rewrite" — переписать текущее описание (FR-A12). */
+    val mode: String = "generate",
+    /** Текущее описание — для режима rewrite. */
+    val current: String? = null,
 )
 
 @Serializable
