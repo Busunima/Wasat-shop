@@ -2,6 +2,7 @@
 <!-- Базовые строки (default = ru). Локализация (ТЗ §11.7): переводы в values-xx. -->
 <resources>
     <string name="app_name" translatable="false">Wasat Shop</string>
+    <string name="offline_banner">Нет подключения к интернету — показаны сохранённые данные</string>
 
     <!-- Вход -->
     <string name="sign_in_with_google">Войти через Google</string>
