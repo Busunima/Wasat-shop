@@ -35,6 +35,13 @@
     <string name="plan_usage_staff">Сотрудники: %1$d / %2$s</string>
     <string name="home_scan">Сканировать QR</string>
     <string name="home_last_store">Вернуться в «%1$s»</string>
+    <string name="home_notifications">Уведомления</string>
+    <string name="home_notifications_badge">Уведомления (%1$d)</string>
+
+    <!-- Центр уведомлений (§11.5) -->
+    <string name="notifications_title">Уведомления</string>
+    <string name="notifications_empty">Уведомлений пока нет</string>
+    <string name="notifications_clear">Очистить</string>
 
     <!-- Админ: товары (FR-A02) -->
     <string name="my_products_title">Мои товары</string>

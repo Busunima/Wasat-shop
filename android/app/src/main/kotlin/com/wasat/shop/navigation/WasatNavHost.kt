@@ -22,6 +22,7 @@ import com.wasat.shop.feature.cart.CartScreen
 import com.wasat.shop.feature.catalog.CatalogScreen
 import com.wasat.shop.feature.catalog.ProductDetailScreen
 import com.wasat.shop.feature.home.HomeScreen
+import com.wasat.shop.feature.notifications.NotificationCenterScreen
 import com.wasat.shop.feature.onboarding.OnboardingScreen
 import com.wasat.shop.feature.orders.CheckoutScreen
 import com.wasat.shop.feature.orders.MyOrdersScreen
@@ -56,6 +57,7 @@ object Routes {
     const val ANALYTICS = "analytics/{storeId}?currency={currency}"
     const val WISHLIST = "wishlist/{storeId}?currency={currency}"
     const val STORE_BY_SLUG = "store/{slug}"
+    const val NOTIFICATIONS = "notifications"
 
     fun home(slug: String?): String = if (slug != null) "home?slug=$slug" else "home"
     fun catalog(storeId: String, currency: String): String = "catalog/$storeId?currency=$currency"
@@ -183,8 +185,13 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 onOpenStore = { slug ->
                     navController.navigate(Routes.storeBySlug(slug))
                 },
+                onOpenNotifications = {
+                    navController.navigate(Routes.NOTIFICATIONS)
+                },
             )
         }
+
+        composable(Routes.NOTIFICATIONS) { NotificationCenterScreen() }
 
         composable(
             route = Routes.CATALOG,

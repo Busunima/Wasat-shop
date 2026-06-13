@@ -49,11 +49,15 @@ fun HomeScreen(
     onOpenBroadcast: (storeId: String) -> Unit,
     onOpenAnalytics: (storeId: String, currency: String) -> Unit,
     onOpenStore: (slug: String) -> Unit,
+    onOpenNotifications: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
+    notificationsViewModel: com.wasat.shop.feature.notifications.NotificationCenterViewModel =
+        hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
     val lastStore by viewModel.lastStore.collectAsState()
     val planUsage by viewModel.planUsage.collectAsState()
+    val unreadNotifications by notificationsViewModel.unread.collectAsState()
     val context = LocalContext.current
 
     // FR-B10: разрешение на уведомления (Android 13+) — запрашиваем один раз на Home
@@ -158,6 +162,20 @@ fun HomeScreen(
                     Text(stringResource(R.string.home_settings))
                 }
             }
+        }
+
+        // Центр уведомлений (§11.5) — доступен всем; в подписи число непрочитанных
+        OutlinedButton(
+            onClick = onOpenNotifications,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                if (unreadNotifications > 0) {
+                    stringResource(R.string.home_notifications_badge, unreadNotifications)
+                } else {
+                    stringResource(R.string.home_notifications)
+                },
+            )
         }
 
         // FR-B01: открыть чужой магазин по QR — доступно всем

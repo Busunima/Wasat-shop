@@ -34,6 +34,13 @@
     <string name="plan_usage_staff">Staff: %1$d / %2$s</string>
     <string name="home_scan">Scan QR</string>
     <string name="home_last_store">Back to “%1$s”</string>
+    <string name="home_notifications">Notifications</string>
+    <string name="home_notifications_badge">Notifications (%1$d)</string>
+
+    <!-- Notification center (§11.5) -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_empty">No notifications yet</string>
+    <string name="notifications_clear">Clear</string>
 
     <!-- Admin: products (FR-A02) -->
     <string name="my_products_title">My products</string>

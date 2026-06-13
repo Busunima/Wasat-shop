@@ -17,8 +17,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         CachedOrderEntity::class,
         PendingOperationEntity::class,
         CachedProductEntity::class,
+        NotificationEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class WasatDatabase : RoomDatabase() {
@@ -26,6 +27,7 @@ abstract class WasatDatabase : RoomDatabase() {
     abstract fun orderDao(): OrderDao
     abstract fun pendingOperationDao(): PendingOperationDao
     abstract fun productDao(): ProductDao
+    abstract fun notificationDao(): NotificationDao
 
     companion object {
         /** v1 → v2: добавить таблицу кэша заказов (корзина не меняется). */
@@ -89,6 +91,22 @@ abstract class WasatDatabase : RoomDatabase() {
                         "`json` TEXT NOT NULL, " +
                         "`cachedAt` INTEGER NOT NULL, " +
                         "PRIMARY KEY(`storeId`, `id`))",
+                )
+            }
+        }
+
+        /** v5 → v6: центр уведомлений в приложении (§11.5). Аддитивно. */
+        val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `notification` (" +
+                        "`id` TEXT NOT NULL, " +
+                        "`title` TEXT NOT NULL, " +
+                        "`body` TEXT NOT NULL, " +
+                        "`type` TEXT, " +
+                        "`receivedAt` INTEGER NOT NULL, " +
+                        "`read` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`id`))",
                 )
             }
         }
