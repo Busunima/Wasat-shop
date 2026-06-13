@@ -3,6 +3,7 @@
 <resources>
     <string name="app_name" translatable="false">Wasat Shop</string>
     <string name="offline_banner">Нет подключения к интернету — показаны сохранённые данные</string>
+    <string name="sync_pending">Ожидают синхронизации: %1$d</string>
 
     <!-- Вход -->
     <string name="sign_in_with_google">Войти через Google</string>
