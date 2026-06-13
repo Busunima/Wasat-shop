@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.WasatApi
 import com.wasat.shop.core.network.dto.ContactDto
+import com.wasat.shop.core.network.dto.SocialDto
 import com.wasat.shop.core.network.dto.StoreUpdateRequest
 import com.wasat.shop.core.network.dto.ThemeDto
 import com.wasat.shop.core.network.safeApiCall
@@ -22,12 +23,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-enum class SettingsField { NAME, DESCRIPTION, EMAIL, DELIVERY, THEME, LOW_STOCK }
+enum class SettingsField { NAME, DESCRIPTION, EMAIL, DELIVERY, THEME, LOW_STOCK, WEBSITE }
 
 /** Валидация настроек (зеркало storeUpdateSchema). Pure JVM — под unit-тестом. */
 object SettingsValidation {
     private val HEX = Regex("^#[0-9A-Fa-f]{6}$")
     private val EMAIL = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
+    private val URL = Regex("^https?://\\S+$")
 
     fun validateHex(value: String): String? = when {
         value.isBlank() -> null // тема не задаётся
@@ -38,6 +40,12 @@ object SettingsValidation {
     fun validateEmail(value: String): String? = when {
         value.isBlank() -> null
         !EMAIL.matches(value) -> "Некорректный email"
+        else -> null
+    }
+
+    fun validateUrl(value: String): String? = when {
+        value.isBlank() -> null // сайт не задаётся
+        !URL.matches(value.trim()) -> "Ссылка должна начинаться с http:// или https://"
         else -> null
     }
 }
@@ -54,6 +62,14 @@ data class StoreSettingsUiState(
     val contactEmail: String = "",
     val contactPhone: String = "",
     val contactAddress: String = "",
+    /** Соцсети (FR-A01). */
+    val socialWebsite: String = "",
+    val socialInstagram: String = "",
+    val socialTelegram: String = "",
+    val socialWhatsapp: String = "",
+    /** Часы работы и статус витрины (FR-A01). */
+    val workingHours: String = "",
+    val isOpen: Boolean = true,
     val deliveryCostInput: String = "",
     /** Порог push «низкий остаток» (FR-A03); пусто — дефолт сервера. */
     val lowStockInput: String = "",
@@ -98,6 +114,12 @@ class StoreSettingsViewModel @Inject constructor(
                         contactEmail = store.contact?.email.orEmpty(),
                         contactPhone = store.contact?.phone.orEmpty(),
                         contactAddress = store.contact?.address.orEmpty(),
+                        socialWebsite = store.social?.website.orEmpty(),
+                        socialInstagram = store.social?.instagram.orEmpty(),
+                        socialTelegram = store.social?.telegram.orEmpty(),
+                        socialWhatsapp = store.social?.whatsapp.orEmpty(),
+                        workingHours = store.workingHours.orEmpty(),
+                        isOpen = store.isOpen ?: true,
                         deliveryCostInput = store.deliveryCost?.let(::minorToInput) ?: "",
                         lowStockInput = store.lowStockThreshold?.toString() ?: "",
                     )
@@ -127,6 +149,13 @@ class StoreSettingsViewModel @Inject constructor(
         update { copy(contactEmail = v, fieldErrors = fieldErrors - SettingsField.EMAIL) }
     fun onPhoneChange(v: String) = update { copy(contactPhone = v) }
     fun onAddressChange(v: String) = update { copy(contactAddress = v) }
+    fun onWebsiteChange(v: String) =
+        update { copy(socialWebsite = v, fieldErrors = fieldErrors - SettingsField.WEBSITE) }
+    fun onInstagramChange(v: String) = update { copy(socialInstagram = v) }
+    fun onTelegramChange(v: String) = update { copy(socialTelegram = v) }
+    fun onWhatsappChange(v: String) = update { copy(socialWhatsapp = v) }
+    fun onWorkingHoursChange(v: String) = update { copy(workingHours = v) }
+    fun onOpenChange(v: Boolean) = update { copy(isOpen = v) }
     fun onDeliveryChange(v: String) =
         update { copy(deliveryCostInput = v, fieldErrors = fieldErrors - SettingsField.DELIVERY) }
     fun onLowStockChange(v: String) =
@@ -168,6 +197,7 @@ class StoreSettingsViewModel @Inject constructor(
             if (s.name.isBlank() || s.name.length > 120) put(SettingsField.NAME, "Название 1–120 символов")
             if (s.description.length > 2000) put(SettingsField.DESCRIPTION, "Описание до 2000 символов")
             SettingsValidation.validateEmail(s.contactEmail)?.let { put(SettingsField.EMAIL, it) }
+            SettingsValidation.validateUrl(s.socialWebsite)?.let { put(SettingsField.WEBSITE, it) }
             if (s.deliveryCostInput.isNotBlank() &&
                 PriceParser.parse(s.deliveryCostInput, currency) == null
             ) {
@@ -200,6 +230,14 @@ class StoreSettingsViewModel @Inject constructor(
                 phone = s.contactPhone.trim(),
                 address = s.contactAddress.trim(),
             ),
+            social = SocialDto(
+                website = s.socialWebsite.trim(),
+                instagram = s.socialInstagram.trim(),
+                telegram = s.socialTelegram.trim(),
+                whatsapp = s.socialWhatsapp.trim(),
+            ),
+            workingHours = s.workingHours.trim(),
+            isOpen = s.isOpen,
             deliveryCost = s.deliveryCostInput.takeIf { it.isNotBlank() }
                 ?.let { PriceParser.parse(it, currency) },
             lowStockThreshold = s.lowStockInput.takeIf { it.isNotBlank() }?.toLongOrNull(),

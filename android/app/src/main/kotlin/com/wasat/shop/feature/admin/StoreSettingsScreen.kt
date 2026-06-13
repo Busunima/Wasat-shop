@@ -196,6 +196,70 @@ fun StoreSettingsScreen(
                 singleLine = true,
             )
 
+            // FR-A01: соцсети
+            OutlinedTextField(
+                value = state.socialWebsite,
+                onValueChange = viewModel::onWebsiteChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.settings_social_website)) },
+                isError = SettingsField.WEBSITE in state.fieldErrors,
+                supportingText = { state.fieldErrors[SettingsField.WEBSITE]?.let { Text(it) } },
+                enabled = !isSaving,
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = state.socialInstagram,
+                onValueChange = viewModel::onInstagramChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.settings_social_instagram)) },
+                enabled = !isSaving,
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = state.socialTelegram,
+                onValueChange = viewModel::onTelegramChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.settings_social_telegram)) },
+                enabled = !isSaving,
+                singleLine = true,
+            )
+            OutlinedTextField(
+                value = state.socialWhatsapp,
+                onValueChange = viewModel::onWhatsappChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.settings_social_whatsapp)) },
+                enabled = !isSaving,
+                singleLine = true,
+            )
+
+            // FR-A01: часы работы (свободный текст)
+            OutlinedTextField(
+                value = state.workingHours,
+                onValueChange = viewModel::onWorkingHoursChange,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.settings_working_hours)) },
+                enabled = !isSaving,
+                singleLine = true,
+            )
+
+            // FR-A01: статус витрины «открыт/закрыт»
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.settings_is_open),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                Switch(
+                    checked = state.isOpen,
+                    onCheckedChange = viewModel::onOpenChange,
+                    enabled = !isSaving,
+                )
+            }
+
             OutlinedTextField(
                 value = state.deliveryCostInput,
                 onValueChange = viewModel::onDeliveryChange,

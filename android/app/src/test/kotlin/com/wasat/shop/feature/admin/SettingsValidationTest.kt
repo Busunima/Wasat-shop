@@ -25,4 +25,14 @@ class SettingsValidationTest {
         assertNotNull(SettingsValidation.validateEmail("a@b"))
         assertNotNull(SettingsValidation.validateEmail("a b@c.com"))
     }
+
+    @Test
+    fun `url - http-s, пусто допустимо (FR-A01 сайт)`() {
+        assertNull(SettingsValidation.validateUrl("https://shop.example.com"))
+        assertNull(SettingsValidation.validateUrl("http://shop.test/path"))
+        assertNull(SettingsValidation.validateUrl("")) // сайт не задаётся
+        assertNotNull(SettingsValidation.validateUrl("shop.example.com"))
+        assertNotNull(SettingsValidation.validateUrl("ftp://x"))
+        assertNotNull(SettingsValidation.validateUrl("просто текст"))
+    }
 }
