@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.dto.OrderDto
+import com.wasat.shop.core.sync.OutboxRepository
 import com.wasat.shop.domain.model.OrderStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -40,6 +41,7 @@ data class StoreOrdersUiState(
 @HiltViewModel
 class StoreOrdersViewModel @Inject constructor(
     private val repository: OrdersRepository,
+    private val outbox: OutboxRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -160,19 +162,18 @@ class StoreOrdersViewModel @Inject constructor(
     /** Сбросить инвойс после передачи его в системную печать. */
     fun consumeInvoice() = _uiState.update { it.copy(invoice = null) }
 
-    /** Переход статуса (валидация переходов — на сервере; UI предлагает допустимые). */
+    /**
+     * Переход статуса (offline-first, Фаза 2): оптимистично меняем кэш сразу, а
+     * доставку кладём в outbox — она уйдёт на сервер при наличии сети (идемпотентно).
+     * UI предлагает только допустимые переходы; валидация — на сервере.
+     */
     fun setStatus(orderId: String, status: OrderStatus, trackingNo: String? = null) {
         if (_uiState.value.busy) return
         _uiState.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
-            when (val r = repository.updateStatus(storeId, orderId, status.name, trackingNo)) {
-                // updateStatus записал заказ в Room — список обновится через Flow
-                is ApiResult.Success -> _uiState.update { it.copy(busy = false) }
-                is ApiResult.ApiError ->
-                    _uiState.update { it.copy(busy = false, error = r.message) }
-                is ApiResult.NetworkError ->
-                    _uiState.update { it.copy(busy = false, error = "Нет соединения с сервером") }
-            }
+            repository.optimisticStoreStatus(storeId, orderId, status.name) // список обновится через Flow
+            outbox.enqueueOrderStatus(storeId, orderId, status.name, trackingNo)
+            _uiState.update { it.copy(busy = false) }
         }
     }
 }
