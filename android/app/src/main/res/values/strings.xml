@@ -23,6 +23,7 @@
     <string name="home_my_products">Мои товары</string>
     <string name="home_settings">Настройки магазина</string>
     <string name="home_inventory">Инвентарь</string>
+    <string name="home_categories">Категории</string>
     <string name="home_promocodes">Промокоды</string>
     <string name="home_staff">Сотрудники</string>
     <string name="home_broadcast">Рассылка покупателям</string>
@@ -279,4 +280,21 @@
     <string name="broadcast_send">Отправить</string>
     <string name="broadcast_sent_title">Рассылка отправлена</string>
     <string name="broadcast_sent_stats">Адресатов: %1$d · доставлено: %2$d · ошибок: %3$d</string>
+
+    <!-- Категории (FR-A01) -->
+    <string name="category_title">Категории</string>
+    <string name="category_create_title">Новая категория</string>
+    <string name="category_edit_title">Редактирование категории</string>
+    <string name="category_name">Название</string>
+    <string name="category_slug">Slug</string>
+    <string name="category_slug_hint">Строчные латинские буквы, цифры и дефис</string>
+    <string name="category_order">Порядок</string>
+    <string name="category_parent">Родительская категория</string>
+    <string name="category_parent_root">Корень</string>
+    <string name="category_create">Создать</string>
+    <string name="category_edit_action">Изменить</string>
+    <string name="category_delete">Удалить</string>
+    <string name="category_empty">Категорий пока нет — создайте первую</string>
+    <string name="category_delete_title">Удалить категорию?</string>
+    <string name="category_delete_confirm">«%1$s» будет удалена. Подкатегории нужно удалить или перенести заранее.</string>
 </resources>

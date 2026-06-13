@@ -11,6 +11,7 @@ import com.wasat.shop.feature.admin.InventoryScreen
 import com.wasat.shop.feature.analytics.AnalyticsScreen
 import com.wasat.shop.feature.admin.MyProductsScreen
 import com.wasat.shop.feature.admin.ProductEditScreen
+import com.wasat.shop.feature.admin.CategoriesScreen
 import com.wasat.shop.feature.admin.PromocodesScreen
 import com.wasat.shop.feature.admin.BroadcastScreen
 import com.wasat.shop.feature.admin.StaffScreen
@@ -48,6 +49,7 @@ object Routes {
     const val PRODUCT_EDIT = "productedit/{storeId}?currency={currency}&productId={productId}"
     const val STORE_SETTINGS = "storesettings/{storeId}?currency={currency}"
     const val INVENTORY = "inventory/{storeId}"
+    const val CATEGORIES = "categories/{storeId}"
     const val PROMOCODES = "promocodes/{storeId}?currency={currency}"
     const val STAFF = "staff/{storeId}"
     const val BROADCAST = "broadcast/{storeId}"
@@ -80,6 +82,7 @@ object Routes {
     fun storeSettings(storeId: String, currency: String): String =
         "storesettings/$storeId?currency=$currency"
     fun inventory(storeId: String): String = "inventory/$storeId"
+    fun categories(storeId: String): String = "categories/$storeId"
     fun promocodes(storeId: String, currency: String): String =
         "promocodes/$storeId?currency=$currency"
     fun staff(storeId: String): String = "staff/$storeId"
@@ -161,6 +164,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 },
                 onOpenInventory = { storeId ->
                     navController.navigate(Routes.inventory(storeId))
+                },
+                onOpenCategories = { storeId ->
+                    navController.navigate(Routes.categories(storeId))
                 },
                 onOpenPromocodes = { storeId, currency ->
                     navController.navigate(Routes.promocodes(storeId, currency))
@@ -335,6 +341,11 @@ fun WasatNavHost(authRepository: AuthRepository) {
         // FR-A03: инвентарь (владелец)
         composable(route = Routes.INVENTORY) {
             InventoryScreen()
+        }
+
+        // FR-A01: категории магазина (владелец)
+        composable(route = Routes.CATEGORIES) {
+            CategoriesScreen()
         }
 
         // FR-A06: промокоды (владелец)

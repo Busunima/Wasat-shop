@@ -21,6 +21,7 @@
     <string name="home_my_products">My products</string>
     <string name="home_settings">Store settings</string>
     <string name="home_inventory">Inventory</string>
+    <string name="home_categories">Categories</string>
     <string name="home_promocodes">Promo codes</string>
     <string name="home_staff">Staff</string>
     <string name="home_broadcast">Broadcast to customers</string>
@@ -277,4 +278,21 @@
     <string name="broadcast_send">Send</string>
     <string name="broadcast_sent_title">Broadcast sent</string>
     <string name="broadcast_sent_stats">Recipients: %1$d · delivered: %2$d · failed: %3$d</string>
+
+    <!-- Categories (FR-A01) -->
+    <string name="category_title">Categories</string>
+    <string name="category_create_title">New category</string>
+    <string name="category_edit_title">Edit category</string>
+    <string name="category_name">Name</string>
+    <string name="category_slug">Slug</string>
+    <string name="category_slug_hint">Lowercase latin letters, digits and hyphens</string>
+    <string name="category_order">Order</string>
+    <string name="category_parent">Parent category</string>
+    <string name="category_parent_root">Root</string>
+    <string name="category_create">Create</string>
+    <string name="category_edit_action">Edit</string>
+    <string name="category_delete">Delete</string>
+    <string name="category_empty">No categories yet — create the first one</string>
+    <string name="category_delete_title">Delete category?</string>
+    <string name="category_delete_confirm">“%1$s” will be deleted. Remove or move its subcategories first.</string>
 </resources>
