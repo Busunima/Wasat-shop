@@ -2,6 +2,7 @@
 <!-- English translations (ТЗ §11.7). -->
 <resources>
     <string name="offline_banner">No internet connection — showing saved data</string>
+    <string name="sync_pending">Pending sync: %1$d</string>
 
     <!-- Sign-in -->
     <string name="sign_in_with_google">Sign in with Google</string>

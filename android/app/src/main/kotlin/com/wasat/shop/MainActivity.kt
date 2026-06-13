@@ -26,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
 import com.wasat.shop.core.designsystem.WasatTheme
 import com.wasat.shop.core.network.ConnectivityViewModel
+import com.wasat.shop.core.sync.OutboxStatusViewModel
 import com.wasat.shop.feature.auth.AuthRepository
 import com.wasat.shop.navigation.WasatNavHost
 import dagger.hilt.android.AndroidEntryPoint
@@ -66,9 +67,31 @@ private fun AppRoot(authRepository: AuthRepository) {
         Column(modifier = Modifier.padding(innerPadding)) {
             val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
             val online by connectivityViewModel.online.collectAsState()
+            val outboxViewModel: OutboxStatusViewModel = hiltViewModel()
+            val pending by outboxViewModel.pending.collectAsState()
             if (!online) OfflineBanner()
+            if (pending > 0) SyncBanner(pending)
             WasatNavHost(authRepository)
         }
+    }
+}
+
+/** Индикатор очереди синхронизации (Фаза 2 outbox): N мутаций ждут отправки. */
+@Composable
+private fun SyncBanner(pending: Int) {
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = stringResource(R.string.sync_pending, pending),
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        )
     }
 }
 
