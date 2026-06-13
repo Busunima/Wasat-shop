@@ -150,3 +150,30 @@ test("списки и карточка", async () => {
   const one = await getReturn(STORE_ID, (globalThis as Record<string, unknown>)["retId"] as string);
   assert.equal(one.status, "REFUNDED");
 });
+
+test("идемпотентность переходов (offline-first): повтор approve/receive/refund — no-op", async () => {
+  await seedOrder("ord-idem", "DELIVERED", [
+    { productId, name: "Кеды", qty: 1, price: 5000, variant: null },
+  ]);
+  const stockBefore = (await getProduct(STORE_ID, productId, true)).totalStock;
+  const ret = await createReturn(STORE_ID, BUYER, {
+    orderId: "ord-idem",
+    items: [{ productId, qty: 1 }],
+    reason: "брак",
+  });
+
+  // повтор approve — тот же статус, без ошибки
+  await resolveReturn(STORE_ID, ret.id, "approve", "ок");
+  assert.equal((await resolveReturn(STORE_ID, ret.id, "approve", "ещё раз")).status, "APPROVED");
+
+  // повтор receive — ресток ровно один раз (не задваивается)
+  await receiveReturn(STORE_ID, ret.id);
+  assert.equal((await receiveReturn(STORE_ID, ret.id)).status, "RECEIVED");
+  assert.equal((await getProduct(STORE_ID, productId, true)).totalStock, stockBefore + 1);
+
+  // повтор refund — без двойного возмещения
+  const refunded = await refundReturn(STORE_ID, ret.id);
+  const again = await refundReturn(STORE_ID, ret.id);
+  assert.equal(again.status, "REFUNDED");
+  assert.equal(again.refundAmount, refunded.refundAmount);
+});

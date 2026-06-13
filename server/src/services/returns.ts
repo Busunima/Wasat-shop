@@ -178,10 +178,12 @@ export async function resolveReturn(
   const ref = returnsCol(storeId).doc(returnId);
   const next: ReturnStatus = action === "approve" ? "APPROVED" : "REJECTED";
 
-  const data = await db().runTransaction(async (tx) => {
+  const { data, noop } = await db().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) throw new ApiError("NOT_FOUND", "Возврат не найден");
     const ret = snap.data()!;
+    // Идемпотентность (offline-first): статус уже целевой — no-op, безопасный ретрай.
+    if ((ret["status"] as ReturnStatus) === next) return { data: ret, noop: true };
     if (!canTransitionReturn(ret["status"] as ReturnStatus, next)) {
       throw new ApiError("CONFLICT", `Недопустимый переход возврата: ${ret["status"]} → ${next}`);
     }
@@ -190,10 +192,10 @@ export async function resolveReturn(
     if (next === "REJECTED") {
       tx.update(orderRef(storeId, ret["orderId"] as string), { status: "COMPLETED" });
     }
-    return { ...ret, status: next, comment: comment ?? null };
+    return { data: { ...ret, status: next, comment: comment ?? null }, noop: false };
   });
 
-  logger.info("Решение по возврату", { storeId, returnId, action });
+  if (!noop) logger.info("Решение по возврату", { storeId, returnId, action });
   return toApiReturn(data);
 }
 
@@ -201,10 +203,12 @@ export async function resolveReturn(
 export async function receiveReturn(storeId: string, returnId: string): Promise<ApiReturn> {
   const ref = returnsCol(storeId).doc(returnId);
 
-  const data = await db().runTransaction(async (tx) => {
+  const { data, noop } = await db().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) throw new ApiError("NOT_FOUND", "Возврат не найден");
     const ret = snap.data()!;
+    // Идемпотентность: уже принят — no-op (ресток НЕ повторяем при ретрае).
+    if ((ret["status"] as ReturnStatus) === "RECEIVED") return { data: ret, noop: true };
     if (!canTransitionReturn(ret["status"] as ReturnStatus, "RECEIVED")) {
       throw new ApiError("CONFLICT", `Возврат не в статусе APPROVED (${ret["status"]})`);
     }
@@ -220,10 +224,10 @@ export async function receiveReturn(storeId: string, returnId: string): Promise<
 
     tx.update(ref, { status: "RECEIVED" });
     tx.update(oRef, { status: "RETURNED" });
-    return { ...ret, status: "RECEIVED" };
+    return { data: { ...ret, status: "RECEIVED" }, noop: false };
   });
 
-  logger.info("Возврат принят (ресток)", { storeId, returnId });
+  if (!noop) logger.info("Возврат принят (ресток)", { storeId, returnId });
   return toApiReturn(data);
 }
 
@@ -236,10 +240,12 @@ export async function refundReturn(storeId: string, returnId: string): Promise<A
   const ref = returnsCol(storeId).doc(returnId);
   const deferred = !env.STRIPE_SECRET_KEY;
 
-  const data = await db().runTransaction(async (tx) => {
+  const { data, noop } = await db().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) throw new ApiError("NOT_FOUND", "Возврат не найден");
     const ret = snap.data()!;
+    // Идемпотентность: уже возмещён — no-op (повторный рефанд не инициируем).
+    if ((ret["status"] as ReturnStatus) === "REFUNDED") return { data: ret, noop: true };
     if (!canTransitionReturn(ret["status"] as ReturnStatus, "REFUNDED")) {
       throw new ApiError("CONFLICT", `Возврат не принят (${ret["status"]})`);
     }
@@ -256,10 +262,13 @@ export async function refundReturn(storeId: string, returnId: string): Promise<A
       refundDeferred: deferred,
     });
     tx.update(oRef, { status: "REFUNDED" });
-    return { ...ret, status: "REFUNDED", refundAmount, refundDeferred: deferred };
+    return {
+      data: { ...ret, status: "REFUNDED", refundAmount, refundDeferred: deferred },
+      noop: false,
+    };
   });
 
-  logger.info("Возврат возмещён", { storeId, returnId, deferred });
+  if (!noop) logger.info("Возврат возмещён", { storeId, returnId, deferred });
   return toApiReturn(data);
 }
 
