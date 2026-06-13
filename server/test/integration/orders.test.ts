@@ -155,6 +155,16 @@ test("статусы FR-A04: валидный переход, недопусти
   await updateOrderStatus(STORE_ID, ids.order1!, "PROCESSING", undefined);
   const shipped = await updateOrderStatus(STORE_ID, ids.order1!, "SHIPPED", "TRACK-42");
   assert.equal(shipped.delivery.trackingNo, "TRACK-42");
+
+  // Идемпотентность (offline-first): повтор того же статуса — no-op, без ошибки
+  const replay = await updateOrderStatus(STORE_ID, ids.order1!, "SHIPPED", undefined);
+  assert.equal(replay.status, "SHIPPED");
+  assert.equal(replay.delivery.trackingNo, "TRACK-42"); // прежний трек не затёрт
+  // но возврат назад (SHIPPED → PROCESSING) — по-прежнему CONFLICT
+  await assert.rejects(
+    () => updateOrderStatus(STORE_ID, ids.order1!, "PROCESSING", undefined),
+    (err: { code?: string }) => err.code === "CONFLICT",
+  );
 });
 
 test("отмена покупателем FR-B06: ресток, чужой заказ — FORBIDDEN, после отгрузки — CONFLICT", async () => {
