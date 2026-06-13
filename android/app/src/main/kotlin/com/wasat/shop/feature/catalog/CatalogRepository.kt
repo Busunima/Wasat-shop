@@ -1,5 +1,7 @@
 package com.wasat.shop.feature.catalog
 
+import com.wasat.shop.core.db.CachedProductEntity
+import com.wasat.shop.core.db.ProductDao
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.WasatApi
 import com.wasat.shop.core.network.dto.ProductDto
@@ -7,15 +9,17 @@ import com.wasat.shop.core.network.dto.ProductListResponse
 import com.wasat.shop.core.network.safeApiCall
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
  * Чтение каталога витрины через REST (FR-B02; решение №9 в docs/decisions.md).
- * Прямое чтение Firestore с офлайн-кэшем (Room) подключается треком «Офлайн» Фазы 2.
+ * Карточка товара кэшируется в Room (Фаза 1c) для офлайн-просмотра.
  */
 @Singleton
 class CatalogRepository @Inject constructor(
     private val api: WasatApi,
+    private val productDao: ProductDao,
     private val json: Json,
 ) {
     suspend fun listProducts(
@@ -24,8 +28,21 @@ class CatalogRepository @Inject constructor(
     ): ApiResult<ProductListResponse> =
         safeApiCall(json) { api.listProducts(storeId, queryParams) }
 
-    suspend fun getProduct(storeId: String, productId: String): ApiResult<ProductDto> =
-        safeApiCall(json) { api.getProduct(storeId, productId) }
+    /** Карточка товара; при успехе кэшируется для офлайн-фолбэка. */
+    suspend fun getProduct(storeId: String, productId: String): ApiResult<ProductDto> {
+        val r = safeApiCall(json) { api.getProduct(storeId, productId) }
+        if (r is ApiResult.Success) {
+            productDao.upsert(
+                CachedProductEntity(storeId, productId, json.encodeToString(r.data), System.currentTimeMillis()),
+            )
+        }
+        return r
+    }
+
+    /** Последняя сохранённая карточка товара (офлайн-фолбэк) или null. */
+    suspend fun cachedProduct(storeId: String, productId: String): ProductDto? =
+        productDao.find(storeId, productId)
+            ?.let { runCatching { json.decodeFromString<ProductDto>(it.json) }.getOrNull() }
 
     /** Похожие товары (FR-B12) — best-effort: при сбое пустой список. */
     suspend fun related(storeId: String, productId: String, limit: Int = 8): List<ProductDto> =

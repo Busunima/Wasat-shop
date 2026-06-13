@@ -12,14 +12,20 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * коллизии. Таблица корзины не трогается. Очередь синхронизации (outbox) — Фаза 2.
  */
 @Database(
-    entities = [CartItemEntity::class, CachedOrderEntity::class, PendingOperationEntity::class],
-    version = 4,
+    entities = [
+        CartItemEntity::class,
+        CachedOrderEntity::class,
+        PendingOperationEntity::class,
+        CachedProductEntity::class,
+    ],
+    version = 5,
     exportSchema = false,
 )
 abstract class WasatDatabase : RoomDatabase() {
     abstract fun cartDao(): CartDao
     abstract fun orderDao(): OrderDao
     abstract fun pendingOperationDao(): PendingOperationDao
+    abstract fun productDao(): ProductDao
 
     companion object {
         /** v1 → v2: добавить таблицу кэша заказов (корзина не меняется). */
@@ -69,6 +75,20 @@ abstract class WasatDatabase : RoomDatabase() {
                         "`createdAt` INTEGER NOT NULL, " +
                         "`attempts` INTEGER NOT NULL, " +
                         "PRIMARY KEY(`opId`))",
+                )
+            }
+        }
+
+        /** v4 → v5: кэш карточек товаров для офлайн-просмотра. Аддитивно. */
+        val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `cached_product` (" +
+                        "`storeId` TEXT NOT NULL, " +
+                        "`id` TEXT NOT NULL, " +
+                        "`json` TEXT NOT NULL, " +
+                        "`cachedAt` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`storeId`, `id`))",
                 )
             }
         }
