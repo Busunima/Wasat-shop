@@ -343,11 +343,17 @@ export async function updateOrderStatus(
 ): Promise<ApiOrder> {
   const ref = ordersCol(storeId).doc(orderId);
 
-  const data = await db().runTransaction(async (tx) => {
+  const { data, noop } = await db().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) throw new ApiError("NOT_FOUND", "Заказ не найден");
     const order = snap.data()!;
     const current = order["status"] as OrderStatus;
+
+    // Идемпотентность (offline-first): повторное применение того же статуса —
+    // no-op, возвращаем заказ без побочных эффектов (безопасный ретрай из outbox).
+    if (current === next) {
+      return { data: order, noop: true };
+    }
 
     if (!canTransition(current, next)) {
       throw new ApiError("CONFLICT", `Недопустимый переход статуса: ${current} → ${next}`);
@@ -369,10 +375,12 @@ export async function updateOrderStatus(
     if (trackingNo !== undefined) {
       updated["delivery"] = { ...(order["delivery"] as Record<string, unknown>), trackingNo };
     }
-    return updated;
+    return { data: updated, noop: false };
   });
 
   const order = toApiOrder(data);
+  if (noop) return order; // ничего не изменилось — без push и лога
+
   // FR-B06: push покупателю о смене статуса (fire-and-forget, best-effort)
   void sendToUsers(
     storeId,
