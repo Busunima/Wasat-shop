@@ -3,6 +3,10 @@ package com.wasat.shop.core.network
 import com.wasat.shop.core.network.dto.AiDescribeRequest
 import com.wasat.shop.core.network.dto.AiDescribeResponse
 import com.wasat.shop.core.network.dto.AnalyticsEventRequest
+import com.wasat.shop.core.network.dto.CategoryCreateRequest
+import com.wasat.shop.core.network.dto.CategoryDto
+import com.wasat.shop.core.network.dto.CategoryListResponse
+import com.wasat.shop.core.network.dto.CategoryUpdateRequest
 import com.wasat.shop.core.network.dto.AnalyticsReportDto
 import com.wasat.shop.core.network.dto.BroadcastRequest
 import com.wasat.shop.core.network.dto.CheckoutRequest
@@ -194,6 +198,32 @@ interface WasatApi {
         @Path("storeId") storeId: String,
         @Body body: PromoPreviewRequest,
     ): Response<PromoPreviewResponse>
+
+    // ── Категории (FR-A01) ───────────────────────────────────────────────────
+
+    @GET("api/stores/{storeId}/categories")
+    suspend fun listCategories(
+        @Path("storeId") storeId: String,
+    ): Response<CategoryListResponse>
+
+    @POST("api/stores/{storeId}/categories")
+    suspend fun createCategory(
+        @Path("storeId") storeId: String,
+        @Body body: CategoryCreateRequest,
+    ): Response<CategoryDto>
+
+    @PATCH("api/stores/{storeId}/categories/{cid}")
+    suspend fun updateCategory(
+        @Path("storeId") storeId: String,
+        @Path("cid") cid: String,
+        @Body body: CategoryUpdateRequest,
+    ): Response<CategoryDto>
+
+    @DELETE("api/stores/{storeId}/categories/{cid}")
+    suspend fun deleteCategory(
+        @Path("storeId") storeId: String,
+        @Path("cid") cid: String,
+    ): Response<Unit>
 
     // ── Заказы (FR-B05/A04/B06) ──────────────────────────────────────────────
 

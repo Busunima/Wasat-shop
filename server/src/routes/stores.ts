@@ -19,6 +19,7 @@ import { productsRouter } from "./products.js";
 import { inventoryRouter } from "./inventory.js";
 import { analyticsRouter } from "./analytics.js";
 import { promocodesRouter } from "./promocodes.js";
+import { categoriesRouter } from "./categories.js";
 import { staffRouter } from "./staff.js";
 import { recommendationsRouter } from "./recommendations.js";
 import { pushRouter } from "./push.js";
@@ -37,6 +38,9 @@ storesRouter.use("/:storeId/inventory", inventoryRouter);
 
 // Промокоды: /api/stores/:storeId/promocodes (FR-A06)
 storesRouter.use("/:storeId/promocodes", promocodesRouter);
+
+// Категории: /api/stores/:storeId/categories (FR-A01)
+storesRouter.use("/:storeId/categories", categoriesRouter);
 
 // Сотрудники: /api/stores/:storeId/staff (FR-A09)
 storesRouter.use("/:storeId/staff", staffRouter);
