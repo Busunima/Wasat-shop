@@ -3,6 +3,7 @@ package com.wasat.shop.core.di
 import android.content.Context
 import androidx.room.Room
 import com.wasat.shop.core.db.CartDao
+import com.wasat.shop.core.db.OrderDao
 import com.wasat.shop.core.db.WasatDatabase
 import dagger.Module
 import dagger.Provides
@@ -18,8 +19,13 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): WasatDatabase =
-        Room.databaseBuilder(context, WasatDatabase::class.java, "wasat.db").build()
+        Room.databaseBuilder(context, WasatDatabase::class.java, "wasat.db")
+            .addMigrations(WasatDatabase.MIGRATION_1_2)
+            .build()
 
     @Provides
     fun provideCartDao(db: WasatDatabase): CartDao = db.cartDao()
+
+    @Provides
+    fun provideOrderDao(db: WasatDatabase): OrderDao = db.orderDao()
 }

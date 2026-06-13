@@ -41,30 +41,37 @@ class MyOrdersViewModel @Inject constructor(
     val uiState: StateFlow<MyOrdersUiState> = _uiState.asStateFlow()
 
     init {
+        // Offline-first (Фаза 1): UI всегда читает кэш Room; список не пропадает офлайн.
+        viewModelScope.launch {
+            repository.observeMyOrders(storeId).collect { cached ->
+                _uiState.update { it.copy(loading = false, orders = cached) }
+            }
+        }
         load()
-        // FR-B06: live-обновление — каждый снапшот своих заказов перечитывает список
+        // FR-B06: live-обновление — каждый снапшот своих заказов перечитывает кэш
         viewModelScope.launch {
             ordersLive.observeMyOrders(storeId).collect { refresh() }
         }
     }
 
-    /** Тихая перезагрузка (без спиннера) по сигналу live-листенера. */
+    /** Тихое обновление кэша (без спиннера) по сигналу live-листенера. */
     private suspend fun refresh() {
-        when (val r = repository.myOrders(storeId)) {
-            is ApiResult.Success -> _uiState.update { it.copy(loading = false, orders = r.data.items) }
-            else -> Unit // тихий сбой: список остаётся прежним, явный load() покажет ошибку
-        }
+        repository.refreshMyOrders(storeId) // список UI обновится через Flow из Room
     }
 
     fun load() {
-        _uiState.update { it.copy(loading = true, error = null) }
+        _uiState.update { it.copy(error = null) }
         viewModelScope.launch {
             _uiState.update {
-                when (val r = repository.myOrders(storeId)) {
-                    is ApiResult.Success -> it.copy(loading = false, orders = r.data.items)
+                when (val r = repository.refreshMyOrders(storeId)) {
+                    is ApiResult.Success -> it.copy(loading = false)
                     is ApiResult.ApiError -> it.copy(loading = false, error = r.message)
                     is ApiResult.NetworkError ->
-                        it.copy(loading = false, error = "Нет соединения с сервером")
+                        it.copy(
+                            loading = false,
+                            // офлайн: есть кэш — молча показываем его, иначе ошибка
+                            error = if (it.orders.isEmpty()) "Нет соединения с сервером" else null,
+                        )
                 }
             }
         }
