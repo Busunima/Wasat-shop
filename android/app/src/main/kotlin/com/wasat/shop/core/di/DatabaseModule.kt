@@ -3,6 +3,7 @@ package com.wasat.shop.core.di
 import android.content.Context
 import androidx.room.Room
 import com.wasat.shop.core.db.CartDao
+import com.wasat.shop.core.db.NotificationDao
 import com.wasat.shop.core.db.OrderDao
 import com.wasat.shop.core.db.PendingOperationDao
 import com.wasat.shop.core.db.ProductDao
@@ -27,6 +28,7 @@ object DatabaseModule {
                 WasatDatabase.MIGRATION_2_3,
                 WasatDatabase.MIGRATION_3_4,
                 WasatDatabase.MIGRATION_4_5,
+                WasatDatabase.MIGRATION_5_6,
             )
             .build()
 
@@ -41,4 +43,7 @@ object DatabaseModule {
 
     @Provides
     fun provideProductDao(db: WasatDatabase): ProductDao = db.productDao()
+
+    @Provides
+    fun provideNotificationDao(db: WasatDatabase): NotificationDao = db.notificationDao()
 }

@@ -10,18 +10,46 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.wasat.shop.MainActivity
 import com.wasat.shop.R
+import com.wasat.shop.core.db.NotificationDao
+import com.wasat.shop.core.db.NotificationEntity
+import dagger.hilt.android.AndroidEntryPoint
+import java.util.UUID
+import javax.inject.Inject
+import kotlinx.coroutines.runBlocking
 
 /**
- * Приём FCM-сообщений (FR-B10): показывает системное уведомление с title/body из
- * notification-блока сообщения. Тап открывает приложение. Новый токен (onNewToken)
- * не регистрируется немедленно: регистрация привязана к магазину и выполняется
- * best-effort при действии покупателя (PushTokenRepository, добавление в вишлист).
+ * Приём FCM-сообщений (FR-B10): сохраняет уведомление в центр уведомлений (§11.5,
+ * Room) и показывает системное уведомление с title/body. В центр пишем даже если
+ * системные уведомления отключены. Тап открывает приложение. Новый токен
+ * (onNewToken) не регистрируется немедленно — регистрация привязана к магазину
+ * (best-effort при действии покупателя).
  */
+@AndroidEntryPoint
 class WasatMessagingService : FirebaseMessagingService() {
+
+    @Inject
+    lateinit var notificationDao: NotificationDao
 
     override fun onMessageReceived(message: RemoteMessage) {
         val title = message.notification?.title ?: getString(R.string.app_name)
         val body = message.notification?.body ?: return
+
+        // Центр уведомлений (§11.5): сохраняем независимо от системного разрешения.
+        runCatching {
+            runBlocking {
+                notificationDao.insert(
+                    NotificationEntity(
+                        id = message.messageId ?: UUID.randomUUID().toString(),
+                        title = title,
+                        body = body,
+                        type = message.data["type"],
+                        receivedAt = System.currentTimeMillis(),
+                        read = false,
+                    ),
+                )
+            }
+        }
+
         if (!NotificationManagerCompat.from(this).areNotificationsEnabled()) return
 
         ensureChannel()
