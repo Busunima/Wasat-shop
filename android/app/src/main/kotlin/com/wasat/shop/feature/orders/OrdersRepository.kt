@@ -124,6 +124,17 @@ class OrdersRepository @Inject constructor(
             is ApiResult.NetworkError -> r
         }
 
+    /**
+     * Оптимистичное локальное изменение статуса заказа магазина (outbox, Фаза 2):
+     * сразу обновляет кэш → UI отражает смену офлайн. Авторитетный заказ придёт при
+     * доставке из очереди. Если заказа нет в кэше — no-op.
+     */
+    suspend fun optimisticStoreStatus(storeId: String, orderId: String, status: String) {
+        val row = orderDao.find(storeId, SCOPE_STORE, orderId) ?: return
+        val dto = runCatching { json.decodeFromString<OrderDto>(row.json) }.getOrNull() ?: return
+        orderDao.upsert(dto.copy(status = status).toEntity(storeId, SCOPE_STORE))
+    }
+
     suspend fun updateStatus(
         storeId: String,
         orderId: String,

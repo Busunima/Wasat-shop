@@ -12,13 +12,14 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * коллизии. Таблица корзины не трогается. Очередь синхронизации (outbox) — Фаза 2.
  */
 @Database(
-    entities = [CartItemEntity::class, CachedOrderEntity::class],
-    version = 3,
+    entities = [CartItemEntity::class, CachedOrderEntity::class, PendingOperationEntity::class],
+    version = 4,
     exportSchema = false,
 )
 abstract class WasatDatabase : RoomDatabase() {
     abstract fun cartDao(): CartDao
     abstract fun orderDao(): OrderDao
+    abstract fun pendingOperationDao(): PendingOperationDao
 
     companion object {
         /** v1 → v2: добавить таблицу кэша заказов (корзина не меняется). */
@@ -52,6 +53,22 @@ abstract class WasatDatabase : RoomDatabase() {
                         "`json` TEXT NOT NULL, " +
                         "`cachedAt` INTEGER NOT NULL, " +
                         "PRIMARY KEY(`storeId`, `scope`, `id`))",
+                )
+            }
+        }
+
+        /** v3 → v4: очередь исходящих мутаций (outbox). Аддитивно — кэш не трогаем. */
+        val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `pending_operation` (" +
+                        "`opId` TEXT NOT NULL, " +
+                        "`type` TEXT NOT NULL, " +
+                        "`storeId` TEXT NOT NULL, " +
+                        "`payload` TEXT NOT NULL, " +
+                        "`createdAt` INTEGER NOT NULL, " +
+                        "`attempts` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`opId`))",
                 )
             }
         }

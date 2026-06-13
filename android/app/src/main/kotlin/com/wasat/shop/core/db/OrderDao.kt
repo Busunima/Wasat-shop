@@ -17,6 +17,12 @@ interface OrderDao {
     )
     fun observe(storeId: String, scope: String): Flow<List<CachedOrderEntity>>
 
+    @Query(
+        "SELECT * FROM cached_order WHERE storeId = :storeId AND scope = :scope " +
+            "AND id = :id LIMIT 1",
+    )
+    suspend fun find(storeId: String, scope: String, id: String): CachedOrderEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(order: CachedOrderEntity)
 
