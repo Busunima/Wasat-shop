@@ -26,6 +26,11 @@ export const stockAdjustSchema = z.object({
   /** Дельта (может быть отрицательной); итог не может уйти ниже 0. */
   delta: z.number().int().min(-100_000).max(100_000),
   reason: z.string().max(200).default("manual"),
+  /**
+   * Ключ идемпотентности (offline-first): повтор с тем же ключом не применяет
+   * дельту повторно. Нужен для безопасной доставки из клиентской outbox-очереди.
+   */
+  idempotencyKey: z.string().min(8).max(64).optional(),
 });
 export type StockAdjust = z.infer<typeof stockAdjustSchema>;
 

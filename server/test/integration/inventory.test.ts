@@ -134,3 +134,27 @@ test("importStockCsv: абсолютные значения, отчёт об о�
   const log = await listInventoryLog(STORE_ID, undefined, 50);
   assert.ok(log.filter((e) => e.reason === "csv-import").length >= 2);
 });
+
+test("adjustStock: идемпотентность по ключу — повтор не задваивает дельту (offline-first)", async () => {
+  const key = "stock-key-abc12345";
+  const first = await adjustStock(STORE_ID, simpleProductId, UID, {
+    delta: 5,
+    reason: "manual",
+    idempotencyKey: key,
+  });
+  const after = first.totalStock;
+  // повтор с тем же ключом — дельта НЕ применяется повторно
+  const replay = await adjustStock(STORE_ID, simpleProductId, UID, {
+    delta: 5,
+    reason: "manual",
+    idempotencyKey: key,
+  });
+  assert.equal(replay.totalStock, after);
+  // другой ключ — применяется как обычно
+  const third = await adjustStock(STORE_ID, simpleProductId, UID, {
+    delta: 5,
+    reason: "manual",
+    idempotencyKey: "stock-key-different9",
+  });
+  assert.equal(third.totalStock, after + 5);
+});

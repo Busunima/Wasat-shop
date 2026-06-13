@@ -59,6 +59,22 @@ export async function adjustStock(
     const previousTotal = (data["totalStock"] as number) ?? 0;
     const productName = (data["name"] as string) ?? "";
 
+    // Идемпотентность (offline-first): повтор с тем же ключом не задваивает дельту.
+    // Маркер читается ДО любых записей (требование транзакций Firestore).
+    const markerRef = input.idempotencyKey
+      ? db().collection("stores").doc(storeId).collection("stockOps").doc(input.idempotencyKey)
+      : null;
+    if (markerRef && (await tx.get(markerRef)).exists) {
+      return {
+        productId,
+        totalStock: previousTotal,
+        variants,
+        previousTotal, // == totalStock → push back_in_stock не сработает
+        productName,
+        replay: true,
+      };
+    }
+
     let variantLabel: string | null = null;
     let totalStock: number;
 
@@ -98,7 +114,16 @@ export async function adjustStock(
       at: FieldValue.serverTimestamp(),
     });
 
-    return { productId, totalStock, variants, previousTotal, productName };
+    // Зафиксировать ключ — повтор той же корректировки станет no-op.
+    if (markerRef) {
+      tx.set(markerRef, {
+        productId,
+        delta: input.delta,
+        at: FieldValue.serverTimestamp(),
+      });
+    }
+
+    return { productId, totalStock, variants, previousTotal, productName, replay: false };
   });
 
   // FR-B10: переход 0 → в наличии — push покупателям с товаром в вишлисте
@@ -109,7 +134,9 @@ export async function adjustStock(
     );
   }
 
-  logger.info("Сток скорректирован", { storeId, productId, delta: input.delta });
+  if (!result.replay) {
+    logger.info("Сток скорректирован", { storeId, productId, delta: input.delta });
+  }
   return { productId: result.productId, totalStock: result.totalStock, variants: result.variants };
 }
 
