@@ -50,6 +50,13 @@ class StoreOrdersViewModel @Inject constructor(
     val uiState: StateFlow<StoreOrdersUiState> = _uiState.asStateFlow()
 
     init {
+        // Offline-first (Фаза 1b): UI читает кэш Room; список не пропадает офлайн.
+        // Кэш отражает последний применённый фильтр (офлайн новый фильтр не дотянуть).
+        viewModelScope.launch {
+            repository.observeStoreOrders(storeId).collect { cached ->
+                _uiState.update { it.copy(loading = false, orders = cached) }
+            }
+        }
         load()
     }
 
@@ -58,9 +65,9 @@ class StoreOrdersViewModel @Inject constructor(
         val fromMs = s.datePreset.days?.let {
             System.currentTimeMillis() - it * 24L * 60 * 60 * 1000
         }
-        _uiState.update { it.copy(loading = true, error = null) }
+        _uiState.update { it.copy(error = null) }
         viewModelScope.launch {
-            val result = repository.storeOrders(
+            val result = repository.refreshStoreOrders(
                 storeId = storeId,
                 status = s.filter?.name,
                 fromMs = fromMs,
@@ -70,10 +77,13 @@ class StoreOrdersViewModel @Inject constructor(
             )
             _uiState.update {
                 when (result) {
-                    is ApiResult.Success -> it.copy(loading = false, orders = result.data.items)
+                    is ApiResult.Success -> it.copy(loading = false)
                     is ApiResult.ApiError -> it.copy(loading = false, error = result.message)
                     is ApiResult.NetworkError ->
-                        it.copy(loading = false, error = "Нет соединения с сервером")
+                        it.copy(
+                            loading = false,
+                            error = if (it.orders.isEmpty()) "Нет соединения с сервером" else null,
+                        )
                 }
             }
         }
@@ -156,12 +166,8 @@ class StoreOrdersViewModel @Inject constructor(
         _uiState.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             when (val r = repository.updateStatus(storeId, orderId, status.name, trackingNo)) {
-                is ApiResult.Success -> _uiState.update { s ->
-                    s.copy(
-                        busy = false,
-                        orders = s.orders.map { if (it.id == orderId) r.data else it },
-                    )
-                }
+                // updateStatus записал заказ в Room — список обновится через Flow
+                is ApiResult.Success -> _uiState.update { it.copy(busy = false) }
                 is ApiResult.ApiError ->
                     _uiState.update { it.copy(busy = false, error = r.message) }
                 is ApiResult.NetworkError ->

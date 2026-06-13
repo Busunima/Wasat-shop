@@ -20,7 +20,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): WasatDatabase =
         Room.databaseBuilder(context, WasatDatabase::class.java, "wasat.db")
-            .addMigrations(WasatDatabase.MIGRATION_1_2)
+            .addMigrations(WasatDatabase.MIGRATION_1_2, WasatDatabase.MIGRATION_2_3)
             .build()
 
     @Provides
