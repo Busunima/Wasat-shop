@@ -60,6 +60,8 @@ class MyOrdersViewModel @Inject constructor(
     }
 
     fun load() {
+        // НЕ ставим loading=true: экран показывает кэш сразу (offline-first),
+        // спиннер на весь экран скрыл бы уже загруженный список. Сеть обновляет молча.
         _uiState.update { it.copy(error = null) }
         viewModelScope.launch {
             _uiState.update {
@@ -127,12 +129,8 @@ class MyOrdersViewModel @Inject constructor(
         _uiState.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             when (val r = repository.cancel(storeId, orderId)) {
-                is ApiResult.Success -> _uiState.update { s ->
-                    s.copy(
-                        busy = false,
-                        orders = s.orders.map { if (it.id == orderId) r.data else it },
-                    )
-                }
+                // repository.cancel записал заказ в Room — список обновится через Flow
+                is ApiResult.Success -> _uiState.update { it.copy(busy = false) }
                 is ApiResult.ApiError ->
                     _uiState.update { it.copy(busy = false, error = r.message) }
                 is ApiResult.NetworkError ->

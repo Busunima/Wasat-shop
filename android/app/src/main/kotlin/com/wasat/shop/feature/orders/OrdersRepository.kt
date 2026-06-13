@@ -26,15 +26,16 @@ class OrdersRepository @Inject constructor(
     suspend fun checkout(body: CheckoutRequest): ApiResult<OrderDto> =
         safeApiCall(json) { api.checkout(body) }
 
-    suspend fun myOrders(storeId: String): ApiResult<OrderListResponse> =
-        safeApiCall(json) { api.myOrders(storeId, mapOf("limit" to "50")) }
-
     // ── Offline-first (Фаза 1): кэш «моих» заказов в Room = источник правды ──────
 
-    /** Поток заказов покупателя из кэша (Room); UI читает только отсюда. */
+    /**
+     * Поток заказов покупателя из кэша (Room); UI читает только отсюда.
+     * Нечитаемая строка кэша (несовместимая схема после обновления) пропускается,
+     * а не валит весь поток — как в RecentlyViewed.
+     */
     fun observeMyOrders(storeId: String): Flow<List<OrderDto>> =
         orderDao.observe(storeId, SCOPE_MINE).map { rows ->
-            rows.map { json.decodeFromString<OrderDto>(it.json) }
+            rows.mapNotNull { runCatching { json.decodeFromString<OrderDto>(it.json) }.getOrNull() }
         }
 
     /** Сетевое обновление кэша «моих» заказов; список UI обновится через Flow. */
