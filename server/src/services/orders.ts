@@ -7,6 +7,7 @@ import {
   canTransition,
   computeTotals,
   type CheckoutInput,
+  type OrdersListQuery,
 } from "../schemas/order.js";
 import { isCancellableByBuyer, type OrderStatus } from "../schemas/orderStatus.js";
 import { applyPromo, type PromoEvaluable } from "../schemas/promocode.js";
@@ -416,18 +417,56 @@ export async function cancelOrderByBuyer(
   return toApiOrder(data);
 }
 
-/** Заказы магазина (FR-A04), новые сверху, опц. фильтр по статусу. */
+/**
+ * Заказы магазина (FR-A04), новые сверху. Фильтры: статус, дата (createdAt),
+ * сумма (total), покупатель (email/uid). Диапазон даты — в Firestore по тому же
+ * полю createdAt (без композитного индекса); статус/сумма/покупатель —
+ * постфильтр в памяти над выборкой newest-first (масштаб MVP, как листинг
+ * каталога). Если постфильтра нет — Firestore-limit точен; иначе добираем с
+ * запасом (минимум ORDERS_SCAN_CAP) и отдаём первые limit подходящих.
+ */
+const ORDERS_SCAN_CAP = 1000;
+
 export async function listOrders(
   storeId: string,
-  status: OrderStatus | undefined,
-  limit: number,
+  filters: OrdersListQuery,
 ): Promise<ApiOrder[]> {
-  let query: FirebaseFirestore.Query = ordersCol(storeId)
-    .orderBy("createdAt", "desc")
-    .limit(limit);
-  if (status) query = ordersCol(storeId).where("status", "==", status).limit(limit);
-  const snap = await query.get();
-  return snap.docs.map((doc) => toApiOrder(doc.data()));
+  let query: FirebaseFirestore.Query = ordersCol(storeId).orderBy("createdAt", "desc");
+  if (filters.from !== undefined) {
+    query = query.where("createdAt", ">=", Timestamp.fromMillis(filters.from));
+  }
+  if (filters.to !== undefined) {
+    query = query.where("createdAt", "<", Timestamp.fromMillis(filters.to));
+  }
+  const hasMemoryFilter =
+    filters.status !== undefined ||
+    filters.minTotal !== undefined ||
+    filters.maxTotal !== undefined ||
+    filters.customer !== undefined;
+  const fetchLimit = hasMemoryFilter
+    ? Math.max(filters.limit, ORDERS_SCAN_CAP)
+    : filters.limit;
+  const snap = await query.limit(fetchLimit).get();
+
+  const customer = filters.customer?.toLowerCase();
+  const result: ApiOrder[] = [];
+  for (const doc of snap.docs) {
+    const order = toApiOrder(doc.data());
+    if (filters.status && order.status !== filters.status) continue;
+    if (filters.minTotal !== undefined && order.total < filters.minTotal) continue;
+    if (filters.maxTotal !== undefined && order.total > filters.maxTotal) continue;
+    if (customer && !matchesCustomer(order, customer)) continue;
+    result.push(order);
+    if (result.length >= filters.limit) break;
+  }
+  return result;
+}
+
+/** Совпадение покупателя по подстроке email или uid (регистронезависимо). */
+function matchesCustomer(order: ApiOrder, needle: string): boolean {
+  const email = order.customerEmail?.toLowerCase() ?? "";
+  const uid = order.customerUid?.toLowerCase() ?? "";
+  return email.includes(needle) || uid.includes(needle);
 }
 
 /** Заказы покупателя в магазине (FR-B06), новые сверху. */

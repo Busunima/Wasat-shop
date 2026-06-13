@@ -12,13 +12,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -137,6 +141,63 @@ fun StoreOrdersScreen(viewModel: StoreOrdersViewModel = hiltViewModel()) {
                         )
                     },
                 )
+            }
+        }
+
+        // FR-A04: фильтр по периоду создания
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            DatePreset.entries.forEach { preset ->
+                FilterChip(
+                    selected = state.datePreset == preset,
+                    onClick = { viewModel.onDatePreset(preset) },
+                    label = { Text(stringResource(datePresetLabelRes(preset))) },
+                )
+            }
+        }
+
+        // FR-A04: фильтр по сумме и покупателю (применяется кнопкой)
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            OutlinedTextField(
+                value = state.customer,
+                onValueChange = viewModel::onCustomerChange,
+                label = { Text(stringResource(R.string.orders_filter_customer)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = state.minAmount,
+                    onValueChange = viewModel::onMinAmountChange,
+                    label = { Text(stringResource(R.string.orders_filter_min)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = state.maxAmount,
+                    onValueChange = viewModel::onMaxAmountChange,
+                    label = { Text(stringResource(R.string.orders_filter_max)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = viewModel::applyFilters, enabled = !state.busy) {
+                    Text(stringResource(R.string.orders_filter_apply))
+                }
+                OutlinedButton(onClick = viewModel::clearAdvancedFilters, enabled = !state.busy) {
+                    Text(stringResource(R.string.orders_filter_reset))
+                }
             }
         }
 

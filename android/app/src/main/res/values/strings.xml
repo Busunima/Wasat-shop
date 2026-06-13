@@ -165,6 +165,15 @@
     <string name="store_orders_title">Заказы магазина</string>
     <string name="orders_export_csv">Экспорт CSV</string>
     <string name="store_orders_all">Все</string>
+    <string name="orders_filter_customer">Покупатель (email или ID)</string>
+    <string name="orders_filter_min">Сумма от</string>
+    <string name="orders_filter_max">Сумма до</string>
+    <string name="orders_filter_apply">Применить</string>
+    <string name="orders_filter_reset">Сбросить</string>
+    <string name="orders_period_all">Весь период</string>
+    <string name="orders_period_week">7 дней</string>
+    <string name="orders_period_month">30 дней</string>
+    <string name="orders_period_quarter">90 дней</string>
     <string name="store_orders_empty">Заказов пока нет</string>
     <string name="order_number">Заказ #%1$s</string>
     <string name="order_total">Итого</string>
