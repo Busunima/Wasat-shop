@@ -40,6 +40,7 @@ class CatalogViewModel @Inject constructor(
     private val wishlistRepository: WishlistRepository,
     recentlyViewed: RecentlyViewedRepository,
     private val analytics: AnalyticsRepository,
+    private val feedCache: CatalogFeedCache,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -98,7 +99,7 @@ class CatalogViewModel @Inject constructor(
             .distinctUntilChanged()
             .flatMapLatest { effective ->
                 Pager(PagingConfig(pageSize = 20, initialLoadSize = 20)) {
-                    ProductPagingSource(repository, storeId, effective) { items ->
+                    ProductPagingSource(repository, storeId, effective, feedCache) { items ->
                         _categories.update { it + items.mapNotNull(ProductDto::category) }
                     }
                 }.flow
