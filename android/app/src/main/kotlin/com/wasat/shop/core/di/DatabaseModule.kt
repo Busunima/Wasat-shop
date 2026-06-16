@@ -7,6 +7,7 @@ import com.wasat.shop.core.db.NotificationDao
 import com.wasat.shop.core.db.OrderDao
 import com.wasat.shop.core.db.PendingOperationDao
 import com.wasat.shop.core.db.ProductDao
+import com.wasat.shop.core.db.ReturnDao
 import com.wasat.shop.core.db.WasatDatabase
 import dagger.Module
 import dagger.Provides
@@ -29,6 +30,7 @@ object DatabaseModule {
                 WasatDatabase.MIGRATION_3_4,
                 WasatDatabase.MIGRATION_4_5,
                 WasatDatabase.MIGRATION_5_6,
+                WasatDatabase.MIGRATION_6_7,
             )
             .build()
 
@@ -46,4 +48,7 @@ object DatabaseModule {
 
     @Provides
     fun provideNotificationDao(db: WasatDatabase): NotificationDao = db.notificationDao()
+
+    @Provides
+    fun provideReturnDao(db: WasatDatabase): ReturnDao = db.returnDao()
 }

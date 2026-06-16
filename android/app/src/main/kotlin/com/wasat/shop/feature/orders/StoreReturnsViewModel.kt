@@ -34,31 +34,40 @@ class StoreReturnsViewModel @Inject constructor(
     val uiState: StateFlow<StoreReturnsUiState> = _uiState.asStateFlow()
 
     init {
+        // Offline-first (B5.3): UI читает кэш Room; очередь возвратов не пропадает офлайн.
+        viewModelScope.launch {
+            repository.observeStoreReturns(storeId).collect { cached ->
+                _uiState.update { it.copy(loading = false, returns = cached) }
+            }
+        }
         load()
     }
 
     fun load() {
-        _uiState.update { it.copy(loading = true, error = null) }
+        // НЕ ставим loading=true: кэш показывается сразу (offline-first), сеть обновляет молча.
+        _uiState.update { it.copy(error = null) }
         viewModelScope.launch {
             _uiState.update {
-                when (val r = repository.storeReturns(storeId, null)) {
-                    is ApiResult.Success -> it.copy(loading = false, returns = r.data.items)
+                when (val r = repository.refreshStoreReturns(storeId, null)) {
+                    is ApiResult.Success -> it.copy(loading = false)
                     is ApiResult.ApiError -> it.copy(loading = false, error = r.message)
                     is ApiResult.NetworkError ->
-                        it.copy(loading = false, error = "Нет соединения с сервером")
+                        it.copy(
+                            loading = false,
+                            error = if (it.returns.isEmpty()) "Нет соединения с сервером" else null,
+                        )
                 }
             }
         }
     }
 
-    private fun apply(returnId: String, call: suspend () -> ApiResult<ReturnDto>) {
+    private fun apply(call: suspend () -> ApiResult<ReturnDto>) {
         if (_uiState.value.busy) return
         _uiState.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             when (val r = call()) {
-                is ApiResult.Success -> _uiState.update { s ->
-                    s.copy(busy = false, returns = s.returns.map { if (it.id == returnId) r.data else it })
-                }
+                // repository персистит возврат в Room — список обновится через Flow
+                is ApiResult.Success -> _uiState.update { it.copy(busy = false) }
                 is ApiResult.ApiError -> _uiState.update { it.copy(busy = false, error = r.message) }
                 is ApiResult.NetworkError ->
                     _uiState.update { it.copy(busy = false, error = "Нет соединения с сервером") }
@@ -66,8 +75,8 @@ class StoreReturnsViewModel @Inject constructor(
         }
     }
 
-    fun approve(returnId: String) = apply(returnId) { repository.resolve(storeId, returnId, "approve") }
-    fun reject(returnId: String) = apply(returnId) { repository.resolve(storeId, returnId, "reject") }
-    fun receive(returnId: String) = apply(returnId) { repository.receive(storeId, returnId) }
-    fun refund(returnId: String) = apply(returnId) { repository.refund(storeId, returnId) }
+    fun approve(returnId: String) = apply { repository.resolve(storeId, returnId, "approve") }
+    fun reject(returnId: String) = apply { repository.resolve(storeId, returnId, "reject") }
+    fun receive(returnId: String) = apply { repository.receive(storeId, returnId) }
+    fun refund(returnId: String) = apply { repository.refund(storeId, returnId) }
 }
