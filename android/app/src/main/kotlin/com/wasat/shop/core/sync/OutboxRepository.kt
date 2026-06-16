@@ -5,6 +5,7 @@ import com.wasat.shop.core.db.PendingOperationEntity
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.ConnectivityObserver
 import com.wasat.shop.feature.orders.OrdersRepository
+import com.wasat.shop.feature.orders.ReturnsRepository
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,6 +33,7 @@ import kotlinx.serialization.json.Json
 class OutboxRepository @Inject constructor(
     private val dao: PendingOperationDao,
     private val ordersRepository: OrdersRepository,
+    private val returnsRepository: ReturnsRepository,
     private val connectivity: ConnectivityObserver,
     private val json: Json,
 ) {
@@ -68,6 +70,26 @@ class OutboxRepository @Inject constructor(
         runCatching { drain() } // best-effort: офлайн просто оставит в очереди
     }
 
+    /** Поставить в очередь переход возврата (approve|reject|receive|refund). */
+    suspend fun enqueueReturnAction(
+        storeId: String,
+        returnId: String,
+        action: String,
+        comment: String? = null,
+    ) {
+        dao.upsert(
+            PendingOperationEntity(
+                opId = UUID.randomUUID().toString(),
+                type = OutboxType.RETURN_ACTION,
+                storeId = storeId,
+                payload = json.encodeToString(ReturnActionOp(returnId, action, comment)),
+                createdAt = System.currentTimeMillis(),
+                attempts = 0,
+            ),
+        )
+        runCatching { drain() }
+    }
+
     /** Слить очередь по порядку. Сетевые ошибки оставляют операцию на следующий раз. */
     suspend fun drain() {
         if (!connectivity.isOnline()) return
@@ -91,6 +113,20 @@ class OutboxRepository @Inject constructor(
                 when (ordersRepository.updateStatus(op.storeId, d.orderId, d.status, d.trackingNo)) {
                     is ApiResult.Success -> DispatchResult.DONE
                     // 4xx (например, недопустимый переход) — перманентно, не зациклить
+                    is ApiResult.ApiError -> DispatchResult.DONE
+                    is ApiResult.NetworkError -> DispatchResult.RETRY
+                }
+            }
+            OutboxType.RETURN_ACTION -> {
+                val d = json.decodeFromString<ReturnActionOp>(op.payload)
+                val result = when (d.action) {
+                    "approve", "reject" -> returnsRepository.resolve(op.storeId, d.returnId, d.action, d.comment)
+                    "receive" -> returnsRepository.receive(op.storeId, d.returnId)
+                    "refund" -> returnsRepository.refund(op.storeId, d.returnId)
+                    else -> return DispatchResult.DONE // неизвестное действие — выкинуть
+                }
+                when (result) {
+                    is ApiResult.Success -> DispatchResult.DONE
                     is ApiResult.ApiError -> DispatchResult.DONE
                     is ApiResult.NetworkError -> DispatchResult.RETRY
                 }

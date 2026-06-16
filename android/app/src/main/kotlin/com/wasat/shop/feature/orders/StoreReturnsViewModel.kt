@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.dto.ReturnDto
+import com.wasat.shop.core.sync.OutboxRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +25,7 @@ data class StoreReturnsUiState(
 @HiltViewModel
 class StoreReturnsViewModel @Inject constructor(
     private val repository: ReturnsRepository,
+    private val outbox: OutboxRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -61,22 +63,22 @@ class StoreReturnsViewModel @Inject constructor(
         }
     }
 
-    private fun apply(call: suspend () -> ApiResult<ReturnDto>) {
+    /**
+     * Переход возврата (offline-first, B5.3): оптимистично меняем кэш и кладём
+     * действие в outbox — доедет при наличии сети (сервер идемпотентен).
+     */
+    private fun act(returnId: String, optimisticStatus: String, action: String) {
         if (_uiState.value.busy) return
         _uiState.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
-            when (val r = call()) {
-                // repository персистит возврат в Room — список обновится через Flow
-                is ApiResult.Success -> _uiState.update { it.copy(busy = false) }
-                is ApiResult.ApiError -> _uiState.update { it.copy(busy = false, error = r.message) }
-                is ApiResult.NetworkError ->
-                    _uiState.update { it.copy(busy = false, error = "Нет соединения с сервером") }
-            }
+            repository.optimisticStoreReturnStatus(storeId, returnId, optimisticStatus)
+            outbox.enqueueReturnAction(storeId, returnId, action)
+            _uiState.update { it.copy(busy = false) }
         }
     }
 
-    fun approve(returnId: String) = apply { repository.resolve(storeId, returnId, "approve") }
-    fun reject(returnId: String) = apply { repository.resolve(storeId, returnId, "reject") }
-    fun receive(returnId: String) = apply { repository.receive(storeId, returnId) }
-    fun refund(returnId: String) = apply { repository.refund(storeId, returnId) }
+    fun approve(returnId: String) = act(returnId, "APPROVED", "approve")
+    fun reject(returnId: String) = act(returnId, "REJECTED", "reject")
+    fun receive(returnId: String) = act(returnId, "RECEIVED", "receive")
+    fun refund(returnId: String) = act(returnId, "REFUNDED", "refund")
 }
