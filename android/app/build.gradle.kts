@@ -118,6 +118,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.appcheck)
+    implementation(libs.firebase.config)
 
     // Google Sign-In через Credential Manager (ТЗ §4.1)
     implementation(libs.androidx.credentials)
