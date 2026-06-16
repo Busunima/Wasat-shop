@@ -18,8 +18,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         PendingOperationEntity::class,
         CachedProductEntity::class,
         NotificationEntity::class,
+        CachedReturnEntity::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = false,
 )
 abstract class WasatDatabase : RoomDatabase() {
@@ -28,6 +29,7 @@ abstract class WasatDatabase : RoomDatabase() {
     abstract fun pendingOperationDao(): PendingOperationDao
     abstract fun productDao(): ProductDao
     abstract fun notificationDao(): NotificationDao
+    abstract fun returnDao(): ReturnDao
 
     companion object {
         /** v1 → v2: добавить таблицу кэша заказов (корзина не меняется). */
@@ -107,6 +109,23 @@ abstract class WasatDatabase : RoomDatabase() {
                         "`receivedAt` INTEGER NOT NULL, " +
                         "`read` INTEGER NOT NULL, " +
                         "PRIMARY KEY(`id`))",
+                )
+            }
+        }
+
+        /** v6 → v7: кэш возвратов для офлайн-чтения (B5.3). Аддитивно. */
+        val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `cached_return` (" +
+                        "`storeId` TEXT NOT NULL, " +
+                        "`id` TEXT NOT NULL, " +
+                        "`scope` TEXT NOT NULL, " +
+                        "`status` TEXT NOT NULL, " +
+                        "`createdAt` INTEGER NOT NULL, " +
+                        "`json` TEXT NOT NULL, " +
+                        "`cachedAt` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`storeId`, `scope`, `id`))",
                 )
             }
         }
