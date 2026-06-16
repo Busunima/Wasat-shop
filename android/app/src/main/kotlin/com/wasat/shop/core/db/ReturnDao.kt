@@ -17,6 +17,12 @@ interface ReturnDao {
     )
     fun observe(storeId: String, scope: String): Flow<List<CachedReturnEntity>>
 
+    @Query(
+        "SELECT * FROM cached_return WHERE storeId = :storeId AND scope = :scope " +
+            "AND id = :id LIMIT 1",
+    )
+    suspend fun find(storeId: String, scope: String, id: String): CachedReturnEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(item: CachedReturnEntity)
 

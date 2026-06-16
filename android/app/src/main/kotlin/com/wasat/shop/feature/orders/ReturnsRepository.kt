@@ -64,6 +64,16 @@ class ReturnsRepository @Inject constructor(
         returnDao.upsert(dto.toEntity(storeId, SCOPE_STORE))
     }
 
+    /**
+     * Оптимистичная смена статуса возврата в кэше (outbox, B5.3): UI отражает
+     * решение сразу; авторитетный возврат придёт при доставке. Нет в кэше — no-op.
+     */
+    suspend fun optimisticStoreReturnStatus(storeId: String, returnId: String, status: String) {
+        val row = returnDao.find(storeId, SCOPE_STORE, returnId) ?: return
+        val dto = runCatching { json.decodeFromString<ReturnDto>(row.json) }.getOrNull() ?: return
+        returnDao.upsert(dto.copy(status = status).toEntity(storeId, SCOPE_STORE))
+    }
+
     suspend fun create(
         storeId: String,
         orderId: String,
