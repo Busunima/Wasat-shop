@@ -103,6 +103,24 @@ jobs:
       # Сборка без секретов (VITE_* пустые) — приложение собирается, рантайм гейтится.
       - run: npm run build
 
+  security:
+    name: Security · аудит зависимостей (§14)
+    # Гейт безопасности на каждом PR/пуше (не зависит от path-фильтра).
+    # ТЗ §14: 0 critical CVE — гейтим по critical в prod-зависимостях; moderate/high
+    # остаются информационными в логе и не валят сборку.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: npm audit — server (0 critical CVE)
+        working-directory: server
+        run: npm audit --omit=dev --audit-level=critical
+      - name: npm audit — admin-web (0 critical CVE)
+        working-directory: admin-web
+        run: npm audit --omit=dev --audit-level=critical
+
   emulator:
     name: Firebase Emulator · rules + server integration
     needs: changes
