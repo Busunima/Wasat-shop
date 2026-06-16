@@ -26,11 +26,13 @@ class ForceUpdateViewModel @Inject constructor(
     val updateRequired: StateFlow<Boolean> = _updateRequired.asStateFlow()
 
     init {
-        val rc = remoteConfig ?: return
-        viewModelScope.launch {
-            runCatching { rc.fetchAndActivate().await() }
-            val minVersion = rc.getLong("min_supported_version_code")
-            _updateRequired.value = BuildConfig.VERSION_CODE < minVersion
+        val rc = remoteConfig
+        if (rc != null) {
+            viewModelScope.launch {
+                runCatching { rc.fetchAndActivate().await() }
+                val minVersion = rc.getLong("min_supported_version_code")
+                _updateRequired.value = BuildConfig.VERSION_CODE < minVersion
+            }
         }
     }
 }
