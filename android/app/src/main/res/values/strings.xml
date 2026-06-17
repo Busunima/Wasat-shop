@@ -114,6 +114,8 @@
     <string name="a11y_product_photo">Фото товара: %1$s</string>
     <string name="a11y_product_photo_generic">Фото товара</string>
     <string name="a11y_store_image">Изображение магазина</string>
+    <string name="a11y_share">Поделиться</string>
+    <string name="share_product_text">Посмотрите «%1$s» в магазине %2$s: %3$s</string>
     <string name="product_low_stock">Осталось мало: %1$d шт.</string>
     <string name="product_reviews_title">Отзывы</string>
     <string name="product_reviews_empty">Отзывов пока нет — они появятся после первых покупок</string>

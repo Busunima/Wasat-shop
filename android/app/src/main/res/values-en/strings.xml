@@ -113,6 +113,8 @@
     <string name="a11y_product_photo">Product photo: %1$s</string>
     <string name="a11y_product_photo_generic">Product photo</string>
     <string name="a11y_store_image">Store image</string>
+    <string name="a11y_share">Share</string>
+    <string name="share_product_text">Check out “%1$s” at %2$s: %3$s</string>
     <string name="product_low_stock">Only %1$d left</string>
     <string name="product_reviews_title">Reviews</string>
     <string name="product_reviews_empty">No reviews yet — they will appear after the first purchases</string>

@@ -46,6 +46,10 @@ class ProductDetailViewModel @Inject constructor(
     private val storeId: String = checkNotNull(savedStateHandle["storeId"])
     private val productId: String = checkNotNull(savedStateHandle["productId"])
 
+    /** Магазин для шеринга (FR-B12): slug → публичная ссылка, name → текст. */
+    private val _storeShare = MutableStateFlow<StoreShareInfo?>(null)
+    val storeShare: StateFlow<StoreShareInfo?> = _storeShare.asStateFlow()
+
     /** ♥ доступен только авторизованным (FR-B07). */
     val wishlistAvailable: Boolean get() = wishlistRepository.isAvailable
 
@@ -89,6 +93,17 @@ class ProductDetailViewModel @Inject constructor(
 
     init {
         load()
+        loadStore()
+    }
+
+    /** Best-effort загрузка магазина для кнопки «Поделиться» (FR-B12). */
+    private fun loadStore() {
+        viewModelScope.launch {
+            val r = repository.getStore(storeId)
+            if (r is ApiResult.Success) {
+                _storeShare.value = StoreShareInfo(r.data.slug, r.data.name)
+            }
+        }
     }
 
     fun addToCart(currency: String, variant: VariantDto?) {
