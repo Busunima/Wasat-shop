@@ -24,6 +24,7 @@ import com.wasat.shop.R
 fun ProfileScreen(
     onOpenOrders: () -> Unit,
     onOpenWishlist: () -> Unit,
+    onOpenStockNotifications: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val signedIn by viewModel.signedIn.collectAsState()
@@ -68,6 +69,12 @@ fun ProfileScreen(
         if (signedIn) {
             OutlinedButton(onClick = onOpenWishlist, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.profile_wishlist))
+            }
+            OutlinedButton(
+                onClick = onOpenStockNotifications,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.profile_stock_notifications))
             }
         }
     }
