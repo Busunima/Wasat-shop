@@ -41,6 +41,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.wasat.shop.R
 import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
+import com.wasat.shop.core.designsystem.ProductGridSkeleton
 import com.wasat.shop.core.designsystem.ProductImage
 import com.wasat.shop.core.designsystem.isExpandedLayout
 import com.wasat.shop.core.network.dto.ProductDto
@@ -244,7 +245,8 @@ private fun CatalogGrid(
 ) {
     val refresh = products.loadState.refresh
     when {
-        refresh is LoadState.Loading -> Centered { CircularProgressIndicator() }
+        // §11.6: skeleton-сетка вместо центрального спиннера при первичной загрузке.
+        refresh is LoadState.Loading -> ProductGridSkeleton(columns = columns)
 
         refresh is LoadState.Error -> Centered {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
