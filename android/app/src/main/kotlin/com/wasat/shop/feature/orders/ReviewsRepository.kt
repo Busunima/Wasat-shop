@@ -16,8 +16,18 @@ class ReviewsRepository @Inject constructor(
     private val api: WasatApi,
     private val json: Json,
 ) {
-    suspend fun list(storeId: String, productId: String): ApiResult<ReviewListResponse> =
-        safeApiCall(json) { api.listReviews(storeId, productId, mapOf("limit" to "30")) }
+    suspend fun list(
+        storeId: String,
+        productId: String,
+        cursor: String? = null,
+    ): ApiResult<ReviewListResponse> =
+        safeApiCall(json) {
+            val params = buildMap {
+                put("limit", "20")
+                if (cursor != null) put("cursor", cursor)
+            }
+            api.listReviews(storeId, productId, params)
+        }
 
     suspend fun create(
         storeId: String,

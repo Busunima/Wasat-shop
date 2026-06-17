@@ -17,6 +17,8 @@ export type ReviewCreate = z.infer<typeof reviewCreateSchema>;
 
 export const reviewsListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
+  /** Курсор пагинации (FR-B03): createdAt последнего отзыва предыдущей страницы, мс. */
+  cursor: z.string().optional(),
 });
 
 /**

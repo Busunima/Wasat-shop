@@ -87,6 +87,13 @@ class ProductDetailViewModel @Inject constructor(
     private val _reviews = MutableStateFlow<List<ReviewDto>>(emptyList())
     val reviews: StateFlow<List<ReviewDto>> = _reviews.asStateFlow()
 
+    /** Курсор пагинации отзывов (FR-B03); null — больше нет/ещё не грузили. */
+    private val _reviewsCursor = MutableStateFlow<String?>(null)
+    val canLoadMoreReviews: StateFlow<Boolean> = _reviewsCursor
+        .map { it != null }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+    private var reviewsLoading = false
+
     /** Кратковременный флаг «добавлено» для обратной связи на кнопке. */
     private val _justAdded = MutableStateFlow(false)
     val justAdded: StateFlow<Boolean> = _justAdded.asStateFlow()
@@ -157,7 +164,25 @@ class ProductDetailViewModel @Inject constructor(
     private fun loadReviews() {
         viewModelScope.launch {
             val result = reviewsRepository.list(storeId, productId)
-            if (result is ApiResult.Success) _reviews.value = result.data.items
+            if (result is ApiResult.Success) {
+                _reviews.value = result.data.items
+                _reviewsCursor.value = result.data.nextCursor
+            }
+        }
+    }
+
+    /** Подгрузка следующей страницы отзывов (FR-B03), по кнопке «Показать ещё». */
+    fun loadMoreReviews() {
+        val cursor = _reviewsCursor.value ?: return
+        if (reviewsLoading) return
+        reviewsLoading = true
+        viewModelScope.launch {
+            val result = reviewsRepository.list(storeId, productId, cursor)
+            if (result is ApiResult.Success) {
+                _reviews.value = _reviews.value + result.data.items
+                _reviewsCursor.value = result.data.nextCursor
+            }
+            reviewsLoading = false
         }
     }
 }

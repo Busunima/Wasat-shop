@@ -290,7 +290,12 @@ private fun ProductDetailContent(
                     )
                 }
 
-                ReviewsSection(reviews)
+                val canLoadMoreReviews by viewModel.canLoadMoreReviews.collectAsState()
+                ReviewsSection(
+                    reviews = reviews,
+                    canLoadMore = canLoadMoreReviews,
+                    onLoadMore = viewModel::loadMoreReviews,
+                )
             }
 
             ProductMiniRow(
@@ -383,7 +388,11 @@ private fun StockIndicator(product: ProductDto, selectedVariant: VariantDto?) {
 
 /** Отзывы о товаре (FR-B08): список с рейтингом и текстом, новые сверху. */
 @Composable
-private fun ReviewsSection(reviews: List<com.wasat.shop.core.network.dto.ReviewDto>) {
+private fun ReviewsSection(
+    reviews: List<com.wasat.shop.core.network.dto.ReviewDto>,
+    canLoadMore: Boolean,
+    onLoadMore: () -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         HorizontalDivider()
         Text(
@@ -406,6 +415,12 @@ private fun ReviewsSection(reviews: List<com.wasat.shop.core.network.dto.ReviewD
                     review.text?.takeIf { it.isNotBlank() }?.let {
                         Text(text = it, style = MaterialTheme.typography.bodyMedium)
                     }
+                }
+            }
+            // FR-B03: пагинация — подгрузка следующей страницы отзывов.
+            if (canLoadMore) {
+                TextButton(onClick = onLoadMore) {
+                    Text(stringResource(R.string.product_reviews_load_more))
                 }
             }
         }

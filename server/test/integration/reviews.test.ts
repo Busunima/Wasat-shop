@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
+import { Timestamp } from "firebase-admin/firestore";
 import { db } from "../../src/lib/firebase.ts";
 import { createProduct } from "../../src/services/products.ts";
 import { createReview, deleteReview, listReviews, reviewIdFor } from "../../src/services/reviews.ts";
@@ -96,9 +97,38 @@ test("createReview: заказ не доставлен / не содержит �
 });
 
 test("listReviews: публичный список товара", async () => {
-  const list = await listReviews(STORE_ID, productId, 20);
-  assert.equal(list.length, 1);
-  assert.equal(list[0]!.customerUid, BUYER);
+  const page = await listReviews(STORE_ID, productId, 20);
+  assert.equal(page.items.length, 1);
+  assert.equal(page.items[0]!.customerUid, BUYER);
+  assert.equal(page.nextCursor, null);
+});
+
+test("listReviews: курсорная пагинация, новые сверху (FR-B03)", async () => {
+  const pid = "paged-product";
+  const col = db().collection("stores").doc(STORE_ID).collection("reviews");
+  for (let i = 0; i < 3; i++) {
+    await col.doc(`pr-${i}`).set({
+      id: `pr-${i}`,
+      productId: pid,
+      customerUid: `u${i}`,
+      rating: 5,
+      text: `r${i}`,
+      photos: [],
+      orderId: "o",
+      createdAt: Timestamp.fromMillis(1000 + i * 1000),
+    });
+  }
+  // Страница 1: 2 самых новых (r2, r1) + курсор на следующую.
+  const page1 = await listReviews(STORE_ID, pid, 2);
+  assert.equal(page1.items.length, 2);
+  assert.equal(page1.items[0]!.text, "r2");
+  assert.equal(page1.items[1]!.text, "r1");
+  assert.notEqual(page1.nextCursor, null);
+  // Страница 2: остаток (r0), курсора больше нет.
+  const page2 = await listReviews(STORE_ID, pid, 2, page1.nextCursor!);
+  assert.equal(page2.items.length, 1);
+  assert.equal(page2.items[0]!.text, "r0");
+  assert.equal(page2.nextCursor, null);
 });
 
 test("deleteReview: модерация пересчитывает агрегаты до нуля", async () => {
