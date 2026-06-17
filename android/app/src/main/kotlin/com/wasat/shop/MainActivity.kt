@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,6 +16,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,6 +39,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
 import com.wasat.shop.core.designsystem.WasatTheme
+import com.wasat.shop.core.designsystem.isExpandedLayout
 import com.wasat.shop.core.network.ConnectivityViewModel
 import com.wasat.shop.core.sync.OutboxStatusViewModel
 import com.wasat.shop.core.update.ForceUpdateViewModel
@@ -76,75 +80,121 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun AppRoot(authRepository: AuthRepository) {
     val navController = rememberNavController()
+    // §11.4 адаптивность: на широких экранах (планшет/десктоп/ландшафт) навигация —
+    // боковой NavigationRail; на компактных — нижняя панель.
+    val useRail = LocalWindowWidthSizeClass.current.isExpandedLayout
     // Scaffold корректно обрабатывает insets системных баров (edge-to-edge).
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        // §11.5 Bottom Navigation — видна только на экранах витрины (каталог/корзина/профиль).
-        bottomBar = { StoreBottomBar(navController) },
+        // §11.5 Bottom Navigation — только на компактной ширине и экранах витрины.
+        bottomBar = { if (!useRail) StoreBottomBar(navController) },
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
-            // Force-update (§11.5): блокирующий экран, если версия ниже минимальной.
-            val forceUpdateViewModel: ForceUpdateViewModel = hiltViewModel()
-            val updateRequired by forceUpdateViewModel.updateRequired.collectAsState()
-            if (updateRequired) {
-                ForceUpdateScreen()
-                return@Column
+        Row(modifier = Modifier.padding(innerPadding)) {
+            if (useRail) StoreNavRail(navController)
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Force-update (§11.5): блокирующий экран, если версия ниже минимальной.
+                val forceUpdateViewModel: ForceUpdateViewModel = hiltViewModel()
+                val updateRequired by forceUpdateViewModel.updateRequired.collectAsState()
+                if (updateRequired) {
+                    ForceUpdateScreen()
+                    return@Column
+                }
+                val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
+                val online by connectivityViewModel.online.collectAsState()
+                val outboxViewModel: OutboxStatusViewModel = hiltViewModel()
+                val pending by outboxViewModel.pending.collectAsState()
+                if (!online) OfflineBanner()
+                if (pending > 0) SyncBanner(pending)
+                WasatNavHost(authRepository, navController)
             }
-            val connectivityViewModel: ConnectivityViewModel = hiltViewModel()
-            val online by connectivityViewModel.online.collectAsState()
-            val outboxViewModel: OutboxStatusViewModel = hiltViewModel()
-            val pending by outboxViewModel.pending.collectAsState()
-            if (!online) OfflineBanner()
-            if (pending > 0) SyncBanner(pending)
-            WasatNavHost(authRepository, navController)
         }
     }
 }
 
 /**
+ * Контекст навигации витрины: текущий store-маршрут + storeId/currency из аргументов.
+ * null — если текущий экран не относится к витрине (каталог/корзина/профиль).
+ */
+private class StoreNavContext(
+    val navController: NavHostController,
+    val route: String?,
+    val storeId: String,
+    val currency: String,
+) {
+    fun go(dest: String) = navController.navigate(dest) { launchSingleTop = true }
+    fun goHome() = navController.navigate(Routes.home(null)) { launchSingleTop = true }
+}
+
+/** Единый список вкладок навигации витрины (общий для bottom bar и rail). */
+private class StoreNavTab(
+    val selected: Boolean,
+    val onClick: () -> Unit,
+    val icon: String,
+    val labelRes: Int,
+)
+
+@Composable
+private fun rememberStoreNavContext(navController: NavHostController): StoreNavContext? {
+    val entry by navController.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+    if (route != Routes.CATALOG && route != Routes.CART && route != Routes.PROFILE) return null
+    val storeId = entry?.arguments?.getString("storeId").orEmpty()
+    if (storeId.isEmpty()) return null
+    val currency = entry?.arguments?.getString("currency") ?: "USD"
+    return StoreNavContext(navController, route, storeId, currency)
+}
+
+private fun storeNavTabs(ctx: StoreNavContext): List<StoreNavTab> = listOf(
+    StoreNavTab(false, ctx::goHome, "🏠", R.string.nav_home),
+    StoreNavTab(
+        ctx.route == Routes.CATALOG,
+        { ctx.go(Routes.catalog(ctx.storeId, ctx.currency)) }, "🛍", R.string.nav_catalog,
+    ),
+    StoreNavTab(
+        ctx.route == Routes.CART,
+        { ctx.go(Routes.cart(ctx.storeId, ctx.currency)) }, "🛒", R.string.nav_cart,
+    ),
+    StoreNavTab(
+        ctx.route == Routes.PROFILE,
+        { ctx.go(Routes.profile(ctx.storeId, ctx.currency)) }, "👤", R.string.nav_profile,
+    ),
+)
+
+/**
  * Нижняя навигация витрины (ТЗ §11.5): Главная / Каталог / Корзина / Профиль.
- * Показывается только на store-маршрутах (каталог/корзина/профиль); storeId/currency
- * берутся из аргументов текущего экрана. Вне витрины панель скрыта.
+ * Показывается только на store-маршрутах; вне витрины панель скрыта.
  */
 @Composable
 private fun StoreBottomBar(navController: NavHostController) {
-    val entry by navController.currentBackStackEntryAsState()
-    val route = entry?.destination?.route
-    if (route != Routes.CATALOG && route != Routes.CART && route != Routes.PROFILE) return
-
-    val storeId = entry?.arguments?.getString("storeId").orEmpty()
-    val currency = entry?.arguments?.getString("currency") ?: "USD"
-    if (storeId.isEmpty()) return
-
-    fun go(dest: String) = navController.navigate(dest) {
-        launchSingleTop = true
-    }
-
+    val ctx = rememberStoreNavContext(navController) ?: return
     NavigationBar {
-        NavigationBarItem(
-            selected = false,
-            onClick = { navController.navigate(Routes.home(null)) { launchSingleTop = true } },
-            icon = { Text("🏠") },
-            label = { Text(stringResource(R.string.nav_home)) },
-        )
-        NavigationBarItem(
-            selected = route == Routes.CATALOG,
-            onClick = { go(Routes.catalog(storeId, currency)) },
-            icon = { Text("🛍") },
-            label = { Text(stringResource(R.string.nav_catalog)) },
-        )
-        NavigationBarItem(
-            selected = route == Routes.CART,
-            onClick = { go(Routes.cart(storeId, currency)) },
-            icon = { Text("🛒") },
-            label = { Text(stringResource(R.string.nav_cart)) },
-        )
-        NavigationBarItem(
-            selected = route == Routes.PROFILE,
-            onClick = { go(Routes.profile(storeId, currency)) },
-            icon = { Text("👤") },
-            label = { Text(stringResource(R.string.nav_profile)) },
-        )
+        storeNavTabs(ctx).forEach { tab ->
+            NavigationBarItem(
+                selected = tab.selected,
+                onClick = tab.onClick,
+                icon = { Text(tab.icon) },
+                label = { Text(stringResource(tab.labelRes)) },
+            )
+        }
+    }
+}
+
+/**
+ * Боковая навигация витрины (ТЗ §11.4) на широких экранах: те же вкладки, что и
+ * bottom bar. Показывается только на store-маршрутах.
+ */
+@Composable
+private fun StoreNavRail(navController: NavHostController) {
+    val ctx = rememberStoreNavContext(navController) ?: return
+    NavigationRail {
+        storeNavTabs(ctx).forEach { tab ->
+            NavigationRailItem(
+                selected = tab.selected,
+                onClick = tab.onClick,
+                icon = { Text(tab.icon) },
+                label = { Text(stringResource(tab.labelRes)) },
+            )
+        }
     }
 }
 
