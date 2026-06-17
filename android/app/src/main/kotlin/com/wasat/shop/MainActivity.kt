@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,12 +31,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
 import com.wasat.shop.core.designsystem.WasatTheme
 import com.wasat.shop.core.network.ConnectivityViewModel
 import com.wasat.shop.core.sync.OutboxStatusViewModel
 import com.wasat.shop.core.update.ForceUpdateViewModel
 import com.wasat.shop.feature.auth.AuthRepository
+import com.wasat.shop.navigation.Routes
 import com.wasat.shop.navigation.WasatNavHost
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -69,8 +75,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun AppRoot(authRepository: AuthRepository) {
+    val navController = rememberNavController()
     // Scaffold корректно обрабатывает insets системных баров (edge-to-edge).
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        // §11.5 Bottom Navigation — видна только на экранах витрины (каталог/корзина/профиль).
+        bottomBar = { StoreBottomBar(navController) },
+    ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             // Force-update (§11.5): блокирующий экран, если версия ниже минимальной.
             val forceUpdateViewModel: ForceUpdateViewModel = hiltViewModel()
@@ -85,8 +96,55 @@ private fun AppRoot(authRepository: AuthRepository) {
             val pending by outboxViewModel.pending.collectAsState()
             if (!online) OfflineBanner()
             if (pending > 0) SyncBanner(pending)
-            WasatNavHost(authRepository)
+            WasatNavHost(authRepository, navController)
         }
+    }
+}
+
+/**
+ * Нижняя навигация витрины (ТЗ §11.5): Главная / Каталог / Корзина / Профиль.
+ * Показывается только на store-маршрутах (каталог/корзина/профиль); storeId/currency
+ * берутся из аргументов текущего экрана. Вне витрины панель скрыта.
+ */
+@Composable
+private fun StoreBottomBar(navController: NavHostController) {
+    val entry by navController.currentBackStackEntryAsState()
+    val route = entry?.destination?.route
+    if (route != Routes.CATALOG && route != Routes.CART && route != Routes.PROFILE) return
+
+    val storeId = entry?.arguments?.getString("storeId").orEmpty()
+    val currency = entry?.arguments?.getString("currency") ?: "USD"
+    if (storeId.isEmpty()) return
+
+    fun go(dest: String) = navController.navigate(dest) {
+        launchSingleTop = true
+    }
+
+    NavigationBar {
+        NavigationBarItem(
+            selected = false,
+            onClick = { navController.navigate(Routes.home(null)) { launchSingleTop = true } },
+            icon = { Text("🏠") },
+            label = { Text(stringResource(R.string.nav_home)) },
+        )
+        NavigationBarItem(
+            selected = route == Routes.CATALOG,
+            onClick = { go(Routes.catalog(storeId, currency)) },
+            icon = { Text("🛍") },
+            label = { Text(stringResource(R.string.nav_catalog)) },
+        )
+        NavigationBarItem(
+            selected = route == Routes.CART,
+            onClick = { go(Routes.cart(storeId, currency)) },
+            icon = { Text("🛒") },
+            label = { Text(stringResource(R.string.nav_cart)) },
+        )
+        NavigationBarItem(
+            selected = route == Routes.PROFILE,
+            onClick = { go(Routes.profile(storeId, currency)) },
+            icon = { Text("👤") },
+            label = { Text(stringResource(R.string.nav_profile)) },
+        )
     }
 }
 

@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavHostController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.wasat.shop.feature.admin.InventoryScreen
@@ -110,8 +110,7 @@ private val currencyArg = navArgument("currency") {
  * Маршрутизация по custom claims (owner → админ-режим) — уточнение Фазы 2.
  */
 @Composable
-fun WasatNavHost(authRepository: AuthRepository) {
-    val navController = rememberNavController()
+fun WasatNavHost(authRepository: AuthRepository, navController: NavHostController) {
     val startDestination =
         if (authRepository.currentUser() == null) Routes.AUTH else Routes.ONBOARDING
 
