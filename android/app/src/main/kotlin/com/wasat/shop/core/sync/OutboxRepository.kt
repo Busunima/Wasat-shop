@@ -4,6 +4,9 @@ import com.wasat.shop.core.db.PendingOperationDao
 import com.wasat.shop.core.db.PendingOperationEntity
 import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.ConnectivityObserver
+import com.wasat.shop.core.network.dto.StockAdjustRequest
+import com.wasat.shop.core.network.dto.VariantSelectorDto
+import com.wasat.shop.feature.admin.InventoryRepository
 import com.wasat.shop.feature.orders.OrdersRepository
 import com.wasat.shop.feature.orders.ReturnsRepository
 import java.util.UUID
@@ -34,6 +37,7 @@ class OutboxRepository @Inject constructor(
     private val dao: PendingOperationDao,
     private val ordersRepository: OrdersRepository,
     private val returnsRepository: ReturnsRepository,
+    private val inventoryRepository: InventoryRepository,
     private val connectivity: ConnectivityObserver,
     private val json: Json,
 ) {
@@ -90,6 +94,29 @@ class OutboxRepository @Inject constructor(
         runCatching { drain() }
     }
 
+    /** Поставить в очередь корректировку остатка (idempotencyKey стабилен у операции). */
+    suspend fun enqueueStockAdjust(
+        storeId: String,
+        productId: String,
+        sku: String?,
+        size: String?,
+        color: String?,
+        delta: Int,
+    ) {
+        val op = StockAdjustOp(productId, sku, size, color, delta, UUID.randomUUID().toString())
+        dao.upsert(
+            PendingOperationEntity(
+                opId = UUID.randomUUID().toString(),
+                type = OutboxType.STOCK_ADJUST,
+                storeId = storeId,
+                payload = json.encodeToString(op),
+                createdAt = System.currentTimeMillis(),
+                attempts = 0,
+            ),
+        )
+        runCatching { drain() }
+    }
+
     /** Слить очередь по порядку. Сетевые ошибки оставляют операцию на следующий раз. */
     suspend fun drain() {
         if (!connectivity.isOnline()) return
@@ -126,6 +153,20 @@ class OutboxRepository @Inject constructor(
                     else -> return DispatchResult.DONE // неизвестное действие — выкинуть
                 }
                 when (result) {
+                    is ApiResult.Success -> DispatchResult.DONE
+                    is ApiResult.ApiError -> DispatchResult.DONE
+                    is ApiResult.NetworkError -> DispatchResult.RETRY
+                }
+            }
+            OutboxType.STOCK_ADJUST -> {
+                val d = json.decodeFromString<StockAdjustOp>(op.payload)
+                val variant = if (d.sku == null && d.size == null && d.color == null) {
+                    null
+                } else {
+                    VariantSelectorDto(sku = d.sku, size = d.size, color = d.color)
+                }
+                val body = StockAdjustRequest(variant = variant, delta = d.delta, idempotencyKey = d.idempotencyKey)
+                when (inventoryRepository.adjustStock(op.storeId, d.productId, body)) {
                     is ApiResult.Success -> DispatchResult.DONE
                     is ApiResult.ApiError -> DispatchResult.DONE
                     is ApiResult.NetworkError -> DispatchResult.RETRY
