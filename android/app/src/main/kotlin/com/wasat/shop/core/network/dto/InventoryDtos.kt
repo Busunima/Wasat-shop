@@ -17,6 +17,8 @@ data class StockAdjustRequest(
     val variant: VariantSelectorDto? = null,
     val delta: Int,
     val reason: String = "manual",
+    /** Ключ идемпотентности (offline-first): повтор из outbox не задваивает дельту. */
+    val idempotencyKey: String? = null,
 )
 
 @Serializable

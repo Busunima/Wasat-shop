@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 object OutboxType {
     const val ORDER_STATUS = "order_status"
     const val RETURN_ACTION = "return_action"
+    const val STOCK_ADJUST = "stock_adjust"
 }
 
 /** Полезная нагрузка операции смены статуса заказа (FR-A04). */
@@ -22,6 +23,17 @@ data class ReturnActionOp(
     val returnId: String,
     val action: String,
     val comment: String? = null,
+)
+
+/** Корректировка остатка (FR-A03). idempotencyKey стабилен — сервер не задваивает дельту. */
+@Serializable
+data class StockAdjustOp(
+    val productId: String,
+    val sku: String? = null,
+    val size: String? = null,
+    val color: String? = null,
+    val delta: Int,
+    val idempotencyKey: String,
 )
 
 /** Результат попытки доставки одной операции. */

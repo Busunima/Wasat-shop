@@ -8,9 +8,8 @@ import com.wasat.shop.core.network.WasatApi
 import com.wasat.shop.core.network.dto.ImportReportDto
 import com.wasat.shop.core.network.dto.InventoryLogEntryDto
 import com.wasat.shop.core.network.dto.ProductDto
-import com.wasat.shop.core.network.dto.StockAdjustRequest
-import com.wasat.shop.core.network.dto.VariantSelectorDto
 import com.wasat.shop.core.network.safeApiCall
+import com.wasat.shop.core.sync.OutboxRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +35,8 @@ data class InventoryUiState(
 class InventoryViewModel @Inject constructor(
     private val api: WasatApi,
     private val json: Json,
-    private val adminProducts: AdminProductsRepository,
+    private val inventoryRepository: InventoryRepository,
+    private val outbox: OutboxRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -50,55 +50,42 @@ class InventoryViewModel @Inject constructor(
     }
 
     fun refresh() {
-        _uiState.update { it.copy(loading = true, error = null) }
+        _uiState.update { it.copy(error = null) }
         viewModelScope.launch {
-            val products = adminProducts.listProducts(storeId)
+            val products = inventoryRepository.refreshProducts(storeId)
             val log = safeApiCall(json) { api.inventoryLog(storeId, mapOf("limit" to "30")) }
-            _uiState.update {
-                it.copy(
-                    loading = false,
-                    products = (products as? ApiResult.Success)?.data?.items ?: it.products,
-                    log = (log as? ApiResult.Success)?.data?.items ?: it.log,
-                    error = if (products is ApiResult.Success) null else "Не удалось загрузить инвентарь",
-                )
+            val logItems = (log as? ApiResult.Success)?.data?.items
+            when (products) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(loading = false, products = products.data, log = logItems ?: it.log, error = null)
+                }
+                else -> {
+                    // Офлайн/ошибка — показать кэш остатков (offline-first, B5.3).
+                    val cached = inventoryRepository.cachedProducts(storeId)
+                    _uiState.update {
+                        it.copy(
+                            loading = false,
+                            products = cached.ifEmpty { it.products },
+                            log = logItems ?: it.log,
+                            error = if (cached.isEmpty()) "Не удалось загрузить инвентарь" else null,
+                        )
+                    }
+                }
             }
         }
     }
 
-    /** Дельта-корректировка остатка варианта (или товара без вариантов). */
+    /**
+     * Дельта-корректировка остатка (offline-first, B5.3): оптимистично меняем кэш,
+     * доставку кладём в outbox (idempotencyKey стабилен — сервер не задваивает).
+     */
     fun adjust(product: ProductDto, variantSku: String?, size: String?, color: String?, delta: Int) {
         if (_uiState.value.busy) return
         _uiState.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
-            val body = StockAdjustRequest(
-                variant = if (product.variants.isEmpty()) {
-                    null
-                } else {
-                    VariantSelectorDto(sku = variantSku, size = size, color = color)
-                },
-                delta = delta,
-            )
-            when (val result = safeApiCall(json) { api.adjustStock(storeId, product.id, body) }) {
-                is ApiResult.Success -> {
-                    _uiState.update { state ->
-                        state.copy(
-                            busy = false,
-                            products = state.products.map { p ->
-                                if (p.id != product.id) p
-                                else p.copy(
-                                    totalStock = result.data.totalStock,
-                                    variants = result.data.variants,
-                                )
-                            },
-                        )
-                    }
-                    refreshLog()
-                }
-                is ApiResult.ApiError ->
-                    _uiState.update { it.copy(busy = false, error = result.message) }
-                is ApiResult.NetworkError ->
-                    _uiState.update { it.copy(busy = false, error = "Нет соединения с сервером") }
-            }
+            val updated = inventoryRepository.optimisticAdjust(storeId, product.id, variantSku, size, color, delta)
+            _uiState.update { it.copy(busy = false, products = updated) }
+            outbox.enqueueStockAdjust(storeId, product.id, variantSku, size, color, delta)
         }
     }
 
