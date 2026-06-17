@@ -34,6 +34,12 @@
     <string name="home_analytics">Analytics</string>
     <string name="home_profile">Profile</string>
 
+    <!-- Bottom navigation (§11.5) -->
+    <string name="nav_home">Home</string>
+    <string name="nav_catalog">Catalog</string>
+    <string name="nav_cart">Cart</string>
+    <string name="nav_profile">Profile</string>
+
     <!-- Buyer profile (§11.5) -->
     <string name="profile_title">Profile</string>
     <string name="profile_guest">Not signed in</string>
