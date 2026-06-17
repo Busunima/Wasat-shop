@@ -1,12 +1,32 @@
 package com.wasat.shop.navigation
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavHostController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.wasat.shop.R
+import com.wasat.shop.core.designsystem.LocalWindowWidthSizeClass
+import com.wasat.shop.core.designsystem.isExpandedLayout
 import com.wasat.shop.feature.admin.InventoryScreen
 import com.wasat.shop.feature.analytics.AnalyticsScreen
 import com.wasat.shop.feature.admin.MyProductsScreen
@@ -205,18 +225,26 @@ fun WasatNavHost(authRepository: AuthRepository, navController: NavHostControlle
         ) { backStackEntry ->
             val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
             val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
-            CatalogScreen(
-                currency = currency,
-                onProductClick = { productId ->
-                    navController.navigate(Routes.product(storeId, productId, currency))
-                },
-                onOpenCart = {
-                    navController.navigate(Routes.cart(storeId, currency))
-                },
-                onOpenWishlist = {
-                    navController.navigate(Routes.wishlist(storeId, currency))
-                },
-            )
+            val openCart = { navController.navigate(Routes.cart(storeId, currency)) }
+            val openWishlist = { navController.navigate(Routes.wishlist(storeId, currency)) }
+            if (LocalWindowWidthSizeClass.current.isExpandedLayout) {
+                // §11.4: на крупных экранах — двухпанельный list-detail (каталог → карточка).
+                CatalogListDetailPane(
+                    storeId = storeId,
+                    currency = currency,
+                    onOpenCart = openCart,
+                    onOpenWishlist = openWishlist,
+                )
+            } else {
+                CatalogScreen(
+                    currency = currency,
+                    onProductClick = { productId ->
+                        navController.navigate(Routes.product(storeId, productId, currency))
+                    },
+                    onOpenCart = openCart,
+                    onOpenWishlist = openWishlist,
+                )
+            }
         }
 
         composable(
@@ -439,5 +467,77 @@ fun WasatNavHost(authRepository: AuthRepository, navController: NavHostControlle
                 },
             )
         }
+    }
+}
+
+private const val DETAIL_EMPTY = "detail_empty"
+
+/**
+ * §11.4 list-detail на крупных экранах: список каталога слева + карточка товара справа.
+ * Детальная панель — вложенный NavHost: productId приходит как nav-аргумент, поэтому
+ * ProductDetailViewModel создаётся штатно (без изменений). Выбор товара (включая переход
+ * на «похожий») обновляет состояние и перенавигирует правую панель; левый список не
+ * перезагружается.
+ */
+@Composable
+private fun CatalogListDetailPane(
+    storeId: String,
+    currency: String,
+    onOpenCart: () -> Unit,
+    onOpenWishlist: () -> Unit,
+) {
+    var selectedProductId by rememberSaveable { mutableStateOf<String?>(null) }
+    val detailNav = rememberNavController()
+
+    LaunchedEffect(selectedProductId) {
+        val pid = selectedProductId ?: return@LaunchedEffect
+        detailNav.navigate(Routes.product(storeId, pid, currency)) {
+            // Держим стек детальной панели плоским: [empty, product].
+            popUpTo(DETAIL_EMPTY)
+            launchSingleTop = true
+        }
+    }
+
+    Row(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.weight(1f)) {
+            CatalogScreen(
+                currency = currency,
+                onProductClick = { selectedProductId = it },
+                onOpenCart = onOpenCart,
+                onOpenWishlist = onOpenWishlist,
+            )
+        }
+        VerticalDivider()
+        Box(modifier = Modifier.weight(1.4f)) {
+            NavHost(navController = detailNav, startDestination = DETAIL_EMPTY) {
+                composable(DETAIL_EMPTY) { DetailPlaceholder() }
+                composable(
+                    route = Routes.PRODUCT,
+                    arguments = listOf(currencyArg),
+                ) {
+                    ProductDetailScreen(
+                        currency = currency,
+                        onProductClick = { selectedProductId = it },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Заглушка правой панели, пока товар не выбран (§11.4 list-detail). */
+@Composable
+private fun DetailPlaceholder() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.catalog_select_product),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.outline,
+        )
     }
 }
