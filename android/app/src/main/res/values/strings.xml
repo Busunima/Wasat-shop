@@ -48,6 +48,10 @@
     <string name="profile_sign_out">Выйти</string>
     <string name="profile_my_orders">Мои заказы</string>
     <string name="profile_wishlist">Избранное</string>
+    <string name="profile_stock_notifications">Подписки о поступлении</string>
+    <string name="stock_notifications_title">Подписки о поступлении</string>
+    <string name="stock_notifications_empty">Нет активных подписок</string>
+    <string name="stock_notify_unsubscribe">Отписаться</string>
     <string name="plan_title">Тариф: %1$s</string>
     <string name="plan_usage_products">Товары: %1$d / %2$s</string>
     <string name="plan_usage_staff">Сотрудники: %1$d / %2$s</string>

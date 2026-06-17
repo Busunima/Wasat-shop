@@ -47,6 +47,10 @@
     <string name="profile_sign_out">Sign out</string>
     <string name="profile_my_orders">My orders</string>
     <string name="profile_wishlist">Wishlist</string>
+    <string name="profile_stock_notifications">Restock alerts</string>
+    <string name="stock_notifications_title">Restock alerts</string>
+    <string name="stock_notifications_empty">No active alerts</string>
+    <string name="stock_notify_unsubscribe">Unsubscribe</string>
     <string name="plan_title">Plan: %1$s</string>
     <string name="plan_usage_products">Products: %1$d / %2$s</string>
     <string name="plan_usage_staff">Staff: %1$d / %2$s</string>

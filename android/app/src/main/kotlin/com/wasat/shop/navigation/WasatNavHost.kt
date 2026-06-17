@@ -44,6 +44,7 @@ import com.wasat.shop.feature.catalog.ProductDetailScreen
 import com.wasat.shop.feature.home.HomeScreen
 import com.wasat.shop.feature.notifications.NotificationCenterScreen
 import com.wasat.shop.feature.profile.ProfileScreen
+import com.wasat.shop.feature.profile.StockNotificationsScreen
 import com.wasat.shop.feature.onboarding.OnboardingScreen
 import com.wasat.shop.feature.orders.CheckoutScreen
 import com.wasat.shop.feature.orders.MyOrdersScreen
@@ -78,6 +79,7 @@ object Routes {
     const val ANALYTICS = "analytics/{storeId}?currency={currency}"
     const val WISHLIST = "wishlist/{storeId}?currency={currency}"
     const val PROFILE = "profile/{storeId}?currency={currency}"
+    const val STOCK_NOTIFICATIONS = "stocknotify/{storeId}?currency={currency}"
     const val STORE_BY_SLUG = "store/{slug}"
     const val NOTIFICATIONS = "notifications"
 
@@ -117,6 +119,8 @@ object Routes {
         "wishlist/$storeId?currency=$currency"
     fun profile(storeId: String, currency: String): String =
         "profile/$storeId?currency=$currency"
+    fun stockNotifications(storeId: String, currency: String): String =
+        "stocknotify/$storeId?currency=$currency"
     fun storeBySlug(slug: String): String = "store/$slug"
 }
 
@@ -329,6 +333,24 @@ fun WasatNavHost(authRepository: AuthRepository, navController: NavHostControlle
             ProfileScreen(
                 onOpenOrders = { navController.navigate(Routes.myOrders(storeId, currency)) },
                 onOpenWishlist = { navController.navigate(Routes.wishlist(storeId, currency)) },
+                onOpenStockNotifications = {
+                    navController.navigate(Routes.stockNotifications(storeId, currency))
+                },
+            )
+        }
+
+        // FR-B10: управление подписками «сообщить о поступлении» в профиле
+        composable(
+            route = Routes.STOCK_NOTIFICATIONS,
+            arguments = listOf(currencyArg),
+        ) { backStackEntry ->
+            val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
+            StockNotificationsScreen(
+                currency = currency,
+                onProductClick = { productId ->
+                    navController.navigate(Routes.product(storeId, productId, currency))
+                },
             )
         }
 
