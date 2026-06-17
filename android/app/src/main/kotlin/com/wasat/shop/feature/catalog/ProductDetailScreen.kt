@@ -1,5 +1,6 @@
 package com.wasat.shop.feature.catalog
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -103,6 +105,8 @@ private fun ProductDetailContent(
 ) {
     val justAdded by viewModel.justAdded.collectAsState()
     val inWishlist by viewModel.inWishlist.collectAsState()
+    val storeShare by viewModel.storeShare.collectAsState()
+    val shareContext = LocalContext.current
     var selectedVariant by remember { mutableStateOf(product.variants.firstOrNull { it.stock > 0 }) }
     var zoomedImageUrl by remember { mutableStateOf<String?>(null) }
 
@@ -151,6 +155,32 @@ private fun ProductDetailContent(
                                 text = if (inWishlist) "♥" else "♡",
                                 style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.clearAndSetSemantics {},
+                            )
+                        }
+                    }
+                    // Поделиться товаром по публичной ссылке витрины (FR-B12)
+                    storeShare?.let { share ->
+                        val shareLabel = stringResource(R.string.a11y_share)
+                        val shareText = stringResource(
+                            R.string.share_product_text,
+                            product.name,
+                            share.name,
+                            ShareLinks.storeUrl(share.slug),
+                        )
+                        TextButton(
+                            onClick = {
+                                val send = Intent(Intent.ACTION_SEND).apply {
+                                    type = "text/plain"
+                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                }
+                                shareContext.startActivity(Intent.createChooser(send, null))
+                            },
+                            modifier = Modifier.semantics { contentDescription = shareLabel },
+                        ) {
+                            Text(
+                                text = "↗",
+                                style = MaterialTheme.typography.titleLarge,
                                 modifier = Modifier.clearAndSetSemantics {},
                             )
                         }

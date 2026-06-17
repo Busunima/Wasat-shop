@@ -6,6 +6,7 @@ import com.wasat.shop.core.network.ApiResult
 import com.wasat.shop.core.network.WasatApi
 import com.wasat.shop.core.network.dto.ProductDto
 import com.wasat.shop.core.network.dto.ProductListResponse
+import com.wasat.shop.core.network.dto.StoreInfoDto
 import com.wasat.shop.core.network.safeApiCall
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,6 +28,10 @@ class CatalogRepository @Inject constructor(
         queryParams: Map<String, String>,
     ): ApiResult<ProductListResponse> =
         safeApiCall(json) { api.listProducts(storeId, queryParams) }
+
+    /** Публичная карточка магазина (slug/name) — для шеринга (FR-B12). */
+    suspend fun getStore(storeId: String): ApiResult<StoreInfoDto> =
+        safeApiCall(json) { api.getStore(storeId) }
 
     /** Карточка товара; при успехе кэшируется для офлайн-фолбэка. */
     suspend fun getProduct(storeId: String, productId: String): ApiResult<ProductDto> {
