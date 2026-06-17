@@ -23,6 +23,7 @@ import com.wasat.shop.feature.catalog.CatalogScreen
 import com.wasat.shop.feature.catalog.ProductDetailScreen
 import com.wasat.shop.feature.home.HomeScreen
 import com.wasat.shop.feature.notifications.NotificationCenterScreen
+import com.wasat.shop.feature.profile.ProfileScreen
 import com.wasat.shop.feature.onboarding.OnboardingScreen
 import com.wasat.shop.feature.orders.CheckoutScreen
 import com.wasat.shop.feature.orders.MyOrdersScreen
@@ -56,6 +57,7 @@ object Routes {
     const val BROADCAST = "broadcast/{storeId}"
     const val ANALYTICS = "analytics/{storeId}?currency={currency}"
     const val WISHLIST = "wishlist/{storeId}?currency={currency}"
+    const val PROFILE = "profile/{storeId}?currency={currency}"
     const val STORE_BY_SLUG = "store/{slug}"
     const val NOTIFICATIONS = "notifications"
 
@@ -93,6 +95,8 @@ object Routes {
         "analytics/$storeId?currency=$currency"
     fun wishlist(storeId: String, currency: String): String =
         "wishlist/$storeId?currency=$currency"
+    fun profile(storeId: String, currency: String): String =
+        "profile/$storeId?currency=$currency"
     fun storeBySlug(slug: String): String = "store/$slug"
 }
 
@@ -187,6 +191,9 @@ fun WasatNavHost(authRepository: AuthRepository) {
                 },
                 onOpenNotifications = {
                     navController.navigate(Routes.NOTIFICATIONS)
+                },
+                onOpenProfile = { storeId, currency ->
+                    navController.navigate(Routes.profile(storeId, currency))
                 },
             )
         }
@@ -283,6 +290,19 @@ fun WasatNavHost(authRepository: AuthRepository) {
             arguments = listOf(currencyArg),
         ) {
             StoreOrdersScreen()
+        }
+
+        // §11.5: профиль покупателя — аккаунт + свои заказы + избранное
+        composable(
+            route = Routes.PROFILE,
+            arguments = listOf(currencyArg),
+        ) { backStackEntry ->
+            val storeId = backStackEntry.arguments?.getString("storeId").orEmpty()
+            val currency = backStackEntry.arguments?.getString("currency") ?: "USD"
+            ProfileScreen(
+                onOpenOrders = { navController.navigate(Routes.myOrders(storeId, currency)) },
+                onOpenWishlist = { navController.navigate(Routes.wishlist(storeId, currency)) },
+            )
         }
 
         // FR-B08: форма отзыва о товаре из полученного заказа

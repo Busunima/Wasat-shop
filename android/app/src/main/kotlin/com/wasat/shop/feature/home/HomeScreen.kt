@@ -50,6 +50,7 @@ fun HomeScreen(
     onOpenAnalytics: (storeId: String, currency: String) -> Unit,
     onOpenStore: (slug: String) -> Unit,
     onOpenNotifications: () -> Unit,
+    onOpenProfile: (storeId: String, currency: String) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
     notificationsViewModel: com.wasat.shop.feature.notifications.NotificationCenterViewModel =
         hiltViewModel(),
@@ -100,6 +101,12 @@ fun HomeScreen(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(stringResource(R.string.home_open_catalog))
+                }
+                OutlinedButton(
+                    onClick = { onOpenProfile(s.storeId, s.currency) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.home_profile))
                 }
                 OutlinedButton(
                     onClick = { onOpenMyProducts(s.storeId, s.currency) },
