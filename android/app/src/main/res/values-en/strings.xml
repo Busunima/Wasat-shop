@@ -32,6 +32,15 @@
     <string name="home_staff">Staff</string>
     <string name="home_broadcast">Broadcast to customers</string>
     <string name="home_analytics">Analytics</string>
+    <string name="home_profile">Profile</string>
+
+    <!-- Buyer profile (§11.5) -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_guest">Not signed in</string>
+    <string name="profile_signed_in">Signed in</string>
+    <string name="profile_sign_out">Sign out</string>
+    <string name="profile_my_orders">My orders</string>
+    <string name="profile_wishlist">Wishlist</string>
     <string name="plan_title">Plan: %1$s</string>
     <string name="plan_usage_products">Products: %1$d / %2$s</string>
     <string name="plan_usage_staff">Staff: %1$d / %2$s</string>
