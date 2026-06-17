@@ -35,6 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -107,6 +109,7 @@ private fun ProductDetailContent(
     val inWishlist by viewModel.inWishlist.collectAsState()
     val storeShare by viewModel.storeShare.collectAsState()
     val shareContext = LocalContext.current
+    val haptics = LocalHapticFeedback.current
     var selectedVariant by remember { mutableStateOf(product.variants.firstOrNull { it.stock > 0 }) }
     var zoomedImageUrl by remember { mutableStateOf<String?>(null) }
 
@@ -244,7 +247,11 @@ private fun ProductDetailContent(
                 StockIndicator(product = product, selectedVariant = selectedVariant)
 
                 Button(
-                    onClick = { viewModel.addToCart(currency, selectedVariant) },
+                    onClick = {
+                        // Тактильная отдача на ключевом действии (§11.3).
+                        haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.addToCart(currency, selectedVariant)
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = StockInfo.availableStock(product, selectedVariant) > 0,
                 ) {

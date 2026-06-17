@@ -26,6 +26,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -45,6 +47,7 @@ fun CheckoutScreen(
     val state by viewModel.uiState.collectAsState()
     val items by viewModel.items.collectAsState()
     val currency = viewModel.currency
+    val haptics = LocalHapticFeedback.current
 
     state.placedOrder?.let { order ->
         LaunchedEffect(order.id) { onPlaced(order.id) }
@@ -217,7 +220,11 @@ fun CheckoutScreen(
         }
 
         Button(
-            onClick = viewModel::placeOrder,
+            onClick = {
+                // Тактильная отдача на ключевом действии (§11.3).
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                viewModel.placeOrder()
+            },
             enabled = !state.busy && items.isNotEmpty(),
             modifier = Modifier.fillMaxWidth(),
         ) {
