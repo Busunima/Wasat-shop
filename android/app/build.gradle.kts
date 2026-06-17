@@ -5,6 +5,15 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.detekt)
+}
+
+// Статанализ Kotlin (ТЗ §14). Non-gating: detekt формирует отчёт, но не валит сборку
+// (ignoreFailures). Перевод в gating — после генерации baseline на машине с Android SDK.
+detekt {
+    buildUponDefaultConfig = true
+    ignoreFailures = true
+    parallel = true
 }
 
 // google-services.json в .gitignore (секреты не коммитятся, ТЗ §13) — в CI файла нет.

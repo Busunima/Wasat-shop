@@ -80,8 +80,8 @@ jobs:
           if grep -rnE --include='*.kt' '^\s*(/\*\*|\*)([^/]|/[^*])*/\*' app/src; then
             echo '::error::Найден вложенный /* внутри Kotlin-комментария (Unclosed comment)'; exit 1
           fi
-      - run: ./gradlew lintDebug testDebugUnitTest assembleDebug
-      # TODO(Фаза 1): добавить статанализ ktlint + detekt (ТЗ §14) отдельными задачами.
+      # detekt — статанализ Kotlin (ТЗ §14). Non-gating (ignoreFailures), отчёт в build/.
+      - run: ./gradlew detekt lintDebug testDebugUnitTest assembleDebug
 
   admin-web:
     name: Admin Web · lint + build

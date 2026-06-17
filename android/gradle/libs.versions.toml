@@ -14,6 +14,7 @@ hilt = "2.54"
 hiltNavigationCompose = "1.2.0"
 work = "2.9.1"
 androidxHiltWork = "1.2.0"
+detekt = "1.23.7"
 room = "2.6.1"
 coil = "2.7.0"
 firebaseBom = "33.7.0" # BOM 34.x требует Kotlin >= 2.3 (метаданные firebase-auth); у нас 2.1.0
@@ -101,3 +102,4 @@ ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
