@@ -80,11 +80,20 @@ fun CategoriesScreen(viewModel: CategoriesViewModel = hiltViewModel()) {
 
             state.error?.let { msg ->
                 item {
-                    Text(
-                        text = msg,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = msg,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f),
+                        )
+                        TextButton(onClick = viewModel::dismissError) {
+                            Text(stringResource(R.string.error_dismiss))
+                        }
+                    }
                 }
             }
 

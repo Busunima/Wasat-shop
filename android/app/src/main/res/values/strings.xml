@@ -7,6 +7,7 @@
     <string name="force_update_title">Нужно обновление</string>
     <string name="force_update_message">Эта версия приложения больше не поддерживается. Обновитесь, чтобы продолжить.</string>
     <string name="force_update_button">Обновить</string>
+    <string name="error_dismiss">Закрыть</string>
 
     <!-- Вход -->
     <string name="sign_in_with_google">Войти через Google</string>

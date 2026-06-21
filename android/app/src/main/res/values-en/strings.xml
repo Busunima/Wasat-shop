@@ -6,6 +6,7 @@
     <string name="force_update_title">Update required</string>
     <string name="force_update_message">This app version is no longer supported. Please update to continue.</string>
     <string name="force_update_button">Update</string>
+    <string name="error_dismiss">Dismiss</string>
 
     <!-- Sign-in -->
     <string name="sign_in_with_google">Sign in with Google</string>
