@@ -12,6 +12,7 @@ import com.wasat.shop.core.util.PriceParser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.util.Currency
+import java.util.Locale
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -217,6 +218,9 @@ class ProductEditViewModel @Inject constructor(
                 category = s.category.trim().ifEmpty { null },
                 tags = TagsParser.parse(s.tagsInput),
                 hints = hints,
+                // Язык генерации — локаль владельца (FR-A12, международный рынок §1),
+                // а не жёстко «ru».
+                language = Locale.getDefault().language,
                 mode = mode,
                 current = current,
             )
