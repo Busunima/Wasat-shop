@@ -201,6 +201,7 @@
     <string name="checkout_total">Итого</string>
     <string name="checkout_place">Оформить заказ</string>
     <string name="checkout_placing">Оформляем…</string>
+    <string name="checkout_offline_hint">Нет соединения — оформление будет доступно при восстановлении сети</string>
     <string name="my_orders_title">Мои заказы</string>
     <string name="my_orders_empty">Заказов пока нет</string>
     <string name="store_orders_title">Заказы магазина</string>

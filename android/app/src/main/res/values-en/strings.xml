@@ -200,6 +200,7 @@
     <string name="checkout_total">Total</string>
     <string name="checkout_place">Place order</string>
     <string name="checkout_placing">Placing…</string>
+    <string name="checkout_offline_hint">No connection — checkout will be available once the network is back</string>
     <string name="my_orders_title">My orders</string>
     <string name="my_orders_empty">No orders yet</string>
     <string name="store_orders_title">Store orders</string>
