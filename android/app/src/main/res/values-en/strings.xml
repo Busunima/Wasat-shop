@@ -6,6 +6,7 @@
     <string name="force_update_title">Update required</string>
     <string name="force_update_message">This app version is no longer supported. Please update to continue.</string>
     <string name="force_update_button">Update</string>
+    <string name="error_dismiss">Dismiss</string>
 
     <!-- Sign-in -->
     <string name="sign_in_with_google">Sign in with Google</string>
@@ -199,6 +200,7 @@
     <string name="checkout_total">Total</string>
     <string name="checkout_place">Place order</string>
     <string name="checkout_placing">Placing…</string>
+    <string name="checkout_offline_hint">No connection — checkout will be available once the network is back</string>
     <string name="my_orders_title">My orders</string>
     <string name="my_orders_empty">No orders yet</string>
     <string name="store_orders_title">Store orders</string>

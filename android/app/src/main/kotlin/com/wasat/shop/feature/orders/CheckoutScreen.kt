@@ -46,6 +46,7 @@ fun CheckoutScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val items by viewModel.items.collectAsState()
+    val online by viewModel.online.collectAsState()
     val currency = viewModel.currency
     val haptics = LocalHapticFeedback.current
 
@@ -219,13 +220,22 @@ fun CheckoutScreen(
             Text(text = it, color = MaterialTheme.colorScheme.error)
         }
 
+        // FR-B05: офлайн оформление заблокировано до восстановления сети.
+        if (!online) {
+            Text(
+                text = stringResource(R.string.checkout_offline_hint),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+
         Button(
             onClick = {
                 // Тактильная отдача на ключевом действии (§11.3).
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 viewModel.placeOrder()
             },
-            enabled = !state.busy && items.isNotEmpty(),
+            enabled = !state.busy && items.isNotEmpty() && online,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(

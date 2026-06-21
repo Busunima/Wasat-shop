@@ -7,6 +7,7 @@
     <string name="force_update_title">Нужно обновление</string>
     <string name="force_update_message">Эта версия приложения больше не поддерживается. Обновитесь, чтобы продолжить.</string>
     <string name="force_update_button">Обновить</string>
+    <string name="error_dismiss">Закрыть</string>
 
     <!-- Вход -->
     <string name="sign_in_with_google">Войти через Google</string>
@@ -200,6 +201,7 @@
     <string name="checkout_total">Итого</string>
     <string name="checkout_place">Оформить заказ</string>
     <string name="checkout_placing">Оформляем…</string>
+    <string name="checkout_offline_hint">Нет соединения — оформление будет доступно при восстановлении сети</string>
     <string name="my_orders_title">Мои заказы</string>
     <string name="my_orders_empty">Заказов пока нет</string>
     <string name="store_orders_title">Заказы магазина</string>

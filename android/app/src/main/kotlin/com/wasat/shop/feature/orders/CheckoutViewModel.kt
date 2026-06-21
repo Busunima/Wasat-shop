@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.wasat.shop.core.db.CartItemEntity
 import com.wasat.shop.core.network.ApiResult
+import com.wasat.shop.core.network.ConnectivityObserver
 import com.wasat.shop.core.network.WasatApi
 import com.wasat.shop.core.network.dto.CheckoutDeliveryDto
 import com.wasat.shop.core.network.dto.CheckoutItemDto
@@ -61,6 +62,7 @@ class CheckoutViewModel @Inject constructor(
     private val cartRepository: CartRepository,
     private val addressBook: AddressBookRepository,
     private val analytics: AnalyticsRepository,
+    private val connectivity: ConnectivityObserver,
     private val api: WasatApi,
     private val json: Json,
     savedStateHandle: SavedStateHandle,
@@ -77,6 +79,10 @@ class CheckoutViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(CheckoutUiState())
     val uiState: StateFlow<CheckoutUiState> = _uiState.asStateFlow()
+
+    /** Сетевая доступность: чекаут блокируется офлайн до восстановления сети (FR-B05). */
+    val online: StateFlow<Boolean> = connectivity.online
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), connectivity.isOnline())
 
     init {
         // §16: старт оформления — числитель воронки begin_checkout
@@ -176,6 +182,11 @@ class CheckoutViewModel @Inject constructor(
         val s = _uiState.value
         val cartItems = items.value
         if (s.busy || cartItems.isEmpty()) return
+        // FR-B05: офлайн чекаут заблокирован до восстановления сети (корзина сохраняется).
+        if (!online.value) {
+            _uiState.update { it.copy(error = "Нет соединения с сервером") }
+            return
+        }
         if (s.method == "courier" && s.address.isBlank()) {
             _uiState.update { it.copy(addressError = "Укажите адрес доставки") }
             return
