@@ -284,6 +284,11 @@
 
     <!-- Аналитика (FR-A05, §16) -->
     <string name="analytics_title">Аналитика</string>
+    <string name="analytics_period_7d">7 дней</string>
+    <string name="analytics_period_30d">30 дней</string>
+    <string name="analytics_period_90d">90 дней</string>
+    <string name="analytics_daily">Выручка по дням</string>
+    <string name="analytics_export">Экспорт CSV</string>
     <string name="analytics_revenue">Выручка</string>
     <string name="analytics_orders">Заказы</string>
     <string name="analytics_avg_check">Средний чек</string>

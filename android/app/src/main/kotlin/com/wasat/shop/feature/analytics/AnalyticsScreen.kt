@@ -12,21 +12,25 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.wasat.shop.R
 import com.wasat.shop.core.network.dto.AnalyticsReportDto
 import com.wasat.shop.core.util.PriceFormatter
+import com.wasat.shop.feature.orders.CsvShare
 
 /** Дашборд аналитики (FR-A05): KPI, воронка, конверсии, топ-товары. */
 @Composable
@@ -35,6 +39,7 @@ fun AnalyticsScreen(
     viewModel: AnalyticsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val period by viewModel.period.collectAsState()
 
     when (val s = state) {
         AnalyticsUiState.Loading -> Box(
@@ -52,12 +57,29 @@ fun AnalyticsScreen(
             }
         }
 
-        is AnalyticsUiState.Loaded -> AnalyticsContent(s.report, currency)
+        is AnalyticsUiState.Loaded -> AnalyticsContent(
+            report = s.report,
+            currency = currency,
+            period = period,
+            onSelectPeriod = viewModel::selectPeriod,
+        )
     }
 }
 
+private val PERIOD_OPTIONS = listOf(
+    AnalyticsPeriod.WEEK to R.string.analytics_period_7d,
+    AnalyticsPeriod.MONTH to R.string.analytics_period_30d,
+    AnalyticsPeriod.QUARTER to R.string.analytics_period_90d,
+)
+
 @Composable
-private fun AnalyticsContent(report: AnalyticsReportDto, currency: String) {
+private fun AnalyticsContent(
+    report: AnalyticsReportDto,
+    currency: String,
+    period: AnalyticsPeriod,
+    onSelectPeriod: (AnalyticsPeriod) -> Unit,
+) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -65,10 +87,39 @@ private fun AnalyticsContent(report: AnalyticsReportDto, currency: String) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = stringResource(R.string.analytics_title),
-            style = MaterialTheme.typography.headlineSmall,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.analytics_title),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            TextButton(
+                onClick = {
+                    CsvShare.share(
+                        context = context,
+                        csv = AnalyticsCsv.build(report),
+                        fileName = "analytics_${report.from}_${report.to}.csv",
+                    )
+                },
+            ) {
+                Text(stringResource(R.string.analytics_export))
+            }
+        }
+
+        // Период дашборда (FR-A05): последние 7 / 30 / 90 дней
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            PERIOD_OPTIONS.forEach { (option, labelRes) ->
+                FilterChip(
+                    selected = period == option,
+                    onClick = { onSelectPeriod(option) },
+                    label = { Text(stringResource(labelRes)) },
+                )
+            }
+        }
+
         Text(
             text = "${report.from} — ${report.to}",
             style = MaterialTheme.typography.bodyMedium,
@@ -131,6 +182,36 @@ private fun AnalyticsContent(report: AnalyticsReportDto, currency: String) {
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.outline,
         )
+
+        // Графики по дням (FR-A05): выручка по датам периода
+        if (report.daily.isNotEmpty()) {
+            HorizontalDivider()
+            Text(
+                text = stringResource(R.string.analytics_daily),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            val maxRevenue = report.daily.maxOf { it.revenue }.coerceAtLeast(1)
+            report.daily.forEach { point ->
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(point.date.takeLast(5), style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            PriceFormatter.format(point.revenue, currency),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                    LinearProgressIndicator(
+                        progress = { point.revenue.toFloat() / maxRevenue.toFloat() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 2.dp),
+                    )
+                }
+            }
+        }
 
         if (report.topProducts.isNotEmpty()) {
             HorizontalDivider()

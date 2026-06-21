@@ -99,12 +99,17 @@ fun InventoryScreen(viewModel: InventoryViewModel = hiltViewModel()) {
         }
 
         state.error?.let {
-            Text(
-                text = it,
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                // FR-A03: повтор загрузки остатков после ошибки сети.
+                TextButton(onClick = viewModel::refresh) {
+                    Text(stringResource(R.string.catalog_retry))
+                }
+            }
         }
 
         LazyColumn(
