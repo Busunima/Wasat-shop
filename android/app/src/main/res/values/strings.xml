@@ -177,6 +177,8 @@
     <string name="return_refund_deferred">оплата отложена</string>
     <string name="return_approve">Одобрить</string>
     <string name="return_reject">Отклонить</string>
+    <string name="return_reject_reason_title">Причина отклонения</string>
+    <string name="return_reject_reason_hint">Необязательно</string>
     <string name="return_receive">Товар принят</string>
     <string name="return_refund">Возместить</string>
     <string name="return_status_requested">Запрошен</string>

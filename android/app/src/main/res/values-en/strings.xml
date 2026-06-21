@@ -176,6 +176,8 @@
     <string name="return_refund_deferred">payment deferred</string>
     <string name="return_approve">Approve</string>
     <string name="return_reject">Reject</string>
+    <string name="return_reject_reason_title">Rejection reason</string>
+    <string name="return_reject_reason_hint">Optional</string>
     <string name="return_receive">Item received</string>
     <string name="return_refund">Refund</string>
     <string name="return_status_requested">Requested</string>

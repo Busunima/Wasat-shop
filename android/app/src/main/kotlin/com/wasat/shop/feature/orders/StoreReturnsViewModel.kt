@@ -67,18 +67,20 @@ class StoreReturnsViewModel @Inject constructor(
      * Переход возврата (offline-first, B5.3): оптимистично меняем кэш и кладём
      * действие в outbox — доедет при наличии сети (сервер идемпотентен).
      */
-    private fun act(returnId: String, optimisticStatus: String, action: String) {
+    private fun act(returnId: String, optimisticStatus: String, action: String, comment: String? = null) {
         if (_uiState.value.busy) return
         _uiState.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             repository.optimisticStoreReturnStatus(storeId, returnId, optimisticStatus)
-            outbox.enqueueReturnAction(storeId, returnId, action)
+            outbox.enqueueReturnAction(storeId, returnId, action, comment)
             _uiState.update { it.copy(busy = false) }
         }
     }
 
     fun approve(returnId: String) = act(returnId, "APPROVED", "approve")
-    fun reject(returnId: String) = act(returnId, "REJECTED", "reject")
+
+    /** Отклонение возврата с необязательной причиной (FR-A11). */
+    fun reject(returnId: String, comment: String? = null) = act(returnId, "REJECTED", "reject", comment)
     fun receive(returnId: String) = act(returnId, "RECEIVED", "receive")
     fun refund(returnId: String) = act(returnId, "REFUNDED", "refund")
 }
