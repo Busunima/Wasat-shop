@@ -87,6 +87,14 @@ class CatalogViewModel @Inject constructor(
     private val _categories = MutableStateFlow<Set<String>>(emptySet())
     val categories: StateFlow<Set<String>> = _categories.asStateFlow()
 
+    /**
+     * Диапазон цен (мин..макс, минорные единицы), встреченный в загруженных
+     * страницах, — границы для RangeSlider фильтра по цене (FR-B02). null — пока
+     * данных нет (фильтр-чип цены скрыт).
+     */
+    private val _priceBounds = MutableStateFlow<LongRange?>(null)
+    val priceBounds: StateFlow<LongRange?> = _priceBounds.asStateFlow()
+
     /** Число позиций в корзине этого магазина — для бейджа на кнопке корзины. */
     val cartCount: StateFlow<Int> = cartRepository.observeCount(storeId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
@@ -101,6 +109,7 @@ class CatalogViewModel @Inject constructor(
                 Pager(PagingConfig(pageSize = 20, initialLoadSize = 20)) {
                     ProductPagingSource(repository, storeId, effective, feedCache) { items ->
                         _categories.update { it + items.mapNotNull(ProductDto::category) }
+                        updatePriceBounds(items)
                     }
                 }.flow
             }
@@ -120,6 +129,16 @@ class CatalogViewModel @Inject constructor(
 
     fun onPriceRangeChange(min: Long?, max: Long?) = _filters.update {
         it.copy(minPrice = min, maxPrice = max)
+    }
+
+    /** Расширяет известный диапазон цен по загруженной странице (границы RangeSlider). */
+    private fun updatePriceBounds(items: List<ProductDto>) {
+        if (items.isEmpty()) return
+        val lo = items.minOf(ProductDto::price)
+        val hi = items.maxOf(ProductDto::price)
+        _priceBounds.update { cur ->
+            if (cur == null) lo..hi else minOf(cur.first, lo)..maxOf(cur.last, hi)
+        }
     }
 
     fun clearFilters() {

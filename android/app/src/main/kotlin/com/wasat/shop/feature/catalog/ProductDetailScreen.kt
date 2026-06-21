@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -96,6 +98,8 @@ fun ProductDetailScreen(
     }
 }
 
+// FlowRow для чипов вариантов (FR-B03) требует opt-in ExperimentalLayoutApi.
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ProductDetailContent(
     product: ProductDto,
@@ -226,8 +230,10 @@ private fun ProductDetailContent(
                 }
 
                 if (product.variants.isNotEmpty()) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        product.variants.take(6).forEach { variant ->
+                    // FlowRow переносит чипы на новые строки — показываем все варианты
+                    // (FR-B03), а не первые шесть.
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        product.variants.forEach { variant ->
                             FilterChip(
                                 selected = variant == selectedVariant,
                                 onClick = { selectedVariant = variant },

@@ -114,6 +114,8 @@
     <string name="catalog_error">Failed to load the catalog</string>
     <string name="catalog_search_hint">Search products</string>
     <string name="catalog_filter_in_stock">In stock</string>
+    <string name="catalog_filter_price">Price</string>
+    <string name="catalog_price_range">%1$s — %2$s</string>
     <string name="catalog_filter_clear">Reset</string>
     <string name="catalog_sort_new">Newest</string>
     <string name="catalog_sort_price_asc">Price ↑</string>

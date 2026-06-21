@@ -115,6 +115,8 @@
     <string name="catalog_error">Не удалось загрузить каталог</string>
     <string name="catalog_search_hint">Поиск товаров</string>
     <string name="catalog_filter_in_stock">В наличии</string>
+    <string name="catalog_filter_price">Цена</string>
+    <string name="catalog_price_range">%1$s — %2$s</string>
     <string name="catalog_filter_clear">Сбросить</string>
     <string name="catalog_sort_new">Новинки</string>
     <string name="catalog_sort_price_asc">Дешевле</string>

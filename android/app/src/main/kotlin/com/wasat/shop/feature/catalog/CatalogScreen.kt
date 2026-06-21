@@ -16,17 +16,22 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RangeSlider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -66,7 +71,25 @@ fun CatalogScreen(
     val wishlistIds by viewModel.wishlistIds.collectAsState()
     val recent by viewModel.recent.collectAsState()
     val popular by viewModel.popular.collectAsState()
+    val priceBounds by viewModel.priceBounds.collectAsState()
     val columns = if (LocalWindowWidthSizeClass.current.isExpandedLayout) 3 else 2
+    var showPriceDialog by remember { mutableStateOf(false) }
+
+    // Диалог фильтра по цене (FR-B02, RangeSlider) — границы из загруженных страниц.
+    val bounds = priceBounds
+    if (showPriceDialog && bounds != null && bounds.first < bounds.last) {
+        PriceFilterDialog(
+            bounds = bounds,
+            currentMin = filters.minPrice,
+            currentMax = filters.maxPrice,
+            currency = currency,
+            onApply = { min, max ->
+                viewModel.onPriceRangeChange(min, max)
+                showPriceDialog = false
+            },
+            onDismiss = { showPriceDialog = false },
+        )
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -124,6 +147,9 @@ fun CatalogScreen(
         FiltersRow(
             filters = filters,
             categories = categories,
+            priceFilterActive = filters.minPrice != null || filters.maxPrice != null,
+            priceFilterEnabled = bounds != null && bounds.first < bounds.last,
+            onPriceClick = { showPriceDialog = true },
             onSortChange = viewModel::onSortChange,
             onCategoryToggle = viewModel::onCategoryToggle,
             onInStockToggle = viewModel::onInStockToggle,
@@ -163,6 +189,9 @@ fun CatalogScreen(
 private fun FiltersRow(
     filters: CatalogFilters,
     categories: Set<String>,
+    priceFilterActive: Boolean,
+    priceFilterEnabled: Boolean,
+    onPriceClick: () -> Unit,
     onSortChange: (CatalogSort) -> Unit,
     onCategoryToggle: (String) -> Unit,
     onInStockToggle: () -> Unit,
@@ -180,6 +209,13 @@ private fun FiltersRow(
             selected = filters.inStockOnly,
             onClick = onInStockToggle,
             label = { Text(stringResource(R.string.catalog_filter_in_stock)) },
+        )
+        // Фильтр по цене (FR-B02): чип открывает диалог с RangeSlider.
+        FilterChip(
+            selected = priceFilterActive,
+            enabled = priceFilterEnabled,
+            onClick = onPriceClick,
+            label = { Text(stringResource(R.string.catalog_filter_price)) },
         )
         SORT_OPTIONS.forEach { (sort, labelRes) ->
             FilterChip(
@@ -201,6 +237,66 @@ private fun FiltersRow(
             }
         }
     }
+}
+
+/**
+ * Диалог фильтра по цене (FR-B02): RangeSlider между минимальной и максимальной
+ * ценой из загруженных товаров. «Применить» отдаёт границы (null, если совпадают
+ * с краями диапазона — значит фильтр не задан); «Сбросить» снимает фильтр.
+ */
+@Composable
+private fun PriceFilterDialog(
+    bounds: LongRange,
+    currentMin: Long?,
+    currentMax: Long?,
+    currency: String,
+    onApply: (Long?, Long?) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val loBound = bounds.first.toFloat()
+    val hiBound = bounds.last.toFloat()
+    var range by remember {
+        mutableStateOf(
+            (currentMin?.toFloat() ?: loBound)..(currentMax?.toFloat() ?: hiBound),
+        )
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.catalog_filter_price)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(
+                        R.string.catalog_price_range,
+                        PriceFormatter.format(range.start.toLong(), currency),
+                        PriceFormatter.format(range.endInclusive.toLong(), currency),
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                RangeSlider(
+                    value = range,
+                    onValueChange = { range = it },
+                    valueRange = loBound..hiBound,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val newMin = range.start.toLong().takeIf { it > bounds.first }
+                    val newMax = range.endInclusive.toLong().takeIf { it < bounds.last }
+                    onApply(newMin, newMax)
+                },
+            ) {
+                Text(stringResource(R.string.checkout_promo_apply))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onApply(null, null) }) {
+                Text(stringResource(R.string.catalog_filter_clear))
+            }
+        },
+    )
 }
 
 private val SORT_OPTIONS = listOf(
