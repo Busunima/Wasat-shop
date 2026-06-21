@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -95,7 +96,8 @@ fun CatalogScreen(
             }
         }
 
-        // Поиск (FR-B02; debounce в ViewModel)
+        // Поиск-апбар (ТЗ §11.5): поле-«таблетка» с иконкой поиска и очисткой
+        // (FR-B02; debounce в ViewModel).
         OutlinedTextField(
             value = searchInput,
             onValueChange = viewModel::onSearchChange,
@@ -103,6 +105,19 @@ fun CatalogScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             placeholder = { Text(stringResource(R.string.catalog_search_hint)) },
+            leadingIcon = { Text("🔍") },
+            trailingIcon = {
+                if (searchInput.isNotEmpty()) {
+                    val clearLabel = stringResource(R.string.a11y_search_clear)
+                    TextButton(
+                        onClick = { viewModel.onSearchChange("") },
+                        modifier = Modifier.semantics { contentDescription = clearLabel },
+                    ) {
+                        Text("✕", modifier = Modifier.clearAndSetSemantics {})
+                    }
+                }
+            },
+            shape = CircleShape,
             singleLine = true,
         )
 
