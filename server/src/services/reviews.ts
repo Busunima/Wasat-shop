@@ -124,19 +124,37 @@ export async function createReview(
   return toApiReview(data);
 }
 
-/** Публичный список отзывов о товаре (FR-B08), новые сверху. */
+export interface ReviewPage {
+  items: ApiReview[];
+  nextCursor: string | null;
+}
+
+/**
+ * Публичный список отзывов о товаре (FR-B08/FR-B03), новые сверху, с курсорной
+ * пагинацией. Сортировка по createdAt на стороне Firestore (требует композитный
+ * индекс productId↑ + createdAt↓), курсор — createdAt последнего отзыва (мс).
+ */
 export async function listReviews(
   storeId: string,
   productId: string,
   limit: number,
-): Promise<ApiReview[]> {
-  const snap = await reviewsCol(storeId)
+  cursor?: string,
+): Promise<ReviewPage> {
+  let query = reviewsCol(storeId)
     .where("productId", "==", productId)
-    .limit(limit)
-    .get();
-  return snap.docs
-    .map((doc) => toApiReview(doc.data()))
-    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    .orderBy("createdAt", "desc")
+    .limit(limit + 1); // +1 — чтобы определить наличие следующей страницы
+  const cursorMillis = cursor ? Number(cursor) : NaN;
+  if (Number.isFinite(cursorMillis)) {
+    query = query.startAfter(Timestamp.fromMillis(cursorMillis));
+  }
+  const snap = await query.get();
+  const docs = snap.docs.slice(0, limit);
+  const items = docs.map((doc) => toApiReview(doc.data()));
+  const hasMore = snap.docs.length > limit;
+  const last = items[items.length - 1];
+  const nextCursor = hasMore && last?.createdAt != null ? String(last.createdAt) : null;
+  return { items, nextCursor };
 }
 
 /** Удаление отзыва (модерация владельцем/сотрудником) + пересчёт агрегатов. */

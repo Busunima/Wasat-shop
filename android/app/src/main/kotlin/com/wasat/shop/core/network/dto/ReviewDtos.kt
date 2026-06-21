@@ -17,7 +17,11 @@ data class ReviewDto(
 )
 
 @Serializable
-data class ReviewListResponse(val items: List<ReviewDto> = emptyList())
+data class ReviewListResponse(
+    val items: List<ReviewDto> = emptyList(),
+    /** Курсор следующей страницы (FR-B03); null — отзывов больше нет. */
+    val nextCursor: String? = null,
+)
 
 @Serializable
 data class ReviewCreateRequest(

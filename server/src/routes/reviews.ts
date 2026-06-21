@@ -31,9 +31,14 @@ function actorUid(req: AuthedRequest): string {
 // Список отзивов о товаре (публично)
 reviewsRouter.get("/", optionalAuth, async (req: AuthedRequest, res, next) => {
   try {
-    const { limit } = reviewsListQuerySchema.parse(req.query);
-    const items = await listReviews(param(req, "storeId"), param(req, "productId"), limit);
-    res.json({ items });
+    const { limit, cursor } = reviewsListQuerySchema.parse(req.query);
+    const page = await listReviews(
+      param(req, "storeId"),
+      param(req, "productId"),
+      limit,
+      cursor,
+    );
+    res.json(page);
   } catch (err) {
     next(err);
   }
