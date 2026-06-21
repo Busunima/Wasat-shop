@@ -129,6 +129,7 @@
     <string name="a11y_wishlist_add">Добавить в избранное</string>
     <string name="a11y_wishlist_remove">Убрать из избранного</string>
     <string name="a11y_wishlist_open">Открыть избранное</string>
+    <string name="a11y_search_clear">Очистить поиск</string>
     <string name="a11y_rating">Рейтинг %1$d из 5</string>
     <string name="a11y_rate_stars">Поставить %1$d из 5</string>
     <string name="a11y_product_photo">Фото товара: %1$s</string>
