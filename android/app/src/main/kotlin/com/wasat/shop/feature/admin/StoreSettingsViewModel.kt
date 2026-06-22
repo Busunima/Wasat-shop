@@ -9,6 +9,7 @@ import com.wasat.shop.core.network.WasatApi
 import com.wasat.shop.core.network.dto.ContactDto
 import com.wasat.shop.core.network.dto.SocialDto
 import com.wasat.shop.core.network.dto.StoreUpdateRequest
+import com.wasat.shop.core.network.dto.SubscriptionCheckoutRequest
 import com.wasat.shop.core.network.dto.ThemeDto
 import com.wasat.shop.core.network.safeApiCall
 import com.wasat.shop.core.util.PriceParser
@@ -194,6 +195,31 @@ class StoreSettingsViewModel @Inject constructor(
 
     /** Сбросить одноразовый URL после открытия в браузере. */
     fun consumePayoutUrl() = _uiState.update { it.copy(payoutUrl = null) }
+
+    /**
+     * Оформить подписку на тариф (FR-S05): получить URL Stripe Checkout и открыть.
+     * Переиспользует payoutUrl/payoutMessage (открытие внешней Stripe-ссылки).
+     */
+    fun startSubscription(plan: String) {
+        if (_uiState.value.payoutLoading) return
+        _uiState.update { it.copy(payoutLoading = true, payoutMessage = null) }
+        viewModelScope.launch {
+            when (val r = safeApiCall(json) { api.subscriptionCheckout(storeId, SubscriptionCheckoutRequest(plan)) }) {
+                is ApiResult.Success -> _uiState.update {
+                    val url = r.data.url
+                    if (url != null) {
+                        it.copy(payoutLoading = false, payoutUrl = url)
+                    } else {
+                        it.copy(payoutLoading = false, payoutMessage = r.data.reason ?: "Подписки пока недоступны")
+                    }
+                }
+                is ApiResult.ApiError ->
+                    _uiState.update { it.copy(payoutLoading = false, payoutMessage = r.message) }
+                is ApiResult.NetworkError ->
+                    _uiState.update { it.copy(payoutLoading = false, payoutMessage = "Нет соединения с сервером") }
+            }
+        }
+    }
 
     private inline fun update(block: StoreSettingsUiState.() -> StoreSettingsUiState) =
         _uiState.update(block)

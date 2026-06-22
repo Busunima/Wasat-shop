@@ -264,6 +264,10 @@
     <string name="settings_is_open">Магазин открыт</string>
     <string name="settings_delivery_cost">Стоимость доставки</string>
     <string name="settings_connect_payouts">Подключить выплаты (Stripe)</string>
+    <string name="settings_plan_label">Тариф подписки</string>
+    <string name="settings_plan_basic">Basic</string>
+    <string name="settings_plan_pro">Pro</string>
+    <string name="settings_plan_enterprise">Enterprise</string>
     <string name="settings_low_stock">Порог низкого остатка</string>
     <string name="settings_low_stock_hint">Push владельцу, когда остаток товара упадёт до порога. Пусто — 3.</string>
 

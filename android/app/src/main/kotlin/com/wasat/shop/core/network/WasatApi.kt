@@ -40,6 +40,8 @@ import com.wasat.shop.core.network.dto.StaffMemberDto
 import com.wasat.shop.core.network.dto.StaffRoleUpdateRequest
 import com.wasat.shop.core.network.dto.StoreInfoDto
 import com.wasat.shop.core.network.dto.StoreInitRequest
+import com.wasat.shop.core.network.dto.SubscriptionCheckoutDto
+import com.wasat.shop.core.network.dto.SubscriptionCheckoutRequest
 import com.wasat.shop.core.network.dto.StockAdjustRequest
 import com.wasat.shop.core.network.dto.StockResultDto
 import com.wasat.shop.core.network.dto.StoreUpdateRequest
@@ -70,6 +72,13 @@ interface WasatApi {
     /** Ссылка онбординга выплат Stripe Connect (§10.2), только владелец. */
     @GET("api/stores/{storeId}/stripe/onboard-link")
     suspend fun stripeOnboardLink(@Path("storeId") storeId: String): Response<OnboardingDto>
+
+    /** Оформление подписки на тариф (FR-S05), только владелец. */
+    @POST("api/stores/{storeId}/subscription/checkout")
+    suspend fun subscriptionCheckout(
+        @Path("storeId") storeId: String,
+        @Body body: SubscriptionCheckoutRequest,
+    ): Response<SubscriptionCheckoutDto>
 
     @GET("api/stores/by-slug/{slug}")
     suspend fun getStoreBySlug(@Path("slug") slug: String): Response<StoreInfoDto>
