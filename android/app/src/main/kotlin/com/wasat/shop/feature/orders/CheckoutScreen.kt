@@ -32,6 +32,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.stripe.android.paymentsheet.PaymentSheet
+import com.stripe.android.paymentsheet.rememberPaymentSheet
 import com.wasat.shop.R
 import com.wasat.shop.core.util.PriceFormatter
 import com.wasat.shop.feature.cart.CartTotals
@@ -49,6 +51,19 @@ fun CheckoutScreen(
     val online by viewModel.online.collectAsState()
     val currency = viewModel.currency
     val haptics = LocalHapticFeedback.current
+
+    // FR-B05: Stripe PaymentSheet. rememberPaymentSheet вызывается безусловно (правила
+    // Compose) — до раннего return. При оплате картой сервер вернул clientSecret.
+    val merchantName = stringResource(R.string.app_name)
+    val paymentSheet = rememberPaymentSheet { viewModel.onPaymentFinished() }
+    LaunchedEffect(state.pendingPayment) {
+        state.pendingPayment?.let { pending ->
+            paymentSheet.presentWithPaymentIntent(
+                pending.clientSecret,
+                PaymentSheet.Configuration(merchantDisplayName = merchantName),
+            )
+        }
+    }
 
     state.placedOrder?.let { order ->
         LaunchedEffect(order.id) { onPlaced(order.id) }

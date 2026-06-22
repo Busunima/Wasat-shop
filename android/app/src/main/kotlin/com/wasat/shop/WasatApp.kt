@@ -11,6 +11,7 @@ import androidx.work.WorkManager
 import com.google.firebase.FirebaseApp
 import com.google.firebase.appcheck.FirebaseAppCheck
 import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
+import com.stripe.android.PaymentConfiguration
 import com.wasat.shop.core.sync.OutboxSyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
@@ -38,6 +39,10 @@ class WasatApp : Application(), Configuration.Provider {
             FirebaseAppCheck.getInstance().installAppCheckProviderFactory(
                 PlayIntegrityAppCheckProviderFactory.getInstance(),
             )
+        }
+        // Stripe PaymentSheet (FR-B05): без публикуемого ключа не инициализируем.
+        if (BuildConfig.STRIPE_PUBLISHABLE_KEY.isNotBlank()) {
+            PaymentConfiguration.init(this, BuildConfig.STRIPE_PUBLISHABLE_KEY)
         }
         scheduleOutboxSync()
     }

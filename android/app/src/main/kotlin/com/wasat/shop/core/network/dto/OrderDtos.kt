@@ -78,6 +78,8 @@ data class OrderDto(
     val payment: OrderPaymentDto = OrderPaymentDto(),
     /** Причина отмены (FR-A04), если заказ отменён владельцем. */
     val cancelReason: String? = null,
+    /** client_secret PaymentIntent (FR-B05) — только в ответе чекаута при оплате картой. */
+    val clientSecret: String? = null,
     val createdAt: Long? = null,
 )
 

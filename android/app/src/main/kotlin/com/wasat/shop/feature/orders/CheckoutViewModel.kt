@@ -47,9 +47,14 @@ data class CheckoutUiState(
     val deliveryCost: Long? = null,
     val busy: Boolean = false,
     val error: String? = null,
+    /** Заказ создан, требуется оплата картой (FR-B05): показываем Stripe PaymentSheet. */
+    val pendingPayment: PendingPayment? = null,
     /** Создан заказ — экран закрывается. */
     val placedOrder: OrderDto? = null,
 )
+
+/** Заказ ждёт оплаты через Stripe PaymentSheet (FR-B05). */
+data class PendingPayment(val clientSecret: String, val order: OrderDto)
 
 /**
  * Чекаут (FR-B05): позиции из локальной корзины, промокод (серверный предпросмотр),
@@ -217,7 +222,17 @@ class CheckoutViewModel @Inject constructor(
                     if (s.method == "courier" && s.saveAddress && s.address.isNotBlank()) {
                         addressBook.save(storeId, s.savedAddresses, s.address)
                     }
-                    _uiState.update { it.copy(busy = false, placedOrder = result.data) }
+                    val data = result.data
+                    val secret = data.clientSecret
+                    _uiState.update {
+                        if (secret != null) {
+                            // FR-B05: оплата картой — заказ создан, показываем PaymentSheet.
+                            it.copy(busy = false, pendingPayment = PendingPayment(secret, data))
+                        } else {
+                            // Без Stripe — заказ оформлен сразу (deferred).
+                            it.copy(busy = false, placedOrder = data)
+                        }
+                    }
                 }
                 is ApiResult.ApiError ->
                     _uiState.update { it.copy(busy = false, error = result.message) }
@@ -225,5 +240,14 @@ class CheckoutViewModel @Inject constructor(
                     _uiState.update { it.copy(busy = false, error = "Нет соединения с сервером") }
             }
         }
+    }
+
+    /**
+     * Завершение оплаты PaymentSheet (FR-B05). Заказ уже создан на сервере; статус
+     * оплаты подтверждается вебхуком. При любом исходе переходим к заказу — отмена/ошибка
+     * оставляют его неоплаченным (виден владельцу), повтор оплаты — Post-MVP.
+     */
+    fun onPaymentFinished() = _uiState.update {
+        it.copy(placedOrder = it.pendingPayment?.order, pendingPayment = null)
     }
 }
