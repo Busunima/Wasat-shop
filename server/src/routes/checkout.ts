@@ -26,8 +26,10 @@ checkoutRouter.post(
       if (!uid) throw new ApiError("UNAUTHENTICATED", "Нет uid после аутентификации");
       const email = (req.claims?.["email"] as string | undefined) ?? "";
 
-      const { order, replay } = await createOrder(uid, email, input);
-      res.status(replay ? 200 : 201).json(order);
+      const { order, replay, clientSecret } = await createOrder(uid, email, input);
+      // clientSecret — для Stripe PaymentSheet (FR-B05); null без ключей (deferred).
+      // Клиент игнорирует неизвестные поля, поэтому ответ обратно совместим.
+      res.status(replay ? 200 : 201).json({ ...order, clientSecret });
     } catch (err) {
       next(err);
     }
