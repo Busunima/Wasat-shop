@@ -16,6 +16,8 @@ import { recordCustomerType, recordEvent } from "./analytics.js";
 import { buildOrderStatusNotification, sendToUsers } from "./push.js";
 import { crossedLowStock, notifyLowStock, type LowStockAlert } from "./lowStock.js";
 import { DEFAULT_LOW_STOCK_THRESHOLD } from "../schemas/store.js";
+import { createPaymentIntent } from "./stripe.js";
+import { env } from "../config/env.js";
 import { logger } from "../lib/logger.js";
 
 /**
@@ -119,7 +121,7 @@ export async function createOrder(
   uid: string,
   email: string,
   input: CheckoutInput,
-): Promise<{ order: ApiOrder; replay: boolean }> {
+): Promise<{ order: ApiOrder; replay: boolean; clientSecret: string | null }> {
   const { storeId } = input;
   const orderId = orderIdFor(uid, input.idempotencyKey);
   const orderRef = ordersCol(storeId).doc(orderId);
@@ -312,7 +314,47 @@ export async function createOrder(
     }
     logger.info("Заказ создан", { storeId, orderId: order.id, total: order.total });
   }
-  return { order, replay: result.replay };
+
+  // FR-B05: при настроенном Stripe и ненулевой сумме — PaymentIntent для оплаты.
+  // idempotencyKey по заказу → ретрай чекаута не создаёт второй PaymentIntent.
+  let clientSecret: string | null = null;
+  if (env.STRIPE_SECRET_KEY && order.total > 0) {
+    const intent = await createPaymentIntent({
+      amountMinor: order.total,
+      currency: order.currency,
+      idempotencyKey: `pi_${storeId}_${order.id}`,
+      metadata: { storeId, orderId: order.id },
+    });
+    if (intent) {
+      clientSecret = intent.clientSecret;
+      order.payment.method = "card";
+      if (!result.replay) {
+        await orderRef.update({
+          "payment.method": "card",
+          "payment.stripePaymentIntentId": intent.id,
+        });
+      }
+    }
+  }
+  return { order, replay: result.replay, clientSecret };
+}
+
+/**
+ * Отметить заказ оплаченным (вебхук payment_intent.succeeded, FR-B05). Идемпотентно:
+ * повторная установка paidAt безвредна. Заказ создаётся нашим чекаутом — существует.
+ */
+export async function markOrderPaid(
+  storeId: string,
+  orderId: string,
+  paymentIntentId: string,
+): Promise<void> {
+  await ordersCol(storeId)
+    .doc(orderId)
+    .update({
+      "payment.method": "card",
+      "payment.paidAt": FieldValue.serverTimestamp(),
+      "payment.stripePaymentIntentId": paymentIntentId,
+    });
 }
 
 /** Восстановление стока по позициям заказа (отмена до отгрузки, оплата deferred). */

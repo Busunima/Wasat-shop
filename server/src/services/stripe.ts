@@ -1,5 +1,40 @@
+import Stripe from "stripe";
 import { env } from "../config/env.js";
 import { logger } from "../lib/logger.js";
+
+/** Ленивый клиент Stripe; null без STRIPE_SECRET_KEY (env-gate, ТЗ §10). */
+let stripeClient: Stripe | null = null;
+export function getStripe(): Stripe | null {
+  if (!env.STRIPE_SECRET_KEY) return null;
+  if (!stripeClient) stripeClient = new Stripe(env.STRIPE_SECRET_KEY);
+  return stripeClient;
+}
+
+/**
+ * PaymentIntent для оплаты заказа покупателем (FR-B05, §10.1). amountMinor — в
+ * минорных единицах валюты магазина. idempotencyKey защищает от дублей при ретраях
+ * чекаута; metadata.{storeId,orderId} нужны вебхуку для отметки оплаты. Без ключа
+ * Stripe → null (оплата остаётся deferred).
+ */
+export async function createPaymentIntent(params: {
+  amountMinor: number;
+  currency: string;
+  idempotencyKey: string;
+  metadata: Record<string, string>;
+}): Promise<{ id: string; clientSecret: string } | null> {
+  const stripe = getStripe();
+  if (!stripe) return null;
+  const intent = await stripe.paymentIntents.create(
+    {
+      amount: params.amountMinor,
+      currency: params.currency.toLowerCase(),
+      automatic_payment_methods: { enabled: true },
+      metadata: params.metadata,
+    },
+    { idempotencyKey: params.idempotencyKey },
+  );
+  return { id: intent.id, clientSecret: intent.client_secret ?? "" };
+}
 
 /**
  * Результат запуска онбординга выплат (Stripe Connect Express, ТЗ §10.2).
