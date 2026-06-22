@@ -10,14 +10,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -74,6 +79,39 @@ private fun ReturnCard(
     viewModel: StoreReturnsViewModel,
 ) {
     val status = ReturnStatuses.parse(ret.status)
+    var rejecting by remember { mutableStateOf(false) }
+    var reason by remember { mutableStateOf("") }
+
+    if (rejecting) {
+        AlertDialog(
+            onDismissRequest = { rejecting = false },
+            title = { Text(stringResource(R.string.return_reject_reason_title)) },
+            text = {
+                OutlinedTextField(
+                    value = reason,
+                    onValueChange = { reason = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.return_reject_reason_hint)) },
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        rejecting = false
+                        viewModel.reject(ret.id, reason.trim().ifEmpty { null })
+                    },
+                ) {
+                    Text(stringResource(R.string.return_reject))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { rejecting = false }) {
+                    Text(stringResource(R.string.product_delete_cancel))
+                }
+            },
+        )
+    }
+
     Card {
         Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Row(
@@ -108,7 +146,7 @@ private fun ReturnCard(
                         TextButton(onClick = { viewModel.approve(ret.id) }, enabled = !busy) {
                             Text(stringResource(R.string.return_approve))
                         }
-                        TextButton(onClick = { viewModel.reject(ret.id) }, enabled = !busy) {
+                        TextButton(onClick = { rejecting = true }, enabled = !busy) {
                             Text(stringResource(R.string.return_reject))
                         }
                     }
