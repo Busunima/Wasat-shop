@@ -57,6 +57,9 @@ fun StoreOrdersScreen(viewModel: StoreOrdersViewModel = hiltViewModel()) {
     // Заказ, для которого запрошен переход в SHIPPED (диалог trackingNo)
     var shippingOrderId by remember { mutableStateOf<String?>(null) }
     var trackingInput by remember { mutableStateOf("") }
+    // Заказ, для которого запрошена отмена (диалог причины, FR-A04)
+    var cancellingOrderId by remember { mutableStateOf<String?>(null) }
+    var cancelReasonInput by remember { mutableStateOf("") }
 
     // FR-A04: получив HTML-инвойс, печатаем его в PDF и сбрасываем одноразовое состояние.
     LaunchedEffect(state.invoice) {
@@ -100,6 +103,37 @@ fun StoreOrdersScreen(viewModel: StoreOrdersViewModel = hiltViewModel()) {
             dismissButton = {
                 TextButton(onClick = { shippingOrderId = null }) {
                     Text(stringResource(R.string.catalog_retry))
+                }
+            },
+        )
+    }
+
+    // FR-A04: отмена заказа с необязательной причиной.
+    cancellingOrderId?.let { orderId ->
+        AlertDialog(
+            onDismissRequest = { cancellingOrderId = null },
+            title = { Text(stringResource(R.string.order_cancel_title)) },
+            text = {
+                OutlinedTextField(
+                    value = cancelReasonInput,
+                    onValueChange = { cancelReasonInput = it },
+                    label = { Text(stringResource(R.string.order_cancel_reason_hint)) },
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.setStatus(
+                        orderId,
+                        OrderStatus.CANCELLED,
+                        reason = cancelReasonInput.trim().ifEmpty { null },
+                    )
+                    cancellingOrderId = null
+                    cancelReasonInput = ""
+                }) { Text(stringResource(R.string.order_cancel_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { cancellingOrderId = null }) {
+                    Text(stringResource(R.string.product_delete_cancel))
                 }
             },
         )
@@ -237,10 +271,10 @@ fun StoreOrdersScreen(viewModel: StoreOrdersViewModel = hiltViewModel()) {
                             OrderTransitions.next(status).forEach { next ->
                                 TextButton(
                                     onClick = {
-                                        if (next == OrderStatus.SHIPPED) {
-                                            shippingOrderId = order.id
-                                        } else {
-                                            viewModel.setStatus(order.id, next)
+                                        when (next) {
+                                            OrderStatus.SHIPPED -> shippingOrderId = order.id
+                                            OrderStatus.CANCELLED -> cancellingOrderId = order.id
+                                            else -> viewModel.setStatus(order.id, next)
                                         }
                                     },
                                     enabled = !state.busy,
@@ -249,6 +283,14 @@ fun StoreOrdersScreen(viewModel: StoreOrdersViewModel = hiltViewModel()) {
                                 }
                             }
                         }
+                    }
+                    // FR-A04: показать причину отмены, если задана.
+                    order.cancelReason?.takeIf { it.isNotBlank() }?.let { reason ->
+                        Text(
+                            text = stringResource(R.string.order_cancel_reason, reason),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.outline,
+                        )
                     }
                     // FR-A04: инвойс заказа (печать/сохранение в PDF)
                     TextButton(

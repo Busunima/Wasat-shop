@@ -227,6 +227,10 @@
     <string name="order_ship_title">Ship order</string>
     <string name="order_tracking_label">Tracking number (optional)</string>
     <string name="order_ship_confirm">Ship</string>
+    <string name="order_cancel_title">Cancel order</string>
+    <string name="order_cancel_reason_hint">Reason (optional)</string>
+    <string name="order_cancel_confirm">Cancel order</string>
+    <string name="order_cancel_reason">Cancellation reason: %1$s</string>
     <string name="order_status_new">New</string>
     <string name="order_status_confirmed">Confirmed</string>
     <string name="order_status_processing">Processing</string>

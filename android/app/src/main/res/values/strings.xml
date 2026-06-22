@@ -228,6 +228,10 @@
     <string name="order_ship_title">Передать в доставку</string>
     <string name="order_tracking_label">Трек-номер (необязательно)</string>
     <string name="order_ship_confirm">Отправить</string>
+    <string name="order_cancel_title">Отмена заказа</string>
+    <string name="order_cancel_reason_hint">Причина (необязательно)</string>
+    <string name="order_cancel_confirm">Отменить заказ</string>
+    <string name="order_cancel_reason">Причина отмены: %1$s</string>
     <string name="order_status_new">Новый</string>
     <string name="order_status_confirmed">Подтверждён</string>
     <string name="order_status_processing">В сборке</string>

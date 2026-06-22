@@ -60,13 +60,14 @@ class OutboxRepository @Inject constructor(
         orderId: String,
         status: String,
         trackingNo: String?,
+        reason: String? = null,
     ) {
         dao.upsert(
             PendingOperationEntity(
                 opId = UUID.randomUUID().toString(),
                 type = OutboxType.ORDER_STATUS,
                 storeId = storeId,
-                payload = json.encodeToString(OrderStatusOp(orderId, status, trackingNo)),
+                payload = json.encodeToString(OrderStatusOp(orderId, status, trackingNo, reason)),
                 createdAt = System.currentTimeMillis(),
                 attempts = 0,
             ),
@@ -137,7 +138,7 @@ class OutboxRepository @Inject constructor(
         when (op.type) {
             OutboxType.ORDER_STATUS -> {
                 val d = json.decodeFromString<OrderStatusOp>(op.payload)
-                when (ordersRepository.updateStatus(op.storeId, d.orderId, d.status, d.trackingNo)) {
+                when (ordersRepository.updateStatus(op.storeId, d.orderId, d.status, d.trackingNo, d.reason)) {
                     is ApiResult.Success -> DispatchResult.DONE
                     // 4xx (например, недопустимый переход) — перманентно, не зациклить
                     is ApiResult.ApiError -> DispatchResult.DONE

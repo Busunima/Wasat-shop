@@ -53,6 +53,8 @@ export interface ApiOrder {
   status: OrderStatus;
   delivery: { method: string; address: string | null; cost: number; trackingNo: string | null };
   payment: { method: string; paidAt: number | null };
+  /** Причина отмены (FR-A04), задаётся при переходе в CANCELLED. */
+  cancelReason: string | null;
   createdAt: number | null;
 }
 
@@ -89,6 +91,7 @@ function toApiOrder(data: FirebaseFirestore.DocumentData): ApiOrder {
       method: (data["payment"]?.["method"] as string) ?? "deferred",
       paidAt: paidAt instanceof Timestamp ? paidAt.toMillis() : null,
     },
+    cancelReason: (data["cancelReason"] as string | null) ?? null,
     createdAt: createdAt instanceof Timestamp ? createdAt.toMillis() : null,
   };
 }
@@ -340,6 +343,7 @@ export async function updateOrderStatus(
   orderId: string,
   next: OrderStatus,
   trackingNo: string | undefined,
+  reason?: string,
 ): Promise<ApiOrder> {
   const ref = ordersCol(storeId).doc(orderId);
 
@@ -369,12 +373,15 @@ export async function updateOrderStatus(
 
     const patch: Record<string, unknown> = { status: next };
     if (trackingNo !== undefined) patch["delivery.trackingNo"] = trackingNo;
+    // FR-A04: причина сохраняется только при отмене.
+    if (next === "CANCELLED" && reason !== undefined) patch["cancelReason"] = reason;
     tx.update(ref, patch);
 
     const updated: Record<string, unknown> = { ...order, status: next };
     if (trackingNo !== undefined) {
       updated["delivery"] = { ...(order["delivery"] as Record<string, unknown>), trackingNo };
     }
+    if (next === "CANCELLED" && reason !== undefined) updated["cancelReason"] = reason;
     return { data: updated, noop: false };
   });
 
