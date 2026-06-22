@@ -68,10 +68,10 @@ haptics, skeleton-плейсхолдеры, navigation rail и list-detail на 
 1. **Stripe** — реализованы (env-gated, ждут живых ключей + деплой/Connect-настройку
    в Dashboard): приём оплат картой (B05) — серверный PaymentIntent + webhook +
    клиентский PaymentSheet; Connect-онбординг выплат (§10.2) — Express-аккаунт +
-   `GET /stripe/onboard-link` + сохранение `stripeAccountId`. Остаётся: сохранённые
-   карты (B11), живой Refund (A11), **биллинг подписок S05** (`/webhooks/stripe-billing`,
-   dunning/grace), коллекции `invoices`/`subscription`, клиентская кнопка «подключить
-   выплаты» в настройках.
+   `GET /stripe/onboard-link` + сохранение `stripeAccountId` + **кнопка «Подключить
+   выплаты» в настройках**. Остаётся: сохранённые карты (B11), живой Refund (A11),
+   **биллинг подписок S05** (`/webhooks/stripe-billing`, dunning/grace), коллекции
+   `invoices`/`subscription`.
 2. **Algolia** — полнотекстовый/фасетный поиск (B02) + `POST /api/search/reindex`
    (отсутствует). Сейчас работает серверный fallback-поиск.
 3. **SMTP/Nodemailer** — email-подтверждение заказа (B05), уведомление владельцу

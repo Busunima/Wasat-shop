@@ -1,5 +1,7 @@
 package com.wasat.shop.feature.admin
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -45,6 +47,15 @@ fun StoreSettingsScreen(
     viewModel: StoreSettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // §10.2: открыть ссылку онбординга выплат во внешнем браузере (Stripe Connect).
+    LaunchedEffect(state.payoutUrl) {
+        state.payoutUrl?.let { url ->
+            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            viewModel.consumePayoutUrl()
+        }
+    }
 
     LaunchedEffect(state.save) {
         if (state.save is SaveState.Done) onSaved()
@@ -308,6 +319,26 @@ fun StoreSettingsScreen(
                     stringResource(
                         if (isSaving) R.string.product_edit_saving else R.string.product_edit_save,
                     ),
+                )
+            }
+
+            // §10.2: подключить/продолжить выплаты Stripe Connect.
+            OutlinedButton(
+                onClick = viewModel::connectPayouts,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.payoutLoading,
+            ) {
+                if (state.payoutLoading) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp))
+                } else {
+                    Text(stringResource(R.string.settings_connect_payouts))
+                }
+            }
+            state.payoutMessage?.let { msg ->
+                Text(
+                    text = msg,
+                    color = MaterialTheme.colorScheme.outline,
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
         }
