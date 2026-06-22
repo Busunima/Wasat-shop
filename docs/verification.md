@@ -25,7 +25,7 @@ haptics, skeleton-плейсхолдеры, navigation rail и list-detail на 
 | FR-B02 | Каталог | ✅ | Paging 3, фильтры (категории, наличие, **RangeSlider по цене**), сортировки; поиск — серверный fallback (не Algolia) |
 | FR-B03 | Карточка товара | ✅ | HorizontalPager + zoom, варианты, отзывы с курсорной пагинацией |
 | FR-B04 | Корзина | ✅ | Room + Firestore-sync + слияние + офлайн |
-| FR-B05 | Чекаут | ✅ (ядро) | транзакция + идемпотентность + офлайн-блокировка; **серверный PaymentIntent + webhook оплаты (env-gated)**; клиентский PaymentSheet (слайс 2) и email — отложены |
+| FR-B05 | Чекаут | ✅ | транзакция + идемпотентность + офлайн-блокировка; серверный PaymentIntent + webhook + **клиентский Stripe PaymentSheet** (env-gated); email — отложен |
 | FR-B06 | Трекинг/отмена заказа | ✅ | realtime listener, push, отмена NEW/CONFIRMED/PROCESSING |
 | FR-B07 | Вишлист | ✅ | `customers/{uid}.wishlist`, только auth |
 | FR-B08 | Отзывы и рейтинг | ✅ | серверная проверка покупки, запрет дубля, пересчёт рейтинга |
