@@ -43,6 +43,15 @@ android {
             ?: System.getenv("WASAT_GOOGLE_WEB_CLIENT_ID")
             ?: "925529408936-i5qv589k9okek7gq7mpc40spdmrgm4ue.apps.googleusercontent.com"
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$webClientId\"")
+
+        // Stripe publishable key (FR-B05) — публичный, встраивается в APK (как webClientId).
+        // Переопределяется gradle-свойством wasat.stripePublishableKey / env
+        // WASAT_STRIPE_PUBLISHABLE_KEY. Дефолт — sandbox-ключ; секретный ключ только
+        // на сервере (server/.env / Secret Manager), в клиент не попадает.
+        val stripePublishableKey = providers.gradleProperty("wasat.stripePublishableKey").orNull
+            ?: System.getenv("WASAT_STRIPE_PUBLISHABLE_KEY")
+            ?: "pk_test_51Tl1Bg7IUDthpMB316eR3q8Y4NzxnZscVqEjvrMI1aIbFMTMAvxMhM5wge4tQvBNKiIAoERq91Qalk5zm430NplV00dYXQoOt1"
+        buildConfigField("String", "STRIPE_PUBLISHABLE_KEY", "\"$stripePublishableKey\"")
     }
 
     buildTypes {
