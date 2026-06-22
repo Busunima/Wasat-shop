@@ -8,6 +8,8 @@ import kotlinx.serialization.Serializable
 data class BroadcastRequest(
     val title: String,
     val body: String,
+    /** Сегмент адресатов (FR-A07): all | with_orders | no_orders. */
+    val segment: String = "all",
 )
 
 /** Статистика доставки broadcast-рассылки. */

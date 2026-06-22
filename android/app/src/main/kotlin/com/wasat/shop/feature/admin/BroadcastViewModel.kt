@@ -20,6 +20,8 @@ import kotlinx.serialization.json.Json
 data class BroadcastUiState(
     val title: String = "",
     val body: String = "",
+    /** Сегмент адресатов (FR-A07): all | with_orders | no_orders. */
+    val segment: String = "all",
     val titleError: String? = null,
     val bodyError: String? = null,
     val sending: Boolean = false,
@@ -42,6 +44,12 @@ class BroadcastViewModel @Inject constructor(
 
     fun onTitle(v: String) = _uiState.update { it.copy(title = v, titleError = null, sent = null) }
     fun onBody(v: String) = _uiState.update { it.copy(body = v, bodyError = null, sent = null) }
+    fun onSegment(v: String) = _uiState.update { it.copy(segment = v, sent = null) }
+
+    /** Подставить шаблон (FR-A07): заполняет заголовок и текст. */
+    fun applyTemplate(title: String, body: String) = _uiState.update {
+        it.copy(title = title, body = body, titleError = null, bodyError = null, sent = null)
+    }
 
     fun send() {
         val title = _uiState.value.title.trim()
@@ -56,7 +64,8 @@ class BroadcastViewModel @Inject constructor(
 
         _uiState.update { it.copy(sending = true, error = null, sent = null) }
         viewModelScope.launch {
-            when (val r = safeApiCall(json) { api.broadcast(storeId, BroadcastRequest(title, body)) }) {
+            val segment = _uiState.value.segment
+            when (val r = safeApiCall(json) { api.broadcast(storeId, BroadcastRequest(title, body, segment)) }) {
                 is ApiResult.Success ->
                     _uiState.update {
                         it.copy(sending = false, sent = r.data, title = "", body = "")

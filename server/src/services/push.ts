@@ -201,6 +201,41 @@ export async function collectAllStoreTokens(storeId: string): Promise<string[]> 
   return [...tokens];
 }
 
+/** Сегмент адресатов рассылки (FR-A07). */
+export type BroadcastSegment = "all" | "with_orders" | "no_orders";
+
+/**
+ * Токены адресатов broadcast по сегменту (FR-A07). «С заказами»/«без заказов»
+ * определяется по наличию uid среди customerUid заказов магазина (ordersCount
+ * сервером не ведётся). all — все токены без фильтра.
+ */
+export async function collectSegmentTokens(
+  storeId: string,
+  segment: BroadcastSegment,
+): Promise<string[]> {
+  if (segment === "all") return collectAllStoreTokens(storeId);
+
+  const ordersSnap = await db()
+    .collection("stores").doc(storeId).collection("orders")
+    .select("customerUid")
+    .get();
+  const withOrders = new Set<string>();
+  for (const doc of ordersSnap.docs) {
+    const uid = doc.data()["customerUid"];
+    if (typeof uid === "string" && uid) withOrders.add(uid);
+  }
+
+  const snap = await tokensCol(storeId).get();
+  const tokens = new Set<string>();
+  for (const doc of snap.docs) {
+    // doc.id == uid покупателя; включаем по совпадению с сегментом.
+    if ((segment === "with_orders") === withOrders.has(doc.id)) {
+      for (const t of (doc.data()["tokens"] as string[]) ?? []) tokens.add(t);
+    }
+  }
+  return [...tokens];
+}
+
 /** Токены конкретного покупателя магазина. */
 export async function collectUserTokens(storeId: string, uid: string): Promise<string[]> {
   const snap = await tokensCol(storeId).doc(uid).get();
