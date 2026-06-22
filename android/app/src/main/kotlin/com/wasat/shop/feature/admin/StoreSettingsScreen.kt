@@ -341,9 +341,36 @@ fun StoreSettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
+
+            // FR-S05: выбор/смена тарифа подписки (открывает Stripe Checkout).
+            Text(
+                text = stringResource(R.string.settings_plan_label),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                PAID_PLANS.forEach { (plan, labelRes) ->
+                    OutlinedButton(
+                        onClick = { viewModel.startSubscription(plan) },
+                        enabled = !state.payoutLoading,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(stringResource(labelRes))
+                    }
+                }
+            }
         }
     }
 }
+
+/** Платные тарифы для оформления подписки (FR-S05) — зеркало PAID_PLANS сервера. */
+private val PAID_PLANS = listOf(
+    "basic" to R.string.settings_plan_basic,
+    "pro" to R.string.settings_plan_pro,
+    "enterprise" to R.string.settings_plan_enterprise,
+)
 
 @Composable
 private fun BrandingRow(

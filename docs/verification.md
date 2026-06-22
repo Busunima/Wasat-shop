@@ -59,7 +59,7 @@ haptics, skeleton-плейсхолдеры, navigation rail и list-detail на 
 | FR-S02 | Управление магазином | ✅ | блокировка с причиной + смена тарифа + read-only инспекция + auditLog (email-уведомление — отложено) |
 | FR-S03 | Тарифные планы | ✅ | лимиты товаров/сотрудников, мягкое ограничение |
 | FR-S04 | Глобальная аналитика | ✅ | GMV/MAU/состав магазинов/тренд |
-| FR-S05 | Биллинг подписок | ✅ (ядро) | Stripe Billing (env-gated): subscription-checkout + webhook `/stripe-billing` синхронизирует `plan`/`subscription` (активация, grace=past_due, даунгрейд); клиентский выбор тарифа и живые price ID — отложены |
+| FR-S05 | Биллинг подписок | ✅ (ядро) | Stripe Billing (env-gated): subscription-checkout + webhook `/stripe-billing` (активация, grace=past_due, даунгрейд) + **выбор тарифа в настройках**; живые price ID — на стороне заказчика |
 
 ## Перечень оставшихся задач
 

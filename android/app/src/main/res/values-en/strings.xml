@@ -263,6 +263,10 @@
     <string name="settings_is_open">Store open</string>
     <string name="settings_delivery_cost">Delivery cost</string>
     <string name="settings_connect_payouts">Connect payouts (Stripe)</string>
+    <string name="settings_plan_label">Subscription plan</string>
+    <string name="settings_plan_basic">Basic</string>
+    <string name="settings_plan_pro">Pro</string>
+    <string name="settings_plan_enterprise">Enterprise</string>
     <string name="settings_low_stock">Low-stock threshold</string>
     <string name="settings_low_stock_hint">Push the owner when product stock drops to this level. Empty — 3.</string>
 

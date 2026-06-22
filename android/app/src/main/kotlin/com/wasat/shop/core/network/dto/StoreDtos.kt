@@ -34,6 +34,18 @@ data class OnboardingDto(
     val onboardUrl: String? = null,
 )
 
+/** Запрос оформления подписки (FR-S05): тариф basic|pro|enterprise. */
+@Serializable
+data class SubscriptionCheckoutRequest(val plan: String)
+
+/** Ответ subscription-checkout (FR-S05): { deferred, reason } | { deferred, url }. */
+@Serializable
+data class SubscriptionCheckoutDto(
+    val deferred: Boolean,
+    val reason: String? = null,
+    val url: String? = null,
+)
+
 /** Единый конверт ошибок API: { error: { code, message, details } }. */
 @Serializable
 data class ErrorEnvelope(val error: ApiErrorBody)
