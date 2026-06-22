@@ -45,26 +45,43 @@ export type OnboardingResult =
   | { deferred: true; reason: string }
   | { deferred: false; stripeAccountId: string; onboardUrl: string };
 
+/** База для return/refresh URL онбординга (Connect). Переопределяется env APP_PUBLIC_URL. */
+const ONBOARD_BASE = process.env["APP_PUBLIC_URL"] ?? "https://app.example.com";
+
 /**
- * Создаёт connected-аккаунт Stripe Connect (тип Express) и ссылку онбординга.
- * За env-guard: реальные вызовы Stripe SDK подключаются в Фазе 4, когда настроены ключи.
- * Сейчас при наличии ключа — точка интеграции (TODO), без ключа — deferred.
+ * Создаёт/переиспользует connected-аккаунт Stripe Connect (Express, §10.2) и ссылку
+ * онбординга. existingAccountId — если аккаунт уже создан (повторный заход из настроек).
+ * Без STRIPE_SECRET_KEY → deferred (магазин в режиме черновика без приёма выплат).
  */
 export async function createConnectOnboarding(params: {
   storeId: string;
   ownerEmail: string;
+  existingAccountId?: string | undefined;
 }): Promise<OnboardingResult> {
-  if (!env.STRIPE_SECRET_KEY) {
+  const stripe = getStripe();
+  if (!stripe) {
     logger.info("Stripe не сконфигурирован — онбординг выплат отложен", {
       storeId: params.storeId,
     });
     return { deferred: true, reason: "STRIPE_SECRET_KEY не задан" };
   }
 
-  // TODO(Фаза 4): stripe.accounts.create({ type: 'express', email })
-  //   + stripe.accountLinks.create({ account, type: 'account_onboarding', ... }).
-  logger.warn("createConnectOnboarding: интеграция Stripe реализуется в Фазе 4", {
-    storeId: params.storeId,
+  const accountId =
+    params.existingAccountId ??
+    (
+      await stripe.accounts.create({
+        type: "express",
+        email: params.ownerEmail,
+        metadata: { storeId: params.storeId },
+      })
+    ).id;
+
+  const link = await stripe.accountLinks.create({
+    account: accountId,
+    refresh_url: `${ONBOARD_BASE}/payouts/refresh?store=${params.storeId}`,
+    return_url: `${ONBOARD_BASE}/payouts/return?store=${params.storeId}`,
+    type: "account_onboarding",
   });
-  return { deferred: true, reason: "Интеграция Stripe реализуется в Фазе 4" };
+
+  return { deferred: false, stripeAccountId: accountId, onboardUrl: link.url };
 }

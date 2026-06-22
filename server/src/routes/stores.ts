@@ -12,6 +12,7 @@ import {
   createStore,
   getPlanUsage,
   getStoreInfo,
+  getStoreOnboardLink,
   resolveSlug,
   updateStore,
 } from "../services/stores.js";
@@ -108,6 +109,24 @@ storesRouter.get(
   async (req: AuthedRequest, res, next) => {
     try {
       res.json(await getPlanUsage(String(req.params["storeId"] ?? "")));
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+/**
+ * GET /api/stores/:storeId/stripe/onboard-link — ссылка онбординга выплат
+ * (Stripe Connect Express, §10.2), только владелец. Создаёт аккаунт при первом заходе.
+ */
+storesRouter.get(
+  "/:storeId/stripe/onboard-link",
+  verifyAppCheck,
+  requireAuth,
+  requireStoreRole,
+  async (req: AuthedRequest, res, next) => {
+    try {
+      res.json(await getStoreOnboardLink(String(req.params["storeId"] ?? "")));
     } catch (err) {
       next(err);
     }

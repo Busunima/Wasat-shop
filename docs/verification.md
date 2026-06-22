@@ -65,10 +65,13 @@ haptics, skeleton-плейсхолдеры, navigation rail и list-detail на 
 
 ### A. Заблокировано внешними решениями/ключами заказчика
 
-1. **Stripe** — живой приём оплат (PaymentSheet/Google Pay, B05), сохранённые карты
-   (B11), живой Refund (A11), Connect-онбординг + `onboard-link`,
-   **биллинг подписок S05** (`/webhooks/stripe`, `/webhooks/stripe-billing`,
-   dunning/grace), коллекции `invoices`/`subscription`. Каркас и env-gate готовы.
+1. **Stripe** — реализованы (env-gated, ждут живых ключей + деплой/Connect-настройку
+   в Dashboard): приём оплат картой (B05) — серверный PaymentIntent + webhook +
+   клиентский PaymentSheet; Connect-онбординг выплат (§10.2) — Express-аккаунт +
+   `GET /stripe/onboard-link` + сохранение `stripeAccountId`. Остаётся: сохранённые
+   карты (B11), живой Refund (A11), **биллинг подписок S05** (`/webhooks/stripe-billing`,
+   dunning/grace), коллекции `invoices`/`subscription`, клиентская кнопка «подключить
+   выплаты» в настройках.
 2. **Algolia** — полнотекстовый/фасетный поиск (B02) + `POST /api/search/reindex`
    (отсутствует). Сейчас работает серверный fallback-поиск.
 3. **SMTP/Nodemailer** — email-подтверждение заказа (B05), уведомление владельцу
