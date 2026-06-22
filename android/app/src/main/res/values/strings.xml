@@ -263,6 +263,7 @@
     <string name="settings_working_hours">Часы работы</string>
     <string name="settings_is_open">Магазин открыт</string>
     <string name="settings_delivery_cost">Стоимость доставки</string>
+    <string name="settings_connect_payouts">Подключить выплаты (Stripe)</string>
     <string name="settings_low_stock">Порог низкого остатка</string>
     <string name="settings_low_stock_hint">Push владельцу, когда остаток товара упадёт до порога. Пусто — 3.</string>
 

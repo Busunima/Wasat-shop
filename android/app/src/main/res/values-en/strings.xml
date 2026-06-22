@@ -262,6 +262,7 @@
     <string name="settings_working_hours">Working hours</string>
     <string name="settings_is_open">Store open</string>
     <string name="settings_delivery_cost">Delivery cost</string>
+    <string name="settings_connect_payouts">Connect payouts (Stripe)</string>
     <string name="settings_low_stock">Low-stock threshold</string>
     <string name="settings_low_stock_hint">Push the owner when product stock drops to this level. Empty — 3.</string>
 

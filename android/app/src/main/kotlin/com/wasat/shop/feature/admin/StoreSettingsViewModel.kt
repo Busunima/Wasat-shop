@@ -74,6 +74,10 @@ data class StoreSettingsUiState(
     /** Порог push «низкий остаток» (FR-A03); пусто — дефолт сервера. */
     val lowStockInput: String = "",
     val uploading: Boolean = false,
+    /** Онбординг выплат Stripe Connect (§10.2): загрузка / одноразовый URL / сообщение. */
+    val payoutLoading: Boolean = false,
+    val payoutUrl: String? = null,
+    val payoutMessage: String? = null,
     val fieldErrors: Map<SettingsField, String> = emptyMap(),
     val save: SaveState = SaveState.Idle,
 )
@@ -162,6 +166,34 @@ class StoreSettingsViewModel @Inject constructor(
         update { copy(lowStockInput = v, fieldErrors = fieldErrors - SettingsField.LOW_STOCK) }
     fun removeLogo() = update { copy(logoUrl = "") }
     fun removeBanner() = update { copy(bannerUrl = "") }
+
+    /**
+     * Подключить/продолжить выплаты Stripe Connect (§10.2): получить ссылку онбординга
+     * и открыть её (payoutUrl). Без ключей Stripe сервер вернёт deferred → сообщение.
+     */
+    fun connectPayouts() {
+        if (_uiState.value.payoutLoading) return
+        _uiState.update { it.copy(payoutLoading = true, payoutMessage = null) }
+        viewModelScope.launch {
+            when (val r = safeApiCall(json) { api.stripeOnboardLink(storeId) }) {
+                is ApiResult.Success -> _uiState.update {
+                    val url = r.data.onboardUrl
+                    if (url != null) {
+                        it.copy(payoutLoading = false, payoutUrl = url)
+                    } else {
+                        it.copy(payoutLoading = false, payoutMessage = r.data.reason ?: "Выплаты пока недоступны")
+                    }
+                }
+                is ApiResult.ApiError ->
+                    _uiState.update { it.copy(payoutLoading = false, payoutMessage = r.message) }
+                is ApiResult.NetworkError ->
+                    _uiState.update { it.copy(payoutLoading = false, payoutMessage = "Нет соединения с сервером") }
+            }
+        }
+    }
+
+    /** Сбросить одноразовый URL после открытия в браузере. */
+    fun consumePayoutUrl() = _uiState.update { it.copy(payoutUrl = null) }
 
     private inline fun update(block: StoreSettingsUiState.() -> StoreSettingsUiState) =
         _uiState.update(block)

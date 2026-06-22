@@ -35,6 +35,7 @@ import com.wasat.shop.core.network.dto.ReviewDto
 import com.wasat.shop.core.network.dto.ReviewListResponse
 import com.wasat.shop.core.network.dto.StaffInviteRequest
 import com.wasat.shop.core.network.dto.StaffListResponse
+import com.wasat.shop.core.network.dto.OnboardingDto
 import com.wasat.shop.core.network.dto.StaffMemberDto
 import com.wasat.shop.core.network.dto.StaffRoleUpdateRequest
 import com.wasat.shop.core.network.dto.StoreInfoDto
@@ -65,6 +66,10 @@ interface WasatApi {
     /** Тариф, лимиты и использование (FR-S03), только владелец. */
     @GET("api/stores/{storeId}/plan")
     suspend fun storePlan(@Path("storeId") storeId: String): Response<PlanUsageDto>
+
+    /** Ссылка онбординга выплат Stripe Connect (§10.2), только владелец. */
+    @GET("api/stores/{storeId}/stripe/onboard-link")
+    suspend fun stripeOnboardLink(@Path("storeId") storeId: String): Response<OnboardingDto>
 
     @GET("api/stores/by-slug/{slug}")
     suspend fun getStoreBySlug(@Path("slug") slug: String): Response<StoreInfoDto>
