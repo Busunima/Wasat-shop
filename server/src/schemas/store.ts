@@ -92,3 +92,10 @@ export type StoreUpdate = z.infer<typeof storeUpdateSchema>;
 export const PLANS = ["free", "basic", "pro", "enterprise"] as const;
 export const planSchema = z.enum(PLANS);
 export type Plan = z.infer<typeof planSchema>;
+
+/** Платные тарифы — для оформления подписки (FR-S05). */
+export const PAID_PLANS = ["basic", "pro", "enterprise"] as const;
+export const subscriptionCheckoutSchema = z.object({
+  plan: z.enum(PAID_PLANS),
+});
+export type SubscriptionCheckoutInput = z.infer<typeof subscriptionCheckoutSchema>;

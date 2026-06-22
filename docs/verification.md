@@ -59,7 +59,7 @@ haptics, skeleton-плейсхолдеры, navigation rail и list-detail на 
 | FR-S02 | Управление магазином | ✅ | блокировка с причиной + смена тарифа + read-only инспекция + auditLog (email-уведомление — отложено) |
 | FR-S03 | Тарифные планы | ✅ | лимиты товаров/сотрудников, мягкое ограничение |
 | FR-S04 | Глобальная аналитика | ✅ | GMV/MAU/состав магазинов/тренд |
-| FR-S05 | Биллинг подписок | 🚫 | Stripe Billing — каркас вебхуков есть, логика отложена |
+| FR-S05 | Биллинг подписок | ✅ (ядро) | Stripe Billing (env-gated): subscription-checkout + webhook `/stripe-billing` синхронизирует `plan`/`subscription` (активация, grace=past_due, даунгрейд); клиентский выбор тарифа и живые price ID — отложены |
 
 ## Перечень оставшихся задач
 
@@ -68,10 +68,11 @@ haptics, skeleton-плейсхолдеры, navigation rail и list-detail на 
 1. **Stripe** — реализованы (env-gated, ждут живых ключей + деплой/Connect-настройку
    в Dashboard): приём оплат картой (B05) — серверный PaymentIntent + webhook +
    клиентский PaymentSheet; Connect-онбординг выплат (§10.2) — Express-аккаунт +
-   `GET /stripe/onboard-link` + сохранение `stripeAccountId` + **кнопка «Подключить
-   выплаты» в настройках**. Остаётся: сохранённые карты (B11), живой Refund (A11),
-   **биллинг подписок S05** (`/webhooks/stripe-billing`, dunning/grace), коллекции
-   `invoices`/`subscription`.
+   `GET /stripe/onboard-link` + сохранение `stripeAccountId` + кнопка «Подключить
+   выплаты» в настройках; **биллинг подписок S05 (сервер)** — subscription-checkout +
+   webhook `/stripe-billing` (активация/grace/даунгрейд). Остаётся: сохранённые карты
+   (B11), живой Refund (A11), клиентский выбор тарифа (S05), коллекция `invoices`,
+   живые price ID тарифов.
 2. **Algolia** — полнотекстовый/фасетный поиск (B02) + `POST /api/search/reindex`
    (отсутствует). Сейчас работает серверный fallback-поиск.
 3. **SMTP/Nodemailer** — email-подтверждение заказа (B05), уведомление владельцу

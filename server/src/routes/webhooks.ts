@@ -3,6 +3,7 @@ import { ApiError } from "../middleware/errorHandler.js";
 import { env } from "../config/env.js";
 import { getStripe } from "../services/stripe.js";
 import { markOrderPaid } from "../services/orders.js";
+import { applyBillingEvent } from "../services/billing.js";
 import { logger } from "../lib/logger.js";
 
 export const webhooksRouter: Router = Router();
@@ -51,7 +52,31 @@ webhooksRouter.post(
   },
 );
 
-// Подписки SaaS (Stripe Billing).
-webhooksRouter.post("/stripe-billing", raw({ type: "application/json" }), (_req, _res, next) => {
-  next(new ApiError("NOT_IMPLEMENTED", "webhooks/stripe-billing: биллинг подписок — Фаза 4"));
-});
+// Подписки SaaS (Stripe Billing, FR-S05): синхронизация тарифа магазина.
+webhooksRouter.post(
+  "/stripe-billing",
+  raw({ type: "application/json" }),
+  async (req: Request, res: Response, next: NextFunction) => {
+    const stripe = getStripe();
+    if (!stripe || !env.STRIPE_BILLING_WEBHOOK_SECRET) {
+      next(new ApiError("NOT_IMPLEMENTED", "webhooks/stripe-billing: Stripe Billing не сконфигурирован"));
+      return;
+    }
+    const signature = req.headers["stripe-signature"];
+    if (typeof signature !== "string") {
+      next(new ApiError("VALIDATION_ERROR", "Нет заголовка stripe-signature"));
+      return;
+    }
+    try {
+      const event = stripe.webhooks.constructEvent(
+        req.body as Buffer,
+        signature,
+        env.STRIPE_BILLING_WEBHOOK_SECRET,
+      );
+      await applyBillingEvent(event);
+      res.json({ received: true });
+    } catch {
+      next(new ApiError("VALIDATION_ERROR", "Stripe billing webhook: проверка не пройдена"));
+    }
+  },
+);

@@ -12,6 +12,10 @@ const baseSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_BILLING_WEBHOOK_SECRET: z.string().optional(),
+  /** Price ID тарифов подписки (Stripe Billing, FR-S05); без них checkout — deferred. */
+  STRIPE_PRICE_BASIC: z.string().optional(),
+  STRIPE_PRICE_PRO: z.string().optional(),
+  STRIPE_PRICE_ENTERPRISE: z.string().optional(),
 
   ALGOLIA_APP_ID: z.string().optional(),
   ALGOLIA_ADMIN_KEY: z.string().optional(),
