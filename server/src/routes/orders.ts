@@ -115,9 +115,15 @@ ordersRouter.post(
   requireStoreStaff,
   async (req: AuthedRequest, res, next) => {
     try {
-      const { status, trackingNo } = orderStatusUpdateSchema.parse(req.body);
+      const { status, trackingNo, reason } = orderStatusUpdateSchema.parse(req.body);
       res.json(
-        await updateOrderStatus(param(req, "storeId"), param(req, "orderId"), status, trackingNo),
+        await updateOrderStatus(
+          param(req, "storeId"),
+          param(req, "orderId"),
+          status,
+          trackingNo,
+          reason,
+        ),
       );
     } catch (err) {
       next(err);

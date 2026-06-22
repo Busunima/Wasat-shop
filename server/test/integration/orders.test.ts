@@ -167,6 +167,15 @@ test("статусы FR-A04: валидный переход, недопусти
   );
 });
 
+test("отмена владельцем FR-A04: причина сохраняется в cancelReason", async () => {
+  const { order } = await createOrder(BUYER, "c@e.com", checkout({
+    items: [{ productId: ids.simple!, qty: 1, variant: undefined }],
+  }) as Parameters<typeof createOrder>[2]);
+  const cancelled = await updateOrderStatus(STORE_ID, order.id, "CANCELLED", undefined, "нет в наличии");
+  assert.equal(cancelled.status, "CANCELLED");
+  assert.equal(cancelled.cancelReason, "нет в наличии");
+});
+
 test("отмена покупателем FR-B06: ресток, чужой заказ — FORBIDDEN, после отгрузки — CONFLICT", async () => {
   // свой заказ в NEW
   const { order } = await createOrder(BUYER, "b@e.com", checkout({

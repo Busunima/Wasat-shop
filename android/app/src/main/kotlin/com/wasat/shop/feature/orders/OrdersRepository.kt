@@ -140,9 +140,10 @@ class OrdersRepository @Inject constructor(
         orderId: String,
         status: String,
         trackingNo: String? = null,
+        reason: String? = null,
     ): ApiResult<OrderDto> {
         val r = safeApiCall(json) {
-            api.updateOrderStatus(storeId, orderId, OrderStatusUpdateRequest(status, trackingNo))
+            api.updateOrderStatus(storeId, orderId, OrderStatusUpdateRequest(status, trackingNo, reason))
         }
         if (r is ApiResult.Success) orderDao.upsert(r.data.toEntity(storeId, SCOPE_STORE))
         return r

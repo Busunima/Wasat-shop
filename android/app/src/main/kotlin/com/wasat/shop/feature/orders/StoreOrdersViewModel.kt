@@ -167,12 +167,17 @@ class StoreOrdersViewModel @Inject constructor(
      * доставку кладём в outbox — она уйдёт на сервер при наличии сети (идемпотентно).
      * UI предлагает только допустимые переходы; валидация — на сервере.
      */
-    fun setStatus(orderId: String, status: OrderStatus, trackingNo: String? = null) {
+    fun setStatus(
+        orderId: String,
+        status: OrderStatus,
+        trackingNo: String? = null,
+        reason: String? = null,
+    ) {
         if (_uiState.value.busy) return
         _uiState.update { it.copy(busy = true, error = null) }
         viewModelScope.launch {
             repository.optimisticStoreStatus(storeId, orderId, status.name) // список обновится через Flow
-            outbox.enqueueOrderStatus(storeId, orderId, status.name, trackingNo)
+            outbox.enqueueOrderStatus(storeId, orderId, status.name, trackingNo, reason)
             _uiState.update { it.copy(busy = false) }
         }
     }

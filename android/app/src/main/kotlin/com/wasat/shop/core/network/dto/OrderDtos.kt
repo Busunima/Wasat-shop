@@ -76,6 +76,8 @@ data class OrderDto(
     val status: String,
     val delivery: OrderDeliveryDto = OrderDeliveryDto(),
     val payment: OrderPaymentDto = OrderPaymentDto(),
+    /** Причина отмены (FR-A04), если заказ отменён владельцем. */
+    val cancelReason: String? = null,
     val createdAt: Long? = null,
 )
 
@@ -86,4 +88,6 @@ data class OrderListResponse(val items: List<OrderDto> = emptyList())
 data class OrderStatusUpdateRequest(
     val status: String,
     val trackingNo: String? = null,
+    /** Причина отмены (FR-A04) — учитывается сервером только для CANCELLED. */
+    val reason: String? = null,
 )

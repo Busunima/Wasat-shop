@@ -15,6 +15,8 @@ data class OrderStatusOp(
     val orderId: String,
     val status: String,
     val trackingNo: String? = null,
+    /** Причина отмены (FR-A04) — для перехода в CANCELLED. */
+    val reason: String? = null,
 )
 
 /** Переход возврата владельцем (FR-A11). action: approve|reject|receive|refund. */

@@ -47,10 +47,12 @@ export const checkoutSchema = z
   });
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 
-/** Смена статуса владельцем/сотрудником (FR-A04). trackingNo — для SHIPPED. */
+/** Смена статуса владельцем/сотрудником (FR-A04). trackingNo — для SHIPPED;
+ * reason — причина отмены для CANCELLED. */
 export const orderStatusUpdateSchema = z.object({
   status: z.enum(ORDER_STATUS),
   trackingNo: z.string().max(64).optional(),
+  reason: z.string().max(500).optional(),
 });
 
 export const ordersListQuerySchema = z.object({
