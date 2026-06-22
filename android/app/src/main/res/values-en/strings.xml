@@ -346,6 +346,20 @@
     <string name="broadcast_send">Send</string>
     <string name="broadcast_sent_title">Broadcast sent</string>
     <string name="broadcast_sent_stats">Recipients: %1$d · delivered: %2$d · failed: %3$d</string>
+    <string name="broadcast_segment_label">Audience</string>
+    <string name="broadcast_segment_all">All</string>
+    <string name="broadcast_segment_with_orders">With orders</string>
+    <string name="broadcast_segment_no_orders">No orders</string>
+    <string name="broadcast_templates_label">Templates</string>
+    <string name="broadcast_tpl_sale">Sale</string>
+    <string name="broadcast_tpl_sale_title">Sale 🔥</string>
+    <string name="broadcast_tpl_sale_body">Discounts on popular items — don\'t miss out!</string>
+    <string name="broadcast_tpl_new">New arrival</string>
+    <string name="broadcast_tpl_new_title">New arrival in the store</string>
+    <string name="broadcast_tpl_new_body">Check out our latest product</string>
+    <string name="broadcast_tpl_back">Come back</string>
+    <string name="broadcast_tpl_back_title">We miss you!</string>
+    <string name="broadcast_tpl_back_body">Come back — we have great offers for you</string>
 
     <!-- Categories (FR-A01) -->
     <string name="category_title">Categories</string>

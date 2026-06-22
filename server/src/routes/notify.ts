@@ -22,8 +22,8 @@ notifyRouter.post(
   requireStoreRole,
   async (req: AuthedRequest, res, next) => {
     try {
-      const { title, body } = broadcastSchema.parse(req.body);
-      res.json(await broadcastToStore(param(req, "storeId"), title, body));
+      const { title, body, segment } = broadcastSchema.parse(req.body);
+      res.json(await broadcastToStore(param(req, "storeId"), title, body, segment));
     } catch (err) {
       next(err);
     }

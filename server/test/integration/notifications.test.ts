@@ -34,6 +34,18 @@ test("broadcastToStore: несуществующий магазин — нули
   assert.deepEqual(stats, { targets: 0, success: 0, failure: 0 });
 });
 
+test("broadcastToStore: сегменты with_orders/no_orders по customerUid заказов", async () => {
+  // У cust-a есть заказ, у cust-b — нет.
+  await db().collection("stores").doc(STORE_ID).collection("orders").doc("o-seg")
+    .set({ customerUid: "cust-a" });
+
+  const withOrders = await broadcastToStore(STORE_ID, "t", "b", "with_orders");
+  assert.equal(withOrders.targets, 1); // только токен cust-a
+
+  const noOrders = await broadcastToStore(STORE_ID, "t", "b", "no_orders");
+  assert.equal(noOrders.targets, 1); // только токен cust-b
+});
+
 test("runAbandonedCartReminders: напоминает по старой непустой корзине один раз", async () => {
   const customers = db().collection("stores").doc(STORE_ID).collection("customers");
   // cust-a: корзина обновлена 2 дня назад → должна напомниться

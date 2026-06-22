@@ -347,6 +347,20 @@
     <string name="broadcast_send">Отправить</string>
     <string name="broadcast_sent_title">Рассылка отправлена</string>
     <string name="broadcast_sent_stats">Адресатов: %1$d · доставлено: %2$d · ошибок: %3$d</string>
+    <string name="broadcast_segment_label">Кому</string>
+    <string name="broadcast_segment_all">Все</string>
+    <string name="broadcast_segment_with_orders">С заказами</string>
+    <string name="broadcast_segment_no_orders">Без заказов</string>
+    <string name="broadcast_templates_label">Шаблоны</string>
+    <string name="broadcast_tpl_sale">Распродажа</string>
+    <string name="broadcast_tpl_sale_title">Распродажа 🔥</string>
+    <string name="broadcast_tpl_sale_body">Скидки на популярные товары — успейте купить!</string>
+    <string name="broadcast_tpl_new">Новинка</string>
+    <string name="broadcast_tpl_new_title">Новинка в магазине</string>
+    <string name="broadcast_tpl_new_body">Посмотрите наш новый товар</string>
+    <string name="broadcast_tpl_back">Возвращайтесь</string>
+    <string name="broadcast_tpl_back_title">Мы скучали!</string>
+    <string name="broadcast_tpl_back_body">Возвращайтесь — у нас есть для вас выгодные предложения</string>
 
     <!-- Категории (FR-A01) -->
     <string name="category_title">Категории</string>

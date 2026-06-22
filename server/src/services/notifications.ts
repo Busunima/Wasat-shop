@@ -1,9 +1,10 @@
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { db } from "../lib/firebase.js";
 import {
-  collectAllStoreTokens,
+  collectSegmentTokens,
   collectUserTokens,
   sendToTokens,
+  type BroadcastSegment,
   type DeliveryStats,
 } from "./push.js";
 import { logger } from "../lib/logger.js";
@@ -16,17 +17,18 @@ import { logger } from "../lib/logger.js";
  * (без FCM-эмулятора — лог), всё остальное проверяется против эмулятора.
  */
 
-/** Рассылка всем покупателям магазина (FR-A07). Возвращает статистику доставки. */
+/** Рассылка покупателям магазина по сегменту (FR-A07). Возвращает статистику доставки. */
 export async function broadcastToStore(
   storeId: string,
   title: string,
   body: string,
+  segment: BroadcastSegment = "all",
 ): Promise<DeliveryStats> {
   const storeSnap = await db().collection("stores").doc(storeId).get();
   if (!storeSnap.exists) {
     return { targets: 0, success: 0, failure: 0 };
   }
-  const tokens = await collectAllStoreTokens(storeId);
+  const tokens = await collectSegmentTokens(storeId, segment);
   const stats = await sendToTokens(
     storeId,
     tokens,
