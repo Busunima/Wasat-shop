@@ -16,7 +16,7 @@ import { recordCustomerType, recordEvent } from "./analytics.js";
 import { buildOrderStatusNotification, sendToUsers } from "./push.js";
 import { crossedLowStock, notifyLowStock, type LowStockAlert } from "./lowStock.js";
 import { DEFAULT_LOW_STOCK_THRESHOLD } from "../schemas/store.js";
-import { createPaymentIntent } from "./stripe.js";
+import { createEphemeralKey, createPaymentIntent, createStripeCustomer } from "./stripe.js";
 import { env } from "../config/env.js";
 import { logger } from "../lib/logger.js";
 
@@ -121,7 +121,13 @@ export async function createOrder(
   uid: string,
   email: string,
   input: CheckoutInput,
-): Promise<{ order: ApiOrder; replay: boolean; clientSecret: string | null }> {
+): Promise<{
+  order: ApiOrder;
+  replay: boolean;
+  clientSecret: string | null;
+  stripeCustomerId: string | null;
+  stripeEphemeralKey: string | null;
+}> {
   const { storeId } = input;
   const orderId = orderIdFor(uid, input.idempotencyKey);
   const orderRef = ordersCol(storeId).doc(orderId);
@@ -318,16 +324,22 @@ export async function createOrder(
   // FR-B05: при настроенном Stripe и ненулевой сумме — PaymentIntent для оплаты.
   // idempotencyKey по заказу → ретрай чекаута не создаёт второй PaymentIntent.
   let clientSecret: string | null = null;
+  let stripeCustomerId: string | null = null;
+  let stripeEphemeralKey: string | null = null;
   if (env.STRIPE_SECRET_KEY && order.total > 0) {
+    // FR-B11: Customer покупателя — для сохранённых карт.
+    stripeCustomerId = await getOrCreateBuyerCustomer(storeId, uid, order.customerEmail);
     const intent = await createPaymentIntent({
       amountMinor: order.total,
       currency: order.currency,
       idempotencyKey: `pi_${storeId}_${order.id}`,
       metadata: { storeId, orderId: order.id },
+      customerId: stripeCustomerId ?? undefined,
     });
     if (intent) {
       clientSecret = intent.clientSecret;
       order.payment.method = "card";
+      if (stripeCustomerId) stripeEphemeralKey = await createEphemeralKey(stripeCustomerId);
       if (!result.replay) {
         await orderRef.update({
           "payment.method": "card",
@@ -336,7 +348,22 @@ export async function createOrder(
       }
     }
   }
-  return { order, replay: result.replay, clientSecret };
+  return { order, replay: result.replay, clientSecret, stripeCustomerId, stripeEphemeralKey };
+}
+
+/** Stripe Customer покупателя в магазине (FR-B11): читает/создаёт customers/{uid}. */
+async function getOrCreateBuyerCustomer(
+  storeId: string,
+  uid: string,
+  email: string,
+): Promise<string | null> {
+  const ref = db().collection("stores").doc(storeId).collection("customers").doc(uid);
+  const snap = await ref.get();
+  const existing = snap.data()?.["stripeCustomerId"] as string | undefined;
+  if (existing) return existing;
+  const customerId = await createStripeCustomer(email, { storeId, uid });
+  if (customerId) await ref.set({ stripeCustomerId: customerId }, { merge: true });
+  return customerId;
 }
 
 /**

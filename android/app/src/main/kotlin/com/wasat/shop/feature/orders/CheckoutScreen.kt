@@ -58,10 +58,19 @@ fun CheckoutScreen(
     val paymentSheet = rememberPaymentSheet { viewModel.onPaymentFinished() }
     LaunchedEffect(state.pendingPayment) {
         state.pendingPayment?.let { pending ->
-            paymentSheet.presentWithPaymentIntent(
-                pending.clientSecret,
-                PaymentSheet.Configuration(merchantDisplayName = merchantName),
-            )
+            // FR-B11: при наличии Customer + ephemeral key PaymentSheet показывает и
+            // сохраняет карты покупателя.
+            val customerId = pending.order.stripeCustomerId
+            val ephemeralKey = pending.order.stripeEphemeralKey
+            val config = if (customerId != null && ephemeralKey != null) {
+                PaymentSheet.Configuration(
+                    merchantDisplayName = merchantName,
+                    customer = PaymentSheet.CustomerConfiguration(customerId, ephemeralKey),
+                )
+            } else {
+                PaymentSheet.Configuration(merchantDisplayName = merchantName)
+            }
+            paymentSheet.presentWithPaymentIntent(pending.clientSecret, config)
         }
     }
 

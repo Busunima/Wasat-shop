@@ -80,6 +80,9 @@ data class OrderDto(
     val cancelReason: String? = null,
     /** client_secret PaymentIntent (FR-B05) — только в ответе чекаута при оплате картой. */
     val clientSecret: String? = null,
+    /** Stripe Customer + ephemeral key (FR-B11) — сохранённые карты в PaymentSheet. */
+    val stripeCustomerId: String? = null,
+    val stripeEphemeralKey: String? = null,
     val createdAt: Long? = null,
 )
 

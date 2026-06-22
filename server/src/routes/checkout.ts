@@ -26,10 +26,13 @@ checkoutRouter.post(
       if (!uid) throw new ApiError("UNAUTHENTICATED", "Нет uid после аутентификации");
       const email = (req.claims?.["email"] as string | undefined) ?? "";
 
-      const { order, replay, clientSecret } = await createOrder(uid, email, input);
-      // clientSecret — для Stripe PaymentSheet (FR-B05); null без ключей (deferred).
-      // Клиент игнорирует неизвестные поля, поэтому ответ обратно совместим.
-      res.status(replay ? 200 : 201).json({ ...order, clientSecret });
+      const { order, replay, clientSecret, stripeCustomerId, stripeEphemeralKey } =
+        await createOrder(uid, email, input);
+      // clientSecret — для Stripe PaymentSheet (FR-B05); customer+ephemeralKey —
+      // сохранённые карты (FR-B11); null без ключей. Клиент игнорирует неизвестные поля.
+      res
+        .status(replay ? 200 : 201)
+        .json({ ...order, clientSecret, stripeCustomerId, stripeEphemeralKey });
     } catch (err) {
       next(err);
     }
