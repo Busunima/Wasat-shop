@@ -7,7 +7,11 @@ import {
 } from "../middleware/auth.js";
 import { verifyAppCheck } from "../middleware/appCheck.js";
 import { ApiError } from "../middleware/errorHandler.js";
-import { storeInitSchema, storeUpdateSchema } from "../schemas/store.js";
+import {
+  storeInitSchema,
+  storeUpdateSchema,
+  subscriptionCheckoutSchema,
+} from "../schemas/store.js";
 import {
   createStore,
   getPlanUsage,
@@ -16,6 +20,7 @@ import {
   resolveSlug,
   updateStore,
 } from "../services/stores.js";
+import { startSubscriptionCheckout } from "../services/billing.js";
 import { productsRouter } from "./products.js";
 import { inventoryRouter } from "./inventory.js";
 import { analyticsRouter } from "./analytics.js";
@@ -127,6 +132,25 @@ storesRouter.get(
   async (req: AuthedRequest, res, next) => {
     try {
       res.json(await getStoreOnboardLink(String(req.params["storeId"] ?? "")));
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+/**
+ * POST /api/stores/:storeId/subscription/checkout — оформление подписки (FR-S05),
+ * только владелец. Возвращает URL Stripe Checkout (или deferred без ключей/price).
+ */
+storesRouter.post(
+  "/:storeId/subscription/checkout",
+  verifyAppCheck,
+  requireAuth,
+  requireStoreRole,
+  async (req: AuthedRequest, res, next) => {
+    try {
+      const { plan } = subscriptionCheckoutSchema.parse(req.body);
+      res.json(await startSubscriptionCheckout(String(req.params["storeId"] ?? ""), plan));
     } catch (err) {
       next(err);
     }
