@@ -46,7 +46,7 @@ haptics, skeleton-плейсхолдеры, navigation rail и list-detail на 
 | FR-A06 | Промокоды | ✅ | типы, ограничения, scope, серверная проверка |
 | FR-A07 | Push покупателям | ✅ | ручные (**сегменты: все/с заказами/без; шаблоны**)/триггерные (брошенная корзина, статус, новый товар) |
 | FR-A09 | Сотрудники | ✅ | приглашение, роли, staff-doc, auditLog |
-| FR-A11 | Возвраты | ✅ (ядро) | очередь, статусы, ресток, **отклонение с причиной**; живой Stripe Refund — отложен |
+| FR-A11 | Возвраты | ✅ | очередь, статусы, ресток, отклонение с причиной, **живой Stripe Refund** (env-gated: рефанд по `payment_intent`, идемпотентно; без ключа — `refundDeferred`) |
 | FR-A12 | AI-ассист контента | ✅ (ядро) | генерация **и rewrite** описаний + Android-UI (env-gated); SEO-мета — Post-MVP по FR-A02 |
 | FR-A08 | Блог/статьи | ⏸ | Post-MVP (схема зарезервирована) |
 | FR-A10 | Программа лояльности | ⏸ | Post-MVP |
@@ -70,9 +70,9 @@ haptics, skeleton-плейсхолдеры, navigation rail и list-detail на 
    клиентский PaymentSheet; Connect-онбординг выплат (§10.2) — Express-аккаунт +
    `GET /stripe/onboard-link` + сохранение `stripeAccountId` + кнопка «Подключить
    выплаты» в настройках; **биллинг подписок S05 (сервер)** — subscription-checkout +
-   webhook `/stripe-billing` (активация/grace/даунгрейд). Остаётся: сохранённые карты
-   (B11), живой Refund (A11), клиентский выбор тарифа (S05), коллекция `invoices`,
-   живые price ID тарифов.
+   webhook `/stripe-billing` (активация/grace/даунгрейд) + выбор тарифа в настройках;
+   живой Refund (A11). Остаётся: сохранённые карты (B11), коллекция `invoices`,
+   живые ключи/price ID + настройка Connect/webhook-endpoint в Dashboard.
 2. **Algolia** — полнотекстовый/фасетный поиск (B02) + `POST /api/search/reindex`
    (отсутствует). Сейчас работает серверный fallback-поиск.
 3. **SMTP/Nodemailer** — email-подтверждение заказа (B05), уведомление владельцу

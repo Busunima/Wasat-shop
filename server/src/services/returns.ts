@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { db } from "../lib/firebase.js";
-import { env } from "../config/env.js";
 import { ApiError } from "../middleware/errorHandler.js";
 import {
   canTransitionReturn,
@@ -14,6 +13,7 @@ import type { OrderStatus } from "../schemas/orderStatus.js";
 import { computeTotalStock, type ProductVariant } from "../schemas/product.js";
 import type { OrderItem } from "./orders.js";
 import { sendToUsers } from "./push.js";
+import { getStripe } from "./stripe.js";
 import { logger } from "../lib/logger.js";
 
 /**
@@ -238,37 +238,69 @@ export async function receiveReturn(storeId: string, returnId: string): Promise<
  */
 export async function refundReturn(storeId: string, returnId: string): Promise<ApiReturn> {
   const ref = returnsCol(storeId).doc(returnId);
-  const deferred = !env.STRIPE_SECRET_KEY;
+  const stripe = getStripe();
 
-  const { data, noop } = await db().runTransaction(async (tx) => {
+  const { data, noop, paymentIntentId, refundAmount } = await db().runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     if (!snap.exists) throw new ApiError("NOT_FOUND", "Возврат не найден");
     const ret = snap.data()!;
     // Идемпотентность: уже возмещён — no-op (повторный рефанд не инициируем).
-    if ((ret["status"] as ReturnStatus) === "REFUNDED") return { data: ret, noop: true };
+    if ((ret["status"] as ReturnStatus) === "REFUNDED") {
+      return { data: ret, noop: true, paymentIntentId: null as string | null, refundAmount: 0 };
+    }
     if (!canTransitionReturn(ret["status"] as ReturnStatus, "REFUNDED")) {
       throw new ApiError("CONFLICT", `Возврат не принят (${ret["status"]})`);
     }
     const oRef = orderRef(storeId, ret["orderId"] as string);
     const orderSnap = await tx.get(oRef);
-    const orderItems = (orderSnap.data()?.["items"] as OrderItem[]) ?? [];
+    const orderData = orderSnap.data();
+    const orderItems = (orderData?.["items"] as OrderItem[]) ?? [];
     const returnItems = (ret["items"] as Array<{ productId: string; qty: number }>) ?? [];
     const refundAmount = computeRefundAmount(orderItems, returnItems);
+    const paymentIntentId =
+      ((orderData?.["payment"] as Record<string, unknown> | undefined)?.[
+        "stripePaymentIntentId"
+      ] as string | undefined) ?? null;
 
+    // Рефанд проведём вне транзакции; deferred=true пока не подтверждён Stripe.
+    const willRefund = Boolean(stripe) && Boolean(paymentIntentId) && refundAmount > 0;
     tx.update(ref, {
       status: "REFUNDED",
       refundAmount,
-      stripeRefundId: null, // фактический рефанд — при подключении Stripe
-      refundDeferred: deferred,
+      stripeRefundId: null,
+      refundDeferred: !willRefund,
     });
     tx.update(oRef, { status: "REFUNDED" });
     return {
-      data: { ...ret, status: "REFUNDED", refundAmount, refundDeferred: deferred },
+      data: { ...ret, status: "REFUNDED", refundAmount, refundDeferred: !willRefund } as Record<
+        string,
+        unknown
+      >,
       noop: false,
+      paymentIntentId: willRefund ? paymentIntentId : null,
+      refundAmount,
     };
   });
 
-  if (!noop) logger.info("Возврат возмещён", { storeId, returnId, deferred });
+  // FR-A11: фактический Stripe Refund вне транзакции (сетевой вызов). Идемпотентно
+  // по returnId. Неуспех оставляет refundDeferred=true для ручной доводки.
+  if (!noop && stripe && paymentIntentId && refundAmount > 0) {
+    try {
+      const refund = await stripe.refunds.create(
+        { payment_intent: paymentIntentId, amount: refundAmount },
+        { idempotencyKey: `refund_${storeId}_${returnId}` },
+      );
+      await ref.update({ stripeRefundId: refund.id, refundDeferred: false });
+      data["stripeRefundId"] = refund.id;
+      logger.info("Stripe Refund выполнен", { storeId, returnId, refundId: refund.id });
+    } catch {
+      await ref.update({ refundDeferred: true });
+      data["refundDeferred"] = true;
+      logger.warn("Stripe Refund не выполнен — отложен", { storeId, returnId });
+    }
+  } else if (!noop) {
+    logger.info("Возврат возмещён (refund deferred)", { storeId, returnId });
+  }
   return toApiReturn(data);
 }
 
