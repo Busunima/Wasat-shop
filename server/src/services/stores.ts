@@ -183,7 +183,32 @@ export async function createStore(
   await auth().setCustomUserClaims(uid, { storeId, role: "owner" });
 
   const onboarding = await createConnectOnboarding({ storeId, ownerEmail });
+  if (!onboarding.deferred) {
+    await storeRef.update({ stripeAccountId: onboarding.stripeAccountId });
+  }
 
   logger.info("Магазин создан", { storeId, slug: input.slug });
   return { storeId, slug: input.slug, onboarding };
+}
+
+/**
+ * Ссылка онбординга Connect для повторного захода из настроек (§10.2, FR-A01).
+ * Создаёт Express-аккаунт, если его ещё нет, и сохраняет stripeAccountId. Без
+ * ключей Stripe — deferred (магазин работает без приёма выплат).
+ */
+export async function getStoreOnboardLink(storeId: string): Promise<OnboardingResult> {
+  const ref = db().collection("stores").doc(storeId);
+  const snap = await ref.get();
+  if (!snap.exists) throw new ApiError("NOT_FOUND", "Магазин не найден");
+  const data = snap.data()!;
+  const existingAccountId = (data["stripeAccountId"] as string | undefined) ?? undefined;
+  const onboarding = await createConnectOnboarding({
+    storeId,
+    ownerEmail: (data["ownerEmail"] as string | undefined) ?? "",
+    existingAccountId,
+  });
+  if (!onboarding.deferred && !existingAccountId) {
+    await ref.update({ stripeAccountId: onboarding.stripeAccountId });
+  }
+  return onboarding;
 }
