@@ -137,6 +137,9 @@ FR-A08 блог · FR-A10 лояльность · ML-рекомендации (V
 - **Безопасность (§13):** App Check (env-gated), Firebase ID Token + Custom Claims,
   Firestore/Storage Rules (45+ тестов), rate-limit (Memorystore-путь задокументирован),
   двойная валидация (Kotlin + Zod), маскирование email в логах, auditLog + cron-очистка.
+  **GDPR (право на забвение):** `GET /api/account/export` (выгрузка заказов + профилей)
+  и `DELETE /api/account` (анонимизация PII заказов + удаление профилей/Auth) —
+  серверная часть, под integration-тестом; кнопки в профиле — следующим слайсом.
 - **Тестирование (§14):** unit (ViewModel/Repository/Zod), integration (эмулятор
   Firestore), Rules-тесты, Android instrumentation, admin-web lint+build, **dependency-audit
   (0 critical CVE)**, **load-сценарии k6** (ручной прогон). Пробелы: E2E (Maestro —
