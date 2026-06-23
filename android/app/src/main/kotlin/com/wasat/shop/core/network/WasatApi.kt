@@ -80,6 +80,14 @@ interface WasatApi {
         @Body body: SubscriptionCheckoutRequest,
     ): Response<SubscriptionCheckoutDto>
 
+    /** GDPR (§13): выгрузка своих данных (заказы + профили) одним JSON. */
+    @GET("api/account/export")
+    suspend fun accountExport(): Response<ResponseBody>
+
+    /** GDPR (§13): удаление аккаунта + анонимизация заказов. */
+    @DELETE("api/account")
+    suspend fun accountDelete(): Response<ResponseBody>
+
     @GET("api/stores/by-slug/{slug}")
     suspend fun getStoreBySlug(@Path("slug") slug: String): Response<StoreInfoDto>
 

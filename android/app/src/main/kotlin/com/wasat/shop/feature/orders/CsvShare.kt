@@ -11,7 +11,7 @@ import java.io.File
  * с временным правом чтения для принимающего приложения.
  */
 object CsvShare {
-    fun share(context: Context, csv: String, fileName: String) {
+    fun share(context: Context, csv: String, fileName: String, mime: String = "text/csv") {
         val dir = File(context.cacheDir, "exports").apply { mkdirs() }
         val file = File(dir, fileName)
         file.writeText(csv)
@@ -22,7 +22,7 @@ object CsvShare {
             file,
         )
         val intent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/csv"
+            type = mime
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }

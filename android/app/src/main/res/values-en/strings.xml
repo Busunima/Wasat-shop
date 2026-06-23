@@ -49,6 +49,11 @@
     <string name="profile_my_orders">My orders</string>
     <string name="profile_wishlist">Wishlist</string>
     <string name="profile_stock_notifications">Restock alerts</string>
+    <string name="profile_export_data">Export my data</string>
+    <string name="profile_delete_account">Delete account</string>
+    <string name="profile_delete_title">Delete account?</string>
+    <string name="profile_delete_text">Your data will be deleted and orders anonymized. This cannot be undone.</string>
+    <string name="profile_delete_confirm">Delete</string>
     <string name="stock_notifications_title">Restock alerts</string>
     <string name="stock_notifications_empty">No active alerts</string>
     <string name="stock_notify_unsubscribe">Unsubscribe</string>
